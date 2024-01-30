@@ -1,8 +1,12 @@
 
 #include "AyonCppApi.h"
 #include "httplib.h"
+#include "nlohmann/json.hpp"
+
 #include <cstdlib>
 #include <string>
+
+using json = nlohmann::json;
 
 AyonApi::AyonApi() {
     // authKey = std::getenv("AYON_API_KEY");
@@ -24,7 +28,10 @@ AyonApi::AyonApi() {
     // Make POST request
     auto res = cli.Post("/api/resolve", json_payload, "application/json");
 
-    std::cout << "Response: " << res->body << std::endl;
+    json j = json::parse(res->body);
+    std::string filePath = j[0]["entities"][0]["filePath"];
+
+    std::cout << "File Path : " << filePath << std::endl;
 };
 AyonApi::~AyonApi(){};
 
