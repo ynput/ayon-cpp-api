@@ -14,6 +14,9 @@ target_precompile_headers(AyonCppApi PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../e
 
 target_link_libraries(AyonCppApi PRIVATE nlohmann_json::nlohmann_json)
 
+target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/spdlog)
+
+target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/spdlog/include)
 install (
   TARGETS AyonCppApi
     DESTINATION ${CMAKE_INSTALL_PREFIX}
