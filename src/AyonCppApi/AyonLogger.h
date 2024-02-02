@@ -3,6 +3,12 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/async.h"
 
+/**
+ * @class AyonLogger
+ * @brief Simple Logger Class that wraps around spdlog in order to expose easy logging functions \n
+ *  AyonLogger::getInstance(log_File_path.json) init code \n
+ *  automaticly logs to file and console
+ */
 class AyonLogger {
     public:
         static AyonLogger &
@@ -48,6 +54,14 @@ class AyonLogger {
                 "Id\":\"%t\",\"Process Id\":\"%P\",\"message\":\"%v\"}");
         }
 
+        /**
+         * @brief this is the core logging function that is called fomr all other ones
+         *
+         * @tparam Args
+         * @param level the log level for spdlog to use
+         * @param format the massage text itself
+         * @param args  things that will be included into the massage inplace off {}
+         */
         template<typename... Args>
         void
         log(const std::string &level, const std::string &format, const Args &... args) {

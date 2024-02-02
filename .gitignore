@@ -13,3 +13,4 @@ build*
 *pluginInfo.json
 .cache
 bin
+docs

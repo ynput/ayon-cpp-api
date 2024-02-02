@@ -1,5 +1,10 @@
+add_compile_definitions(JTRACE=${JTRACE})
+
+
 set(AR_PROJECT_NAME AyonCppApi)
 option(BUILD_TEST "Build the test application" OFF)
+
+
 
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
@@ -12,7 +17,6 @@ set(JSON_BuildTests OFF CACHE INTERNAL "")
 
 
 # add the dependency directory but exclude the cmake because we don't need it
-
 
 add_subdirectory("src/AyonCppApi")
 include_directories("src/AyonCppApi")
@@ -28,7 +32,7 @@ include_directories("ext/spdlog/include")
 
 
 if(BUILD_TEST)
-    add_subdirectory("test")       # Executable
+  add_subdirectory("test")       # Dont add / Build test app 
 endif()
 
 
