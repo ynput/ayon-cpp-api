@@ -10,11 +10,23 @@ test() {
 };
 
 int
+generateRandomInt(int seed, int min_val, int max_val) {
+    // Create a random number generator with the given seed
+    std::mt19937 gen(seed);
+
+    // Define the range of integers
+    std::uniform_int_distribution<int> distribution(min_val, max_val);
+
+    // Generate a random integer
+    return distribution(gen);
+}
+
+int
 main() {
     AyonApi Ayon;
 
-    int min_paths = 480;
-    int iterations = 1;
+    int min_paths = 30;
+    int iterations = 20;
     std::cout << "Start Test" << std::endl;
     Instrumentor::Get().BeginSession("Profile", "/home/workh/Ynput/dev/ayon-cpp-api/profile.json");
 
@@ -47,12 +59,16 @@ main() {
             std::vector<std::string>* test = new std::vector<std::string>;
 
             for (int i = 0; i < pathsToResolve; i++) {
-                test->emplace_back(
-                    "ayon://Usd_Base/Assets/lib_Caracter/Hero_01?product=usdTest&version=*&representation=usd");
-                // test->emplace_back(std::to_string(i));
-            }
-            std::vector<std::string> batchResolve = Ayon.batchResolvePath(*test);
+                test->emplace_back("ayon://Usd_Base/UsdTesting?product=usdUsdTest_"
+                                   + std::to_string(generateRandomInt(i, 0, 300)) + "&version=v001&representation=usd");
 
+                // test->emplace_back("ayon://Usd_Base/UsdTesting?product=usdUsdTest_214&version=v001&representation=usd");
+            }
+            std::unordered_map<std::string, std::string> batchResolve = Ayon.batchResolvePath(*test);
+            // for (std::string &path: batchResolve) {
+            //     std::cout << path << std::endl;
+            // }
+            std::cout << timer_name << std::endl;
             delete test;
         }
     }

@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include "AyonLogger.h"
 #include "appDataFoulder.h"
@@ -46,7 +47,7 @@ class AyonApi {
          * @param headers the http header that you want to send
          * @param jsonPayload the payload in json format
          */
-        nlohmann::json CPOST(const std::string &endPoint, httplib::Headers &headers, nlohmann::json &jsonPayload);
+        nlohmann::json CPOST(const std::string &endPoint, httplib::Headers &headers, nlohmann::json jsonPayload);
 
         /**
          * @brief uses the uri resolve endpoint on the AYON server in order to resolve an uri path towards the local
@@ -60,7 +61,15 @@ class AyonApi {
          *
          * @param uriPaths
          */
-        std::vector<std::string> batchResolvePath(const std::vector<std::string> &uriPaths);
+        std::unordered_map<std::string, std::string> batchResolvePath(const std::vector<std::string> &uriPaths);
+
+        /**
+         * @brief this function takes an ayon:// path and returns a pair of assetIdentifier(ayon:// path) and the
+         * machine local file location
+         *
+         * @param assetIdentifier
+         */
+        std::pair<std::string, std::string> getAssetIdent(const nlohmann::json &uriResolverRespone);
 
         /**
          * @brief this function loads all needed varible into the class \n
