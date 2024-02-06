@@ -56,7 +56,7 @@ int
 main(int argc, char* argv[]) {
     //------------------ Init
     if (argc != 7) {
-        std::cerr << "Usage: " << argv[0] << " <string1> <string2> <int1> <int2> <int3> <int4>" << std::endl;
+        std::cerr << "Usage: " << argc << argv[0] << " <string1> <string2> <int1> <int2> <int3> <int4>" << std::endl;
         return 1;
     }
 

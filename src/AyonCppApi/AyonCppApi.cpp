@@ -99,13 +99,13 @@ AyonApi::SPOST(const std::string &endPoint, httplib::Headers &headers, nlohmann:
 };
 
 nlohmann::json
-AyonApi::CPOST(const std::string &endPoint, httplib::Headers &headers, nlohmann::json jsonPayload) {
+AyonApi::CPOST(const std::string &endPoint,
+               httplib::Headers &headers,
+               nlohmann::json jsonPayload,
+               const int &sucsessStatus) {
     PerfTimer("AyonApi::CPOST");
-    // std::cout << "Cpost payload get: " << jsonPayload << std::endl;
     std::string payload = jsonPayload.dump();
-    // std::cout << "dumped payload: " << payload << std::endl;
-    nlohmann::json jsonRespne = nlohmann::json::parse(GenerativeCorePost(endPoint, headers, payload));
-    // std::cout << "resp: " << jsonRespne << std::endl;
+    nlohmann::json jsonRespne = nlohmann::json::parse(GenerativeCorePost(endPoint, headers, payload, sucsessStatus));
     return jsonRespne;
 };
 
@@ -123,9 +123,9 @@ std::unordered_map<std::string, std::string>
 AyonApi::batchResolvePath(const std::vector<std::string> &uriPaths) {
     PerfTimer("AyonApi::batchResolvePath");
 
-    // std::vector<std::string> resolvedPaths;
     httplib::Headers headers = {{"X-ayon-site-id", siteId}};
     std::string ayonEndpoint = "/api/resolve";
+    uint8_t expectedResponseStatus = 200;
 
     std::string grpReason;
     int uriPathsVecSize = uriPaths.size();
@@ -169,26 +169,16 @@ AyonApi::batchResolvePath(const std::vector<std::string> &uriPaths) {
         }
     }
 
-    // std::cout << "Group Reason  : " << grpReason << std::endl;
-    // std::cout << "Ayailable Threads  : " << num_threads << std::endl;
-    // std::cout << "Uri Vec size  : " << uriPathsVecSize << std::endl;
-    // std::cout << "group amount : " << groupAmount << std::endl;
-    // std::cout << "group Size : " << groupSize << std::endl;
-
     std::vector<std::future<nlohmann::json>> futures;
     int groupStartPos = 0;
     int groupEndPos;
     for (int thread = 0; thread < groupAmount; thread++) {
-        // std::cout << std::endl;
         groupEndPos = groupSize * (thread + 1);
 
         if (uriPathsVecSize - groupEndPos < regroupSizeForAsyncRequests) {
             groupEndPos = uriPathsVecSize - 1;
         }
 
-        // std::cout << "threadId: " << thread << " start end grp pos: " << groupStartPos << " " << groupEndPos
-        //           << std::endl;
-        // std::cout << "vec1val : " << uriPaths[groupStartPos] << " vec2Val : " << uriPaths[groupEndPos] << std::endl;
         nlohmann::json threadLocalUriPathsJsonArray;
 
         for (size_t i = groupStartPos; i <= groupEndPos; ++i) {
@@ -199,7 +189,7 @@ AyonApi::batchResolvePath(const std::vector<std::string> &uriPaths) {
         // TODO CPOST needs an option to take in an expected response http code so that it can rerun if the code has not
         // been hit
         futures.push_back(std::async(std::launch::async, &AyonApi::CPOST, this, std::ref(ayonEndpoint),
-                                     std::ref(headers), threadLocalJsonPayload));
+                                     std::ref(headers), threadLocalJsonPayload, std::ref(expectedResponseStatus)));
         if (thread >= 10) {
             std::this_thread::sleep_for(std::chrono::milliseconds(groupSize + 10));
         }
@@ -207,45 +197,19 @@ AyonApi::batchResolvePath(const std::vector<std::string> &uriPaths) {
         groupStartPos = groupEndPos + 1;
     }
 
-    // for (int i = 0; i < num_threads; ++i) {
-    //     // Launch a new thread and store its future in the vector
-    //     futures.push_back(std::async(std::launch::async, &AyonApi::CPOST, this, std::ref(ayonEndpoint),
-    //                                  std::ref(headers), std::ref(jsonPayload)));
-    // }
-    // std::cout << std::endl;
-    std::vector<nlohmann::json> jsonResponse;
+    std::vector<nlohmann::json> jsonResponses;
     for (auto &future: futures) {
-        jsonResponse.push_back(future.get());
-        // std::cout << "response" << future.get() << std::endl;
+        jsonResponses.push_back(future.get());
     }
 
     std::unordered_map<std::string, std::string> assetIdentGrp;
 
-    for (const auto &response: jsonResponse) {
+    for (const auto &response: jsonResponses) {
         for (const auto &assetRaw: response) {
-            // std::cout << assetRaw["entities"][0]["filePath"] << std::endl;
-
             assetIdentGrp.emplace(getAssetIdent(assetRaw));
         }
     }
-    // for (const auto &pair: assetIdentGrp) {
-    //     std::cout << "Key: " << pair.first << ", Value: " << pair.second << std::endl;
-    // }
-    //--------- Get File paths from response and convert them into an vector
-    // for (const auto &response: jsonResponse) {
-    //     for (const auto &entry: response) {
-    //         for (const auto &options: entry["entities"]) {
-    //             resolvedPaths.push_back(
-    //                 options["filePath"]);   // TODO this will return all the version if =* on versions
-    //             // std::cout << options["filePath"] << std::endl;
-    //         }
-    //     }
-    // }
 
-    // std::cout << jsonResponse[0][0]["entities"][0]["filePath"] << std::endl;
-
-    // resolvedPaths.emplace_back("this");
-    // std::cout << "func end \n" << std::endl;
     return assetIdentGrp;
 };
 
@@ -254,15 +218,18 @@ AyonApi::getAssetIdent(const nlohmann::json &uriResolverRespone) {
     std::pair<std::string, std::string> AssetIdent;
 
     try {
+        // TODO check if this works ( condition is that the response will allways put the last version at the end )
         for (const auto &versions: uriResolverRespone["entities"]) {
             AssetIdent.second = versions["filePath"];
         }
+
         AssetIdent.first = uriResolverRespone["uri"];
     }
     catch (nlohmann::json_abi_v3_11_3::detail::type_error) {
-        Log->warn("asset identification cant be generated ");
+        Log->warn("asset identification cant be generated {}", uriResolverRespone.dump());
     }
-
+    // std::cout << "last path ; "
+    //           << uriResolverRespone["entities"][sizeof(uriResolverRespone["entities"]) - 1]["filePath"] << std::endl;
     return AssetIdent;
 };
 
@@ -292,7 +259,7 @@ std::string
 AyonApi::GenerativeCorePost(const std::string &endPoint,
                             httplib::Headers headers,
                             std::string &Payload,
-                            int &sucsessStatus) {
+                            const int &sucsessStatus) {
     PerfTimer("AyonApi::GenerativeCorePost");
 
     httplib::Client AyonServerClient(serverUrl);
@@ -304,6 +271,7 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
     while (responeStatus != sucsessStatus || retryes >= maxCallRetrys) {
         response = AyonServerClient.Post(endPoint, headers, Payload, "application/json");
         responeStatus = response->status;
+        retryes++;
     }
     if (responeStatus == sucsessStatus) {
         return response->body;
@@ -311,7 +279,7 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
     Log->warn("to manny resolve retryes without correct response code ");
     return "";
 };
-// TODO multi thread this because why not
+
 std::string
 AyonApi::convertUriVecToString(const std::vector<std::string> &uriVec) {
     PerfTimer("AyonApi::convertUriVecToString");
@@ -325,7 +293,9 @@ AyonApi::convertUriVecToString(const std::vector<std::string> &uriVec) {
 
     return payload;
 };
-// TODO implement
+
+// TODO check if this needs to be implemented
+//  TODO implement
 std::string
 AyonApi::getFileVersion(const nlohmann::json &jsonData, u_int16_t versionNum = 65535) {
     PerfTimer("AyonApi::getFileVersion");

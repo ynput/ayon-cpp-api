@@ -17,8 +17,8 @@ done
 # Run the C++ program with the list of random strings as arguments
 cd $BIN_DIR
 
-MIN_PATHS=30 
-TESTITERATIONS=10
+MIN_PATHS=3000
+TESTITERATIONS=2
 MIN_VARIENT=0
 MAX_VARIENT=200
 

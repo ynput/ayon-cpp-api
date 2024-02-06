@@ -47,7 +47,10 @@ class AyonApi {
          * @param headers the http header that you want to send
          * @param jsonPayload the payload in json format
          */
-        nlohmann::json CPOST(const std::string &endPoint, httplib::Headers &headers, nlohmann::json jsonPayload);
+        nlohmann::json CPOST(const std::string &endPoint,
+                             httplib::Headers &headers,
+                             nlohmann::json jsonPayload,
+                             const int &sucsessStatus);
 
         /**
          * @brief uses the uri resolve endpoint on the AYON server in order to resolve an uri path towards the local
@@ -98,7 +101,7 @@ class AyonApi {
         std::string GenerativeCorePost(const std::string &endPoint,
                                        httplib::Headers headers,
                                        std::string &Payload,
-                                       int &sucsessStatus);
+                                       const int &sucsessStatus);
 
         /**
          * @brief converts a vector off uris into an string to serve into CorePost funcs
@@ -139,7 +142,7 @@ class AyonApi {
         u_int8_t regroupSizeForAsyncRequests = 10;
         u_int16_t maxGroupSizeForAsyncRequests = 500;
         u_int16_t minVecSizeForGroupSplitAsyncRequests = 50;
-        u_int8_t maxCallRetrys = 10;
+        u_int8_t maxCallRetrys = 2;
         // General Varibles
         std::unique_ptr<httplib::Client> AyonServer;
         const int num_threads;
