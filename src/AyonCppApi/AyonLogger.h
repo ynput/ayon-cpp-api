@@ -12,7 +12,7 @@
 class AyonLogger {
     public:
         static AyonLogger &
-        getInstance(const std::string &filepath = "logfile.json") {
+        getInstance(const std::string &filepath) {
             static AyonLogger instance(filepath);
             return instance;
         }
@@ -48,7 +48,7 @@ class AyonLogger {
             console_logger_->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
 
             // Initialize file logger
-            file_logger_ = spdlog::basic_logger_mt<spdlog::async_factory>("file_logger", filepath);
+            file_logger_ = spdlog::basic_logger_mt<spdlog::async_factory>("fileLogger", filepath.c_str());
             file_logger_->set_pattern(
                 "{\"timestamp\":\"%Y-%m-%d %H:%M:%S.%e\",\"level\":\"%l\",\"Thread "
                 "Id\":\"%t\",\"Process Id\":\"%P\",\"message\":\"%v\"}");

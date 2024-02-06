@@ -12,6 +12,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <fstream>
 #include <functional>
@@ -48,21 +49,16 @@ AyonApi::~AyonApi(){};
 
 bool
 AyonApi::loadEnvVars() {
-    PerfTimer("AyonApi::loadEnvVars") authKey = std::getenv("AYON_API_KEY");
+    PerfTimer("AyonApi::loadEnvVars");
+    authKey = std::getenv("AYON_API_KEY");
     serverUrl = std::getenv("AYON_SERVER_URL");
 
     if (authKey == nullptr || serverUrl == nullptr) {
-        Log->warn(
-            "One ore More Environment Varibles Could not be Loaded  AYON_API_KEY: {}, AYON_SERVER_URL: {}, "
-            "AYON_SITE_ID: {}",
-            authKey, serverUrl);
+        Log->warn("One ore More Environment Varibles Could not be Loaded  AYON_API_KEY: , AYON_SERVER_URL:");
         return false;
     }
 
-    Log->info(
-        "All Environment Varibles have been loaded AYON_API_KEY: {}, AYON_SERVER_URL: {}, "
-        "AYON_SITE_ID: {}",
-        authKey, serverUrl);
+    Log->info("AYON_API_KEY and AYON_SERVER_URL have been loaded");
 
     const char* siteIdEnv = getenv("AYON_SITE_ID");
 
@@ -74,13 +70,13 @@ AyonApi::loadEnvVars() {
             siteIdFile.close();
         }
         else {
-            Log->info("wasnt able to get site_id file can reat in siteId");
+            Log->info("wasnt able to get site_id file cant read siteId file");
         }
     }
     else {
         siteId = siteIdEnv;
     }
-
+    Log->info("All Env varibles have been loaded");
     return true;
 };
 
@@ -293,21 +289,27 @@ AyonApi::serialCorePost(const std::string &endPoint, httplib::Headers headers, s
 };
 
 std::string
-AyonApi::GenerativeCorePost(const std::string &endPoint, httplib::Headers headers, std::string &Payload) {
+AyonApi::GenerativeCorePost(const std::string &endPoint,
+                            httplib::Headers headers,
+                            std::string &Payload,
+                            int &sucsessStatus) {
     PerfTimer("AyonApi::GenerativeCorePost");
 
     httplib::Client AyonServerClient(serverUrl);
     AyonServerClient.set_bearer_token_auth(authKey);
+    httplib::Result response;
+    int responeStatus;
+    uint8_t retryes;
 
-    httplib::Result respone = AyonServerClient.Post(endPoint, headers, Payload, "application/json");
-
-    // TODO needs better response evaluation
-    if (respone->status == 422) {
-        Log->warn("request returned error code: 422");
-        return "";
+    while (responeStatus != sucsessStatus || retryes >= maxCallRetrys) {
+        response = AyonServerClient.Post(endPoint, headers, Payload, "application/json");
+        responeStatus = response->status;
     }
-
-    return respone->body;
+    if (responeStatus == sucsessStatus) {
+        return response->body;
+    }
+    Log->warn("to manny resolve retryes without correct response code ");
+    return "";
 };
 // TODO multi thread this because why not
 std::string

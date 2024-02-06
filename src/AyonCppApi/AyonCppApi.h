@@ -95,7 +95,10 @@ class AyonApi {
          * @param headers
          * @param Payload
          */
-        std::string GenerativeCorePost(const std::string &endPoint, httplib::Headers headers, std::string &Payload);
+        std::string GenerativeCorePost(const std::string &endPoint,
+                                       httplib::Headers headers,
+                                       std::string &Payload,
+                                       int &sucsessStatus);
 
         /**
          * @brief converts a vector off uris into an string to serve into CorePost funcs
@@ -136,6 +139,7 @@ class AyonApi {
         u_int8_t regroupSizeForAsyncRequests = 10;
         u_int16_t maxGroupSizeForAsyncRequests = 500;
         u_int16_t minVecSizeForGroupSplitAsyncRequests = 50;
+        u_int8_t maxCallRetrys = 10;
         // General Varibles
         std::unique_ptr<httplib::Client> AyonServer;
         const int num_threads;

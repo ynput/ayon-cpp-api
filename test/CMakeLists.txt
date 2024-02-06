@@ -1,6 +1,6 @@
 
 if(BUILD_TEST)
-    add_executable(test_app test.cpp)
+    add_executable(test_app test.cpp testLib.cpp)
 
     target_link_libraries(test_app AyonCppApi)
 
