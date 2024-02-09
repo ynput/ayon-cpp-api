@@ -1,7 +1,10 @@
 #pragma once
 
 #include <sys/types.h>
+#include <cstdint>
 #include <memory>
+#include <mutex>
+#include <regex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -39,7 +42,10 @@ class AyonApi {
          * @param headers the http header that you want to send
          * @param jsonPayload the payload in json format
          */
-        nlohmann::json SPOST(const std::string &endPoint, httplib::Headers &headers, nlohmann::json &jsonPayload);
+        nlohmann::json SPOST(const std::shared_ptr<std::string> endPoint,
+                             const std::shared_ptr<httplib::Headers> headers,
+                             nlohmann::json jsonPayload,
+                             const std::shared_ptr<uint8_t> sucsessStatus);
         /**
          * @brief calls the AYON server while also creation a new httplib client ( Generative Async )
          *
@@ -47,10 +53,10 @@ class AyonApi {
          * @param headers the http header that you want to send
          * @param jsonPayload the payload in json format
          */
-        nlohmann::json CPOST(const std::string &endPoint,
-                             httplib::Headers &headers,
+        nlohmann::json CPOST(const std::shared_ptr<std::string> endPoint,
+                             const std::shared_ptr<httplib::Headers> headers,
                              nlohmann::json jsonPayload,
-                             const int &sucsessStatus);
+                             const std::shared_ptr<uint8_t> sucsessStatus);
 
         /**
          * @brief uses the uri resolve endpoint on the AYON server in order to resolve an uri path towards the local
@@ -58,13 +64,13 @@ class AyonApi {
          *
          * @param uriPath
          */
-        std::string resolvePath(const std::string &uriPath);
+        std::pair<std::string, std::string> resolvePath(const std::string &uriPath);
         /**
          * @brief resolves manny paths against the AYON server in an async way
          *
          * @param uriPaths
          */
-        std::unordered_map<std::string, std::string> batchResolvePath(const std::vector<std::string> &uriPaths);
+        std::unordered_map<std::string, std::string> batchResolvePath(std::vector<std::string> &uriPaths);
 
         /**
          * @brief this function takes an ayon:// path and returns a pair of assetIdentifier(ayon:// path) and the
@@ -90,7 +96,10 @@ class AyonApi {
          * @param headers
          * @param Payload
          */
-        std::string serialCorePost(const std::string &endPoint, httplib::Headers headers, std::string &Payload);
+        std::string serialCorePost(const std::string &endPoint,
+                                   httplib::Headers headers,
+                                   std::string &Payload,
+                                   const int &sucsessStatus);
         /**
          * @brief calls the server while creating a new client instance to stay async
          *
@@ -138,13 +147,35 @@ class AyonApi {
 
         // --- Runtime Dep Vars
         // Async Grp Generation Varibles
-        u_int8_t minGrpSizeForAsyncRequests = 5;
-        u_int8_t regroupSizeForAsyncRequests = 10;
-        u_int16_t maxGroupSizeForAsyncRequests = 500;
+        u_int8_t minGrpSizeForAsyncRequests = 10;
+        u_int16_t regroupSizeForAsyncRequests = 100;   // 300
+        u_int16_t maxGroupSizeForAsyncRequests = 200;
         u_int16_t minVecSizeForGroupSplitAsyncRequests = 50;
-        u_int8_t maxCallRetrys = 2;
+        u_int8_t maxCallRetrys = 8;
+        u_int16_t retryWaight = 800;
         // General Varibles
         std::unique_ptr<httplib::Client> AyonServer;
         const int num_threads;
         std::shared_ptr<AyonLogger> Log;
+        std::regex regexVersionPattern = std::regex("/v(\\d{3})/");
+        std::string uriResolverEndpoint = "/api/resolve";
+        std::string uriResolverEndpointPathOnlyVar = "?pathOnly=true";
+        // std::string uriResolverEndpointPathOnlyVar = "";
+        bool pathOnlyReselution = true;
+
+        // varibles used for async thread creatoin
+        uint16_t maxThreadsBeforeSmallWait = 5;
+        uint16_t asyncThreadCreationSmallWaitTime;
+
+        uint16_t maxThreadsBeforeBigWait;
+        uint16_t asyncThreadCreationBigWaitTime;
+
+        u_int16_t connectionTimeOutMax = 400;
+        u_int8_t readTimeOutMax = 160;
+        bool enableThreadWaithing = true;
+        bool enableBigBlockThreadWaithing = true;
+
+        bool batchResolveOptimizeVector = false;
+
+        std::mutex AyonServerMutex;
 };

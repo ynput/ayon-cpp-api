@@ -17,12 +17,19 @@ done
 # Run the C++ program with the list of random strings as arguments
 cd $BIN_DIR
 
-MIN_PATHS=3000
-TESTITERATIONS=2
-MIN_VARIENT=0
-MAX_VARIENT=200
+
+# MIN_PATHS=100
+MIN_PATHS=8300
+# MIN_PATHS=10000
+# MIN_PATHS=100000
+TESTITERATIONS=1
+MIN_VARIENT=2
+MAX_VARIENT=2
 
 
-./test_app "ayon://Usd_Base/UsdTesting?product=usdUsdTest_" "&version=v001&representation=usd" "$MIN_PATHS" "$TESTITERATIONS" "$MIN_VARIENT" "$MAX_VARIENT" 
+# ./test_app "ayon://Usd_Base/UsdTesting?product=usdUsdTest_" "&version=*&representation=usd" "$MIN_PATHS" "$TESTITERATIONS" "$MIN_VARIENT" "$MAX_VARIENT" 
+
+
+./test_app "ayon://Usd_Base/UsdTesting?product=modelMain_" "&version=*&representation=obj" "$MIN_PATHS" "$TESTITERATIONS" "$MIN_VARIENT" "$MAX_VARIENT" 
 
 echo "Ending Testing"

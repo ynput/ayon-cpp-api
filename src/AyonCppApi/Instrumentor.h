@@ -6,7 +6,6 @@
 #include <fstream>
 #include <mutex>
 #include <thread>
-#include <vector>
 #include <future>
 
 struct ProfileResult {
@@ -49,7 +48,8 @@ class Instrumentor {
 
         void
         WriteProfileAsync(const ProfileResult &result) {
-            std::async(std::launch::async, [this, result]() { WriteProfile(result); });
+            std::future<void> async = std::async(std::launch::async, [this, result]() { WriteProfile(result); });
+            async.get();
         }
 
         void

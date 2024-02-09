@@ -1,7 +1,10 @@
+#include <cstdint>
 #include <memory>
+#include "spdlog/common.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/async.h"
+#include <spdlog/spdlog.h>
 
 /**
  * @class AyonLogger
@@ -40,6 +43,41 @@ class AyonLogger {
         critical(const std::string &format, const Args &... args) {
             log("critical", format, args...);
         }
+        void
+        LogLevlInfo(const bool &alsoSetFileLogger = false) {
+            if (alsoSetFileLogger) {
+                file_logger_->set_level(spdlog::level::info);
+            }
+            console_logger_->set_level(spdlog::level::info);
+        }
+        void
+        LogLevlError(const bool &alsoSetFileLogger = false) {
+            if (alsoSetFileLogger) {
+                file_logger_->set_level(spdlog::level::err);
+            }
+            console_logger_->set_level(spdlog::level::err);
+        }
+        void
+        LogLevlWarn(const bool &alsoSetFileLogger = false) {
+            if (alsoSetFileLogger) {
+                file_logger_->set_level(spdlog::level::warn);
+            }
+            console_logger_->set_level(spdlog::level::warn);
+        }
+        void
+        LogLevlCritical(const bool &alsoSetFileLogger = false) {
+            if (alsoSetFileLogger) {
+                file_logger_->set_level(spdlog::level::critical);
+            }
+            console_logger_->set_level(spdlog::level::critical);
+        }
+        void
+        LogLevlOff(const bool &alsoSetFileLogger = false) {
+            if (alsoSetFileLogger) {
+                file_logger_->set_level(spdlog::level::off);
+            }
+            console_logger_->set_level(spdlog::level::off);
+        }
 
     private:
         AyonLogger(const std::string &filepath) {
@@ -70,4 +108,7 @@ class AyonLogger {
         }
         std::shared_ptr<spdlog::logger> console_logger_;
         std::shared_ptr<spdlog::logger> file_logger_;
+
+        // std::map<uint8_t, std::string> logLevels = {{3, "error"}, {0, "info"}, {1, "warn"}, {4, "critical"}};
+        // uint8_t logLvl = 4;
 };

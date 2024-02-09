@@ -8,7 +8,7 @@ DEBUG=0
 CLEAN_BUILD=0
 BUILD_TEST="OFF"
 JTRACE=0
-
+build_type="Release"
   
 
 #----------- Checking for build mode
@@ -41,12 +41,14 @@ fi
 if [ "$DEBUG" -eq 1 ]; then
   BUILD_TEST="ON"
   JTRACE=1
+  build_type="Debug"
+  export CXXFLAGS="-Wall -Wextra -fsanitize=thread -fno-omit-frame-pointer -g -Wshadow-compatible"
+  export LDFLAGS="-fsanitize=address,undefined,thread,leak"
 fi
 
 
 #-------------- Cmake / Build Commands 
-cmake . -B build -DBUILD_TEST=$BUILD_TEST -DJTRACE=$JTRACE
-
+cmake . -B build -DBUILD_TEST=$BUILD_TEST -DJTRACE=$JTRACE -DCMAKE_BUILD_TYPE=$build_type
 if [ "$CLEAN_BUILD" -eq 1 ]; then 
   cmake --build build --clean-first
 else
@@ -62,12 +64,3 @@ fi
  
 
 
-#------------- Optional testing 
-#TODO update this to be laucnhed via AYON 
-# if [ "$DEBUG" -eq 1 ]; then
-#   echo "Debbug is on"
-#   cd $SCRIPT_DIR/bin 
-#   ./test_app
-# fi
-#
-#

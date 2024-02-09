@@ -7,3 +7,6 @@
 [submodule "ext/spdlog"]
 	path = ext/spdlog
 	url = git@github.com:gabime/spdlog.git
+[submodule "ext/backward-cpp"]
+	path = ext/backward-cpp
+	url = git@github.com:bombela/backward-cpp.git
