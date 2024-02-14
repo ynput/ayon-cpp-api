@@ -388,7 +388,8 @@ AyonApi::serialCorePost(const std::string &endPoint,
             else {
                 Log->info("AyonApi::GenerativeCorePost wrong status code: {} expected: {}", responeStatus,
                           sucsessStatus);
-                std::this_thread::sleep_for(std::chrono::milliseconds(retryWaight));
+                std::this_thread::sleep_for(std::chrono::milliseconds(
+                    responeStatus == ServerBusyCode ? RequestDelayWhenServerBusy : retryWaight));
             }
         }   // TODO error reason not printed
         catch (const httplib::Error &e) {

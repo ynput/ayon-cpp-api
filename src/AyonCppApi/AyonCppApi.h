@@ -176,6 +176,8 @@ class AyonApi {
         bool enableBigBlockThreadWaithing = true;
 
         bool batchResolveOptimizeVector = false;
+        uint16_t ServerBusyCode = 503;
+        uint16_t RequestDelayWhenServerBusy = retryWaight * 5;
 
         std::mutex AyonServerMutex;
 };
