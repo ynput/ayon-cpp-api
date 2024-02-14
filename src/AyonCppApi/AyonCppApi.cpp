@@ -496,8 +496,10 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
                     retryes = 0;
                     if (allowRequest.try_lock()) {
                         // no one locked the requests
+
                         Log->info("AyonApi::GenerativeCorePost no one locked; locking");
                         allowRequest.lock();
+                        Log->info("AyonApi::GenerativeCorePost locked");
                         continue;
                     }
                     else {
