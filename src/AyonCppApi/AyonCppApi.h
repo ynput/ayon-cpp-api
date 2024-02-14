@@ -5,6 +5,7 @@
 #include <memory>
 #include <mutex>
 #include <regex>
+#include <shared_mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -148,8 +149,8 @@ class AyonApi {
         // --- Runtime Dep Vars
         // Async Grp Generation Varibles
         u_int8_t minGrpSizeForAsyncRequests = 10;
-        u_int16_t regroupSizeForAsyncRequests = 100;   // 300
-        u_int16_t maxGroupSizeForAsyncRequests = 200;
+        u_int16_t regroupSizeForAsyncRequests = 200;   // 300
+        u_int16_t maxGroupSizeForAsyncRequests = 300;
         u_int16_t minVecSizeForGroupSplitAsyncRequests = 50;
         u_int8_t maxCallRetrys = 8;
         u_int16_t retryWaight = 800;
@@ -164,20 +165,23 @@ class AyonApi {
         bool pathOnlyReselution = true;
 
         // varibles used for async thread creatoin
-        uint16_t maxThreadsBeforeSmallWait = 5;
-        uint16_t asyncThreadCreationSmallWaitTime;
+        // uint16_t maxThreadsBeforeSmallWait = 10;
+        // uint16_t asyncThreadCreationSmallWaitTime = 200;
 
-        uint16_t maxThreadsBeforeBigWait;
-        uint16_t asyncThreadCreationBigWaitTime;
+        // uint16_t maxThreadsBeforeBigWait;
+        // uint16_t asyncThreadCreationBigWaitTime;
 
         u_int16_t connectionTimeOutMax = 400;
         u_int8_t readTimeOutMax = 160;
-        bool enableThreadWaithing = true;
+        // bool enableThreadWaithing = false;
         bool enableBigBlockThreadWaithing = true;
-
         bool batchResolveOptimizeVector = false;
+
         uint16_t ServerBusyCode = 503;
-        uint16_t RequestDelayWhenServerBusy = retryWaight * 5;
+        uint16_t RequestDelayWhenServerBusy = 10000;
+        std::mutex allowRequest;
+
+        bool serverBusy = false;
 
         std::mutex AyonServerMutex;
 };

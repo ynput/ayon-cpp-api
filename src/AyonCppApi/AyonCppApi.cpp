@@ -45,10 +45,10 @@ AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
     AyonServer = std::make_unique<httplib::Client>(serverUrl);
     AyonServer->set_bearer_token_auth(authKey);
 
-    asyncThreadCreationSmallWaitTime = maxThreadsBeforeSmallWait * 50;
+    // asyncThreadCreationSmallWaitTime = maxThreadsBeforeSmallWait * 50;
 
-    maxThreadsBeforeBigWait = num_threads;
-    asyncThreadCreationBigWaitTime = maxThreadsBeforeBigWait * 10;
+    // maxThreadsBeforeBigWait = num_threads;
+    // asyncThreadCreationBigWaitTime = maxThreadsBeforeBigWait * 10;
 };
 AyonApi::~AyonApi(){};
 
@@ -256,7 +256,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
         else {
             // the groups are to small so we build groups by size
 
-            groupSize = regroupSizeForAsyncRequests;
+            groupSize = std::min((int)regroupSizeForAsyncRequests, uriPathsVecSize);
             groupAmount = std::floor(static_cast<double>(uriPathsVecSize) / groupSize);
             grpReason = "Groups are to small we will build them by size";
         }
@@ -266,8 +266,8 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
 
     // TODO this works but its bad
     // evaluate what needs to be done to load balance the requests to the AYON server so that it dosnt crash
-    maxThreadsBeforeBigWait = maxThreadsBeforeSmallWait * 2.5;
-    asyncThreadCreationBigWaitTime = groupAmount * 2;
+    // maxThreadsBeforeBigWait = maxThreadsBeforeSmallWait * 2.5;
+    // asyncThreadCreationBigWaitTime = groupAmount * 2;
 
     int groupStartPos = 0;
     int groupEndPos;
@@ -294,21 +294,18 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
         futures.push_back(std::async(std::launch::async, &AyonApi::CPOST, this, std::ref(batchResolveEndpoint),
                                      std::ref(headers), std::move(threadLocalJsonPayload),
                                      std::ref(expectedResponseStatus)));
-
         // TODO reorder this because small sleep is more comman and can shadow the other if in order to only check if no
         // small sleep is done
-        if (enableThreadWaithing && thread != groupAmount) {
-            if ((thread + 1) % maxThreadsBeforeBigWait == 0 && enableBigBlockThreadWaithing) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(asyncThreadCreationBigWaitTime));
-            }
-            else {
-                if ((thread + 1) % maxThreadsBeforeSmallWait == 0) {
-                    std::this_thread::sleep_for(
-                        std::chrono::milliseconds(groupSize + asyncThreadCreationSmallWaitTime));
-                }
-            }
-        }
-
+        // if (enableThreadWaithing && thread != groupAmount) {
+        //     // if ((thread + 1) % maxThreadsBeforeBigWait == 0 && enableBigBlockThreadWaithing) {
+        //     //     std::this_thread::sleep_for(std::chrono::milliseconds(asyncThreadCreationBigWaitTime));
+        //     // }
+        //     // else {
+        //     if ((thread + 1) % maxThreadsBeforeSmallWait == 0) {
+        //         std::this_thread::sleep_for(std::chrono::milliseconds(groupSize + asyncThreadCreationSmallWaitTime));
+        //     }
+        //     // }
+        // }
         groupStartPos = groupEndPos + 1;
     }
 
@@ -416,28 +413,62 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
     int responeStatus;
     uint8_t retryes = 0;
     while (retryes <= maxCallRetrys) {
+        // if (allowRequest.try_lock_shared()) {   // the lock is available and we can send a request // the lock is
+        // also
+        //                                         // locked now
+        //     allowRequest.unlock_shared();
+        // }
+        // else {                                  // the lock is not available so some 503 is blocking
+        //     std::this_thread::sleep_for(std::chrono::milliseconds(distr(gen)));
+        //     continue;
+        // }
+
+        allowRequest.lock();
+        // server is available
+        allowRequest.unlock();
+        Log->info("AyonApi::GenerativeCorePost server is available sending request");
+
         try {
             response = AyonServerClient.Post(endPoint, headers, Payload, "application/json");
             responeStatus = response->status;
             retryes++;
 
             if (responeStatus == sucsessStatus) {
+                Log->info("AyonApi::GenerativeCorePost request worked unlocking and returning ");
+                allowRequest.unlock();
                 return response->body;
             }
             else {
+                if (responeStatus == ServerBusyCode) {
+                    Log->warn("AyonApi::GenerativeCorePost Server responded with 503");
+                    retryes = 0;
+                    if (allowRequest.try_lock()) {
+                        // no one locked the requests
+                        Log->info("AyonApi::GenerativeCorePost no one locked locking");
+                        allowRequest.lock();
+                        continue;
+                    }
+                    else {
+                        // some one allready locked the request we start at the beginning off the whiel again
+
+                        Log->info("AyonApi::GenerativeCorePost  allready locked");
+                        continue;
+                    }
+                }
                 Log->info("AyonApi::GenerativeCorePost wrong status code: {} expected: {}", responeStatus,
                           sucsessStatus);
                 std::this_thread::sleep_for(std::chrono::milliseconds(retryWaight));
             }
         }   // TODO error reason not printed
         catch (const httplib::Error &e) {
-            Log->warn("Request Failed because: {}");
+            Log->warn("AyonApi::GenerativeCorePost Request Failed because: {}");
             break;
         }
-        Log->warn("Connection failed Rety now");
+        Log->warn("AyonApi::GenerativeCorePost Connection failed Rety now");
     }
 
-    Log->warn("to manny resolve retryes without correct response code  for: {}, on: {}", Payload, endPoint);
+    Log->warn("AyonApi::GenerativeCorePost to manny resolve retryes without correct response code  for: {}, on: {}",
+              Payload, endPoint);
     return "";
 };
 

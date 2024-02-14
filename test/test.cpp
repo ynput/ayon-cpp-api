@@ -31,11 +31,14 @@ main(int argc, char* argv[]) {
     Instrumentor::Get().BeginSession("Profile", std::filesystem::current_path() / profileJsonName.c_str());
     TestLogger = new TestFileLogger(loggingFileName);
 
+    PlotLogger = new TestFileLogger(plottingFileName);
+
     std::cout << "Testing started With\n min_paths: " << min_paths << "\n runIterations:" << runIterations << std::endl;
     //-------------- Testing
 
     Ayon = new AyonApi;
-
+    *PlotLogger << std::string("Uri Paths") + "," + "Time in ms"
+                << "\n";
     batchResolveTest();
     // serialResolveTest();
 

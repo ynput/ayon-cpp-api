@@ -59,7 +59,7 @@ cmake --install build
 
 
 if [ "$DEBUG" -eq 0 ]; then
-  doxygen Doxyfile
+  # doxygen Doxyfile
 fi
  
 

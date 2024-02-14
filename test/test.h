@@ -26,6 +26,10 @@ std::string profileJsonName = "profile_" + testStartDatation + profile_ext;
 
 std::string loggingFileName = "Log_" + testStartDatation + ".txt";
 
+std::string plottingFileName = "Plot_" + testStartDatation + ".txt";
+
 TestFileLogger* TestLogger;
+TestFileLogger* PlotLogger;
+
 AyonApi* Ayon;
 #endif   // DEBUG
