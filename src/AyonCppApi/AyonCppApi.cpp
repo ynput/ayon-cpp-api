@@ -159,6 +159,10 @@ AyonApi::CPOST(const std::shared_ptr<std::string> endPoint,
 std::pair<std::string, std::string>
 AyonApi::resolvePath(const std::string &uriPath) {
     PerfTimer("AyonApi::resolvePath");
+    if (uriPath.empty()) {
+        Log->info("path was empty: {}", uriPath.c_str());
+        return {};
+    }
     std::pair<std::string, std::string> resolvedAsset;
     nlohmann::json jsonPayload = {{"resolveRoots", true}, {"uris", nlohmann::json::array({uriPath})}};
     httplib::Headers headers = {{"X-ayon-site-id", siteId}};

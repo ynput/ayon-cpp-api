@@ -5,6 +5,7 @@ set(AR_PROJECT_NAME AyonCppApi)
 option(BUILD_TEST "Build the test application" OFF)
 
 
+
 # # Set compiler flags
 # # options undefined undefined thread leak
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra  -fsanitize=thread -fno-omit-frame-pointer -g")
@@ -26,25 +27,25 @@ set(JSON_BuildTests OFF CACHE INTERNAL "")
 
 # add the dependency directory but exclude the cmake because we don't need it
 
-add_subdirectory("src/AyonCppApi")
-include_directories("src/AyonCppApi")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/AyonCppApi")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/AyonCppApi")
 
-add_subdirectory("ext/cpp-httplib" EXCLUDE_FROM_ALL)
-include_directories("ext/cpp-httplib")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/cpp-httplib" EXCLUDE_FROM_ALL)
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/cpp-httplib")
 
-add_subdirectory("ext/json" EXCLUDE_FROM_ALL)
-include_directories("ext/json/include")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/json" EXCLUDE_FROM_ALL)
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/json/include")
 
-add_subdirectory("ext/spdlog" EXCLUDE_FROM_ALL)
-include_directories("ext/spdlog/include")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/spdlog" EXCLUDE_FROM_ALL)
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/spdlog/include")
 
-add_subdirectory("ext/backward-cpp")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/backward-cpp")
 
 
 
 
 if(BUILD_TEST)
-  add_subdirectory("test")       # Dont add / Build test app 
+  add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")       # Dont add / Build test app 
 endif()
 
 
