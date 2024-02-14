@@ -473,18 +473,18 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
             response = AyonServerClient.Post(endPoint, headers, Payload, "application/json");
             responeStatus = response->status;
             retryes++;
+            if (ffoLocking) {
+                // if ffoLocking was enabled for this thread then we have to add to the thread pool after we are
+                // finished so that the next thread can join
 
+                ConcurentRequestAfterffoMutex.lock();
+                maxConcurentRequestAfterffo++;
+                ConcurentRequestAfterffoMutex.unlock();
+            }
             if (responeStatus == sucsessStatus) {
                 Log->info("AyonApi::GenerativeCorePost request worked unlocking and returning ");
                 // allowRequest.unlock();
-                if (ffoLocking) {
-                    // if ffoLocking was enabled for this thread then we have to add to the thread pool after we are
-                    // finished so that the next thread can join
 
-                    ConcurentRequestAfterffoMutex.lock();
-                    maxConcurentRequestAfterffo++;
-                    ConcurentRequestAfterffoMutex.unlock();
-                }
                 return response->body;
             }
             else {
