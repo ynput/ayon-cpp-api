@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sys/types.h>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -170,6 +171,8 @@ class AyonApi {
 
         // uint16_t maxThreadsBeforeBigWait;
         // uint16_t asyncThreadCreationBigWaitTime;
+        std::mutex ConcurentRequestAfterffoMutex;
+        uint8_t maxConcurentRequestAfterffo = 8;
 
         u_int16_t connectionTimeOutMax = 400;
         u_int8_t readTimeOutMax = 160;

@@ -45,6 +45,12 @@ AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
     AyonServer = std::make_unique<httplib::Client>(serverUrl);
     AyonServer->set_bearer_token_auth(authKey);
 
+    // requestPool.availableRequestSlots.reserve(requestPool.defaultPoolSize);
+    // std::fill(requestPool.availableRequestSlots.begin(), requestPool.availableRequestSlots.end(), true);
+    //
+    // requestPool.requestSlotMutex.reserve(requestPool.defaultPoolSize);
+    // std::fill(requestPool.requestSlotMutex.begin(), requestPool.requestSlotMutex.end(), std::mutex());
+    //
     // asyncThreadCreationSmallWaitTime = maxThreadsBeforeSmallWait * 50;
 
     // maxThreadsBeforeBigWait = num_threads;
@@ -412,16 +418,34 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
     httplib::Result response;
     int responeStatus;
     uint8_t retryes = 0;
+    bool ffoLocking = false;
     while (retryes <= maxCallRetrys) {
-        // if (allowRequest.try_lock_shared()) {   // the lock is available and we can send a request // the lock is
-        // also
-        //                                         // locked now
-        //     allowRequest.unlock_shared();
-        // }
-        // else {                                  // the lock is not available so some 503 is blocking
-        //     std::this_thread::sleep_for(std::chrono::milliseconds(distr(gen)));
-        //     continue;
-        // }
+        if (allowRequest.try_lock()) {
+            allowRequest.unlock();
+            if (ffoLocking) {
+                // 503 locking is enabled so we want to check if we can run a thread or if the thread pool is full
+                // lock the mutex for the maxConcurentRequestAfterffo int for multithreading
+                ConcurentRequestAfterffoMutex.lock();
+                if (maxConcurentRequestAfterffo >= 1) {
+                    // the thread pool is not full so we runn and we deduct 1 from the thread pool to block for this
+                    // thread
+                    maxConcurentRequestAfterffo--;
+                }
+                else {
+                    // the thread pool has no space for this thread so we wait a bit and then we try again.
+                    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+                    continue;
+                }
+                // unlock the mutex for the maxConcurentRequestAfterffo int for multithreading
+                ConcurentRequestAfterffoMutex.unlock();
+            }
+            // ffo locking is off on this thread so this is the first time that we know about the ffo event
+        }
+        else {
+            // we where unable to lock the allowRequest motex so on some thread an ffo event accuret
+            // this means we want to set the ffoLocking to ture so that we limit the amount off requests
+            ffoLocking = true;
+        }
 
         allowRequest.lock();
         // server is available
@@ -436,15 +460,26 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
             if (responeStatus == sucsessStatus) {
                 Log->info("AyonApi::GenerativeCorePost request worked unlocking and returning ");
                 allowRequest.unlock();
+                if (ffoLocking) {
+                    // if ffoLocking was enabled for this thread then we have to add to the thread pool after we are
+                    // finished so that the next thread can join
+
+                    ConcurentRequestAfterffoMutex.lock();
+                    maxConcurentRequestAfterffo++;
+                    ConcurentRequestAfterffoMutex.unlock();
+                }
                 return response->body;
             }
             else {
                 if (responeStatus == ServerBusyCode) {
                     Log->warn("AyonApi::GenerativeCorePost Server responded with 503");
+                    // we hit a 503
+                    // we add to the ReserverBusyResponses (++)
+                    // at the top we check if server
                     retryes = 0;
                     if (allowRequest.try_lock()) {
                         // no one locked the requests
-                        Log->info("AyonApi::GenerativeCorePost no one locked locking");
+                        Log->info("AyonApi::GenerativeCorePost no one locked; locking");
                         allowRequest.lock();
                         continue;
                     }
