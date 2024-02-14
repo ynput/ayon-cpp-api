@@ -422,7 +422,8 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
     uint16_t loopIertaion = 0;
     while (retryes <= maxCallRetrys || GenerativeCorePostMaxLoopIterations > loopIertaion) {
         loopIertaion++;
-        Log->info("AyonApi::GenerativeCorePost while loop iteration {}", loopIertaion);
+        Log->info("AyonApi::GenerativeCorePost while loop thread {} iteration {}",
+                  std::hash<std::thread::id>{}(std::this_thread::get_id()), loopIertaion);
         // if (allowRequest.try_lock()) {
         //     allowRequest.unlock();
 
@@ -441,7 +442,7 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
                 ConcurentRequestAfterffoMutex.unlock();
             }
             else {
-                Log->info("AyonApi::GenerativeCorePost thread pool close");
+                Log->info("AyonApi::GenerativeCorePost thread pool closed");
 
                 // the thread pool has no space for this thread so we wait a bit and then we try again.
 
