@@ -270,11 +270,6 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
     Log->info("AyonApi::batchResolvePath build groups with grpSize: {} grpAmount: {} grouingReason: {} vectorSize: {}",
               groupSize, groupAmount, grpReason, uriPathsVecSize);
 
-    // TODO this works but its bad
-    // evaluate what needs to be done to load balance the requests to the AYON server so that it dosnt crash
-    // maxThreadsBeforeBigWait = maxThreadsBeforeSmallWait * 2.5;
-    // asyncThreadCreationBigWaitTime = groupAmount * 2;
-
     int groupStartPos = 0;
     int groupEndPos;
     for (int thread = 0; thread < groupAmount; thread++) {
@@ -289,7 +284,6 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
             groupEndPos = uriPathsVecSize - 1;
             thread = groupAmount;
         }
-        // TODO move the threadLocalUriPathsJsonArray generation onto the thread itself
         nlohmann::json threadLocalUriPathsJsonArray;
 
         for (int i = groupStartPos; i <= groupEndPos; i++) {
@@ -300,18 +294,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
         futures.push_back(std::async(std::launch::async, &AyonApi::CPOST, this, std::ref(batchResolveEndpoint),
                                      std::ref(headers), std::move(threadLocalJsonPayload),
                                      std::ref(expectedResponseStatus)));
-        // TODO reorder this because small sleep is more comman and can shadow the other if in order to only check if no
-        // small sleep is done
-        // if (enableThreadWaithing && thread != groupAmount) {
-        //     // if ((thread + 1) % maxThreadsBeforeBigWait == 0 && enableBigBlockThreadWaithing) {
-        //     //     std::this_thread::sleep_for(std::chrono::milliseconds(asyncThreadCreationBigWaitTime));
-        //     // }
-        //     // else {
-        //     if ((thread + 1) % maxThreadsBeforeSmallWait == 0) {
-        //         std::this_thread::sleep_for(std::chrono::milliseconds(groupSize + asyncThreadCreationSmallWaitTime));
-        //     }
-        //     // }
-        // }
+
         groupStartPos = groupEndPos + 1;
     }
 
@@ -424,17 +407,11 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
         loopIertaion++;
         Log->info("AyonApi::GenerativeCorePost while loop thread {} iteration {}",
                   std::hash<std::thread::id>{}(std::this_thread::get_id()), loopIertaion);
-        // if (allowRequest.try_lock()) {
-        //     allowRequest.unlock();
 
         if (ffoLocking) {
-            // 503 locking is enabled so we want to check if we can run a thread or if the thread pool is full
-            // lock the mutex for the maxConcurentRequestAfterffo int for multithreading
             ConcurentRequestAfterffoMutex.lock();
             Log->info("AyonApi::GenerativeCorePost ffoLocking enabled");
             if (maxConcurentRequestAfterffo >= 1) {
-                // the thread pool is not full so we runn and we deduct 1 from the thread pool to block for this
-                // thread
                 maxConcurentRequestAfterffo--;
 
                 Log->info("AyonApi::GenerativeCorePost thread pool open available: {}", maxConcurentRequestAfterffo);
@@ -444,30 +421,12 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
             else {
                 Log->info("AyonApi::GenerativeCorePost thread pool closed");
 
-                // the thread pool has no space for this thread so we wait a bit and then we try again.
-
                 ConcurentRequestAfterffoMutex.unlock();
                 std::this_thread::sleep_for(std::chrono::milliseconds(800));
                 continue;
             }
-            // unlock the mutex for the maxConcurentRequestAfterffo int for multithreading
         }
 
-        // Log->info("AyonApi::GenerativeCorePost Lock open");
-        // ffo locking is off on this thread so this is the first time that we know about the ffo event
-        // }
-        // else {
-        //     // we where unable to lock the allowRequest motex so on some thread an ffo event accuret
-        //     // this means we want to set the ffoLocking to ture so that we limit the amount off requests
-        //     ffoLocking = true;
-        //     Log->info("AyonApi::GenerativeCorePost unable to get lock set ffoLocking to true and return");
-        //     std::this_thread::sleep_for(std::chrono::milliseconds(800));
-        //     continue;
-        // }
-
-        // allowRequest.lock();
-        // // server is available
-        // allowRequest.unlock();
         Log->info("AyonApi::GenerativeCorePost sending request");
 
         try {
@@ -475,41 +434,22 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
             responeStatus = response->status;
             retryes++;
             if (ffoLocking) {
-                // if ffoLocking was enabled for this thread then we have to add to the thread pool after we are
-                // finished so that the next thread can join
-
                 ConcurentRequestAfterffoMutex.lock();
                 maxConcurentRequestAfterffo++;
                 ConcurentRequestAfterffoMutex.unlock();
             }
             if (responeStatus == sucsessStatus) {
                 Log->info("AyonApi::GenerativeCorePost request worked unlocking and returning ");
-                // allowRequest.unlock();
 
                 return response->body;
             }
             else {
                 if (responeStatus == ServerBusyCode) {
                     Log->warn("AyonApi::GenerativeCorePost Server responded with 503");
-                    // we hit a 503
-                    // we add to the ReserverBusyResponses (++)
-                    // at the top we check if server
+
                     retryes = 0;
                     ffoLocking = true;
                     continue;
-                    // if (allowRequest.try_lock()) {
-                    //     // no one locked the requests
-                    //
-                    //     Log->info("AyonApi::GenerativeCorePost no one locked; locking");
-                    //
-                    //     continue;
-                    // }
-                    // else {
-                    //     // some one allready locked the request we start at the beginning off the whiel again
-                    //
-                    //     Log->info("AyonApi::GenerativeCorePost  allready locked");
-                    //     continue;
-                    // }
                 }
                 Log->info("AyonApi::GenerativeCorePost wrong status code: {} expected: {} retrying", responeStatus,
                           sucsessStatus);
@@ -541,20 +481,3 @@ AyonApi::convertUriVecToString(const std::vector<std::string> &uriVec) {
 
     return payload;
 };
-
-// // TODO check if this needs to be implemented
-// //  TODO implement
-// std::string
-// AyonApi::getFileVersion(const nlohmann::json &jsonData, u_int16_t versionNum = 65535) {
-//     PerfTimer("AyonApi::getFileVersion");
-//     return "no";
-// };
-//
-// // TODO implement
-// std::vector<nlohmann::json>
-// AyonApi::splitBatchResolveResponse(const nlohmann::json &jsonDataGrp) {
-//     PerfTimer("AyonApi::splitBatchResolveResponse");
-//     std::vector<nlohmann::json> seperatedData;
-//
-//     return seperatedData;
-// };

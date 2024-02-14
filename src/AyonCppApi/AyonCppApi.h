@@ -155,22 +155,15 @@ class AyonApi {
         u_int16_t minVecSizeForGroupSplitAsyncRequests = 50;
         u_int8_t maxCallRetrys = 8;
         u_int16_t retryWaight = 800;
-        // General Varibles
+
         std::unique_ptr<httplib::Client> AyonServer;
         const int num_threads;
         std::shared_ptr<AyonLogger> Log;
         std::regex regexVersionPattern = std::regex("/v(\\d{3})/");
         std::string uriResolverEndpoint = "/api/resolve";
         std::string uriResolverEndpointPathOnlyVar = "?pathOnly=true";
-        // std::string uriResolverEndpointPathOnlyVar = "";
         bool pathOnlyReselution = true;
 
-        // varibles used for async thread creatoin
-        // uint16_t maxThreadsBeforeSmallWait = 10;
-        // uint16_t asyncThreadCreationSmallWaitTime = 200;
-
-        // uint16_t maxThreadsBeforeBigWait;
-        // uint16_t asyncThreadCreationBigWaitTime;
         std::mutex ConcurentRequestAfterffoMutex;
         uint8_t maxConcurentRequestAfterffo = 8;
 
