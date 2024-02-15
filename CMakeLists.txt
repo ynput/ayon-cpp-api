@@ -6,14 +6,6 @@ option(BUILD_TEST "Build the test application" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 
-# # Set compiler flags
-# # options undefined undefined thread leak
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra  -fsanitize=thread -fno-omit-frame-pointer -g")
-#
-# # Set linker flags
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address,undefined,thread,leak")
-#
-#
 
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)

@@ -38,12 +38,12 @@ if [ "$CLEAN_BUILD" -eq 1 ]; then
   mkdir build
 fi
 
+
 if [ "$DEBUG" -eq 1 ]; then
   BUILD_TEST="ON"
   JTRACE=1
   build_type="Debug"
-  export CXXFLAGS="-Wall -Wextra -fsanitize=thread -fno-omit-frame-pointer -g -Wshadow-compatible"
-  export LDFLAGS="-fsanitize=address,undefined,thread,leak"
+  export CXXFLAGS="-Wall -Wextra -fsanitize=thread -fno-omit-frame-pointer -g "
 fi
 
 

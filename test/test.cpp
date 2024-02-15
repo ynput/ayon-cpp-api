@@ -23,7 +23,7 @@ main(int argc, char* argv[]) {
     //------- setup logging and progiling
     profile_ext = ".json";
     testStartDatation = getCurrentDateTimeAsString();
-    profileJsonName = "profile_" + testStartDatation + profile_ext;
+    profileJsonName = "/profile_" + testStartDatation + profile_ext;
 
     loggingFileName = "Log_" + testStartDatation + ".txt";
 

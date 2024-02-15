@@ -23,9 +23,9 @@ batchResolveTest() {
         }
 
         std::unordered_map<std::string, std::string> batchResolve = Ayon->batchResolvePath(*test);
-        for (auto &b: batchResolve) {
-            // std::cout << b.first << " / " << b.second << std::endl;
-        }
+        // for (auto &b: batchResolve) {
+        // std::cout << b.first << " / " << b.second << std::endl;
+        // }
         *TestLogger << "After Calling batchResolvePath() Returnd array len: " << batchResolve.size() << "\n";
         for (const std::pair<std::string, std::string> path: batchResolve) {
             *TestLogger << "Asset Identifier: " << path.first << "asset path: " << path.second << "\n";
