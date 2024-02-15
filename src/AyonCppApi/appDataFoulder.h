@@ -2,8 +2,10 @@
 #define APPDATA_UTILS_H
 
 #include <string>
-
+#include <cstdlib>
+#include <filesystem>
 #include "AyonCppApiCrossPlatformMacros.h"
+
 #ifdef _WIN32
     #include <windows.h>
     #define OS_WINDOWS
@@ -24,11 +26,11 @@ getAppDataDir() {
     std::string appDataDir;
 
 #ifdef OS_WINDOWS
-    char* appDataPath;
-    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &appDataPath))) {
-        appDataDir = std::string(appDataPath);
-        CoTaskMemFree(appDataPath);
-    }
+    const wchar_t* appDataPath = _wgetenv(L"APPDATA");
+    if (appDataPath) {
+        std::filesystem::path winPath = std::filesystem::path(appDataPath);
+        appDataDir = winPath.string();
+}
 #elif defined(OS_MACOS)
     const char* homeDir = getenv("HOME");
     if (homeDir) {

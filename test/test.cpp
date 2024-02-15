@@ -28,7 +28,7 @@ main(int argc, char* argv[]) {
     loggingFileName = "Log_" + testStartDatation + ".txt";
 
     //-------- Start logging and profiling
-    Instrumentor::Get().BeginSession("Profile", std::filesystem::current_path() / profileJsonName.c_str());
+    Instrumentor::Get().BeginSession("Profile", std::filesystem::current_path().string() + profileJsonName.c_str());
     TestLogger = new TestFileLogger(loggingFileName);
 
     PlotLogger = new TestFileLogger(plottingFileName);

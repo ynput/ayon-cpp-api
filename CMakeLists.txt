@@ -4,7 +4,7 @@ add_compile_definitions(JTRACE=${JTRACE})
 set(AR_PROJECT_NAME AyonCppApi)
 option(BUILD_TEST "Build the test application" OFF)
 
-
+set(CMAKE_CXX_STANDARD 20)
 
 # # Set compiler flags
 # # options undefined undefined thread leak

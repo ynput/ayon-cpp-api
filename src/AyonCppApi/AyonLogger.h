@@ -36,6 +36,7 @@ class AyonLogger {
         template<typename... Args>
         void
         warn(const std::string &format, const Args &... args) {
+			
             log("warn", format, args...);
         }
 
@@ -103,9 +104,13 @@ class AyonLogger {
          */
         template<typename... Args>
         void
-        log(const std::string &level, const std::string &format, const Args &... args) {
-            file_logger_->log(spdlog::level::from_str(level), format.c_str(), args...);
-            console_logger_->log(spdlog::level::from_str(level), format.c_str(), args...);
+        log(const std::string &level,const std::string &massage, const Args &... args) {
+            
+			//std::string formattedMassage = fmt::vformat(massage, args...);
+			std::string formatted_message = fmt::vformat(massage, fmt::make_format_args(args...));
+
+			file_logger_->log(spdlog::level::from_str(level), formatted_message);
+            console_logger_->log(spdlog::level::from_str(level), formatted_message);
         }
         std::shared_ptr<spdlog::logger> console_logger_;
         std::shared_ptr<spdlog::logger> file_logger_;

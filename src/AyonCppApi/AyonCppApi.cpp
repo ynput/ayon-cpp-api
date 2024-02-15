@@ -1,6 +1,6 @@
 
 #include "AyonCppApi.h"
-#include <netinet/in.h>
+
 #include <sys/types.h>
 #include "httplib.h"
 #include "nlohmann/json.hpp"
@@ -29,12 +29,15 @@
 #include <utility>
 #include <vector>
 
+#include <cstdlib>
+#include <filesystem>
+
 AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
     PerfTimer("AyonApi::AyonApi");
 
     // ----------- Init Logger
     std::filesystem::path log_File_path = std::filesystem::current_path() / "logFile.json";
-    Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(log_File_path));
+    Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(log_File_path.string()));
 
     // ------------- Init Environment
 
