@@ -10,3 +10,12 @@ Test runs tests on the api ( the test app needs to be run from inside AYON
 
 build is curently done with threadsanatiser enables so install libtsan and
 libasan libubsan
+
+
+git clone --recurse-submodules https://github.com/ynput/ayon-cpp-api.git
+git submodule update --init --recursive
+
+linux build 
+./build.sh 
+or 
+./build.sh Debug ( for well debug build, also builds the testing applycatoin ) 
