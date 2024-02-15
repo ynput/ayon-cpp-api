@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AyonCppApiCrossPlatformMacros.h"
 #include <string>
 #include <chrono>
 #include <algorithm>

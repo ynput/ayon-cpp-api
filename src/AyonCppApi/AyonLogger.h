@@ -6,6 +6,7 @@
 #include "spdlog/async.h"
 #include <spdlog/spdlog.h>
 
+#include "AyonCppApiCrossPlatformMacros.h"
 /**
  * @class AyonLogger
  * @brief Simple Logger Class that wraps around spdlog in order to expose easy logging functions \n

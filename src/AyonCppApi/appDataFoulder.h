@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include "AyonCppApiCrossPlatformMacros.h"
 #ifdef _WIN32
     #include <windows.h>
     #define OS_WINDOWS

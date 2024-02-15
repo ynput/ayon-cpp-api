@@ -6,6 +6,7 @@
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include "devMacros.h"
+#include "AyonCppApiCrossPlatformMacros.h"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
