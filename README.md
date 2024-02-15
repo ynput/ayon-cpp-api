@@ -13,6 +13,7 @@ libasan libubsan
 
 
 git clone --recurse-submodules https://github.com/ynput/ayon-cpp-api.git
+
 git submodule update --init --recursive
 
 linux build 
