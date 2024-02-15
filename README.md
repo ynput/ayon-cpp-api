@@ -2,17 +2,18 @@
 
 An API Wrapper for AYON server written in cpp
 
-Test runs tests on the api ( the test app needs to be run from inside AYON
-(Because off environment variables))
+requiered: 
+- C++ Compiler
+- Cmake
+- GitHub public key setup ( this is because the submodules are linked via git@ )
 
-- The tests are formatted for Chrome://trcaing ( the output file is defined in
-  Test.cpp file )
+Tested Platforms: 
+- AlmaLinux9
+- Ubunto 22.04.3LTS
+- 
 
-build is curently done with threadsanatiser enables so install libtsan and
-libasan libubsan
 
-
-git clone --recurse-submodules https://github.com/ynput/ayon-cpp-api.git
+git clone --recurse-submodules git@github.com:ynput/ayon-cpp-api.git
 
 git submodule update --init --recursive
 
