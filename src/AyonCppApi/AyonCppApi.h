@@ -139,6 +139,9 @@ class AyonApi {
         std::vector<nlohmann::json> splitBatchResolveResponse(const nlohmann::json &jsonDataGrp);
 
         // ----- Env Varibles
+
+        std::unique_ptr<httplib::Client> AyonServer;
+
         const char* authKey;
         const char* serverUrl;
 
@@ -157,7 +160,6 @@ class AyonApi {
         u_int8_t maxCallRetrys = 8;
         u_int16_t retryWaight = 800;
 
-        std::unique_ptr<httplib::Client> AyonServer;
         const int num_threads;
         std::shared_ptr<AyonLogger> Log;
         std::regex regexVersionPattern = std::regex("/v(\\d{3})/");

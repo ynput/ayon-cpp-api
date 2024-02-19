@@ -40,25 +40,20 @@ AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
     Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(log_File_path.string()));
 
     // ------------- Init Environment
-
     if (!loadEnvVars()) {
         throw std::invalid_argument(
             " Environment Could not be initialised are you shure your running this libary in an AYON environment");
     }
 
+    std::string tempUri = serverUrl;
+    if (tempUri.size() >= 5 && tempUri[4] == 's') {
+        tempUri.erase(4, 1);
+        delete[] serverUrl;
+        serverUrl = tempUri.c_str();
+    }
     AyonServer = std::make_unique<httplib::Client>(serverUrl);
+
     AyonServer->set_bearer_token_auth(authKey);
-
-    // requestPool.availableRequestSlots.reserve(requestPool.defaultPoolSize);
-    // std::fill(requestPool.availableRequestSlots.begin(), requestPool.availableRequestSlots.end(), true);
-    //
-    // requestPool.requestSlotMutex.reserve(requestPool.defaultPoolSize);
-    // std::fill(requestPool.requestSlotMutex.begin(), requestPool.requestSlotMutex.end(), std::mutex());
-    //
-    // asyncThreadCreationSmallWaitTime = maxThreadsBeforeSmallWait * 50;
-
-    // maxThreadsBeforeBigWait = num_threads;
-    // asyncThreadCreationBigWaitTime = maxThreadsBeforeBigWait * 10;
 };
 AyonApi::~AyonApi(){};
 
