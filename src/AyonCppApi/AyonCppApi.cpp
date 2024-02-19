@@ -376,8 +376,15 @@ AyonApi::serialCorePost(const std::string &endPoint,
                 return response->body;
             }
             else {
-                Log->info("AyonApi::GenerativeCorePost wrong status code: {} expected: {}", responeStatus,
-                          sucsessStatus);
+                Log->info("AyonApi::serialCorePost wrong status code: {} expected: {}", responeStatus, sucsessStatus);
+                if (responeStatus == 401) {
+                    Log->warn("not logged in 401 ");
+                    return "";
+                }
+                if (responeStatus == 500) {
+                    Log->warn("internal server error ");
+                    return "";
+                }
                 std::this_thread::sleep_for(std::chrono::milliseconds(
                     responeStatus == ServerBusyCode ? RequestDelayWhenServerBusy : retryWaight));
             }
@@ -454,6 +461,14 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
                     retryes = 0;
                     ffoLocking = true;
                     continue;
+                }
+                if (responeStatus == 401) {
+                    Log->warn("not logged in 401 ");
+                    return "";
+                }
+                if (responeStatus == 500) {
+                    Log->warn("internal server error ");
+                    return "";
                 }
                 Log->info("AyonApi::GenerativeCorePost wrong status code: {} expected: {} retrying", responeStatus,
                           sucsessStatus);
