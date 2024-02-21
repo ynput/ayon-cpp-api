@@ -87,6 +87,7 @@ AyonApi::loadEnvVars() {
         siteId = siteIdEnv;
     }
     Log->info("Loaded Environment Variables");
+
     return true;
 };
 
@@ -279,7 +280,8 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
         // check if we are to close to the end and extend the group to catch all the data and end the loop
 
         if (uriPathsVecSize - groupEndPos < groupSize + (groupSize / 2)) {
-            Log->warn("the group with the threadId: {} It is too close to the end. This group will be extended. ", thread);
+            Log->warn("the group with the threadId: {} It is too close to the end. This group will be extended. ",
+                      thread);
             groupEndPos = uriPathsVecSize - 1;
             thread = groupAmount;
         }

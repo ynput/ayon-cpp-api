@@ -1,5 +1,8 @@
 #include <cstdint>
+#include <cstdlib>
+#include <filesystem>
 #include <memory>
+#include <string>
 #include "spdlog/common.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
@@ -36,7 +39,6 @@ class AyonLogger {
         template<typename... Args>
         void
         warn(const std::string &format, const Args &... args) {
-			
             log("warn", format, args...);
         }
 
@@ -87,34 +89,87 @@ class AyonLogger {
             console_logger_ = spdlog::stdout_color_mt("console");
             console_logger_->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
 
-            // Initialize file logger
-            file_logger_ = spdlog::basic_logger_mt<spdlog::async_factory>("fileLogger", filepath.c_str());
-            file_logger_->set_pattern(
-                "{\"timestamp\":\"%Y-%m-%d %H:%M:%S.%e\",\"level\":\"%l\",\"Thread "
-                "Id\":\"%t\",\"Process Id\":\"%P\",\"message\":\"%v\"}");
+            char* envVarFileLoggingPath = std::getenv("AYONLOGGERFILEPOS");
+
+            if (envVarFileLoggingPath != nullptr) {
+                fileLoggerFilePath
+                    = std::string(std::filesystem::absolute(std::string(envVarFileLoggingPath) + "/logFile.json"));
+                fileLoggerFilePathOverwrite = true;
+            }
+
+            char* envVarFileLogging = std::getenv("AYONLOGGERFILELOGGING");
+
+            if (envVarFileLogging != nullptr) {
+                switch (envVarFileLogging[1]) {
+                    case 'F':
+                        std::cout << "---------------------------" << std::endl;
+                        enableFileLogging = false;
+                        break;
+                    default:
+                        enableFileLogging = true;
+                        file_logger_ = spdlog::basic_logger_mt<spdlog::async_factory>(
+                            "fileLogger", fileLoggerFilePathOverwrite ? fileLoggerFilePath.c_str() : filepath.c_str());
+                        file_logger_->set_pattern(
+                            "{\"timestamp\":\"%Y-%m-%d %H:%M:%S.%e\",\"level\":\"%l\",\"Thread "
+                            "Id\":\"%t\",\"Process Id\":\"%P\",\"message\":\"%v\"}");
+                        break;
+                }
+            }
+
+            char* envVarLogLvl = std::getenv("AYONLOGGERLOGLVL");
+
+            if (envVarLogLvl != nullptr) {
+                switch (envVarLogLvl[0]) {
+                    case 'I':
+                        if (enableFileLogging) {
+                            file_logger_->set_level(spdlog::level::info);
+                        }
+                        console_logger_->set_level(spdlog::level::info);
+                        break;
+                    case 'E':
+                        if (enableFileLogging) {
+                            file_logger_->set_level(spdlog::level::err);
+                        }
+                        console_logger_->set_level(spdlog::level::err);
+                        break;
+                    case 'W':
+                        if (enableFileLogging) {
+                            file_logger_->set_level(spdlog::level::warn);
+                        }
+                        console_logger_->set_level(spdlog::level::warn);
+                        break;
+                    case 'C':
+                        if (enableFileLogging) {
+                            file_logger_->set_level(spdlog::level::critical);
+                        }
+                        console_logger_->set_level(spdlog::level::critical);
+                        break;
+                    case 'O':
+                        if (enableFileLogging) {
+                            file_logger_->set_level(spdlog::level::off);
+                        }
+                        console_logger_->set_level(spdlog::level::off);
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
 
-        /**
-         * @brief this is the core logging function that is called fomr all other ones
-         *
-         * @tparam Args
-         * @param level the log level for spdlog to use
-         * @param format the massage text itself
-         * @param args  things that will be included into the massage inplace off {}
-         */
         template<typename... Args>
         void
-        log(const std::string &level,const std::string &massage, const Args &... args) {
-            
-			//std::string formattedMassage = fmt::vformat(massage, args...);
-			std::string formatted_message = fmt::vformat(massage, fmt::make_format_args(args...));
+        log(const std::string &level, const std::string &massage, const Args &... args) {
+            // std::string formattedMassage = fmt::vformat(massage, args...);
+            std::string formatted_message = fmt::vformat(massage, fmt::make_format_args(args...));
 
-			file_logger_->log(spdlog::level::from_str(level), formatted_message);
+            if (enableFileLogging) {
+                file_logger_->log(spdlog::level::from_str(level), formatted_message);
+            }
             console_logger_->log(spdlog::level::from_str(level), formatted_message);
         }
         std::shared_ptr<spdlog::logger> console_logger_;
         std::shared_ptr<spdlog::logger> file_logger_;
-
-        // std::map<uint8_t, std::string> logLevels = {{3, "error"}, {0, "info"}, {1, "warn"}, {4, "critical"}};
-        // uint8_t logLvl = 4;
+        bool enableFileLogging;
+        bool fileLoggerFilePathOverwrite;
+        std::string fileLoggerFilePath;
 };
