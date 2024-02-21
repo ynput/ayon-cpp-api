@@ -64,29 +64,29 @@ AyonApi::loadEnvVars() {
     serverUrl = std::getenv("AYON_SERVER_URL");
 
     if (authKey == nullptr || serverUrl == nullptr) {
-        Log->warn("One ore More Environment Varibles Could not be Loaded  AYON_API_KEY: , AYON_SERVER_URL:");
+        Log->warn("One or More Environment Variables Could not be Loaded  AYON_API_KEY: , AYON_SERVER_URL:");
         return false;
     }
 
-    Log->info("AYON_API_KEY and AYON_SERVER_URL have been loaded");
+    Log->info("Loaded AYON_API_KEY and AYON_SERVER_URL");
 
-    const char* siteIdEnv = getenv("AYON_SITE_ID");
+    const char* siteIdEnv = std::getenv("AYON_SITE_ID");
 
     if (siteIdEnv == nullptr) {
-        Log->info("SiteID is not available as an ENV varible");
+        Log->info("SiteID is not available as an ENV variable");
         std::ifstream siteIdFile(ayonAppData + "/site_id");
         if (siteIdFile.is_open()) {
             std::getline(siteIdFile, siteId);
             siteIdFile.close();
         }
         else {
-            Log->info("wasnt able to get site_id file cant read siteId file");
+            Log->info("wasn't able to get site_id file cant read siteId file");
         }
     }
     else {
         siteId = siteIdEnv;
     }
-    Log->info("All Env varibles have been loaded");
+    Log->info("Loaded Environment Variables");
     return true;
 };
 
@@ -107,12 +107,12 @@ AyonApi::SPOST(const std::shared_ptr<std::string> endPoint,
     nlohmann::json jsonRespne;
 
     if (jsonPayload.empty()) {
-        Log->info("jsonPayload is empty no request created");
+        Log->info("JSON payload is empty. No request created");
         return jsonRespne;
     }
 
     if (endPoint == nullptr || headers == nullptr || sucsessStatus == nullptr) {
-        Log->error("One ore more of the provided pointers are null: endPoint, headers, sucsessStatus");
+        Log->error("One or more of the provided pointers are null: endPoint, headers, sucsessStatus.");
 
         return jsonRespne;
     }
@@ -125,7 +125,7 @@ AyonApi::SPOST(const std::shared_ptr<std::string> endPoint,
                                                               // find a better way to make shure its not a array
     }
     else {
-        Log->warn("SPOST cant phrease json // response empty");
+        Log->warn("SPOST cant phrase JSON // response empty");
     }
     AyonServerMutex.unlock();
     return jsonRespne;
@@ -140,12 +140,12 @@ AyonApi::CPOST(const std::shared_ptr<std::string> endPoint,
     nlohmann::json jsonRespne;
 
     if (jsonPayload.empty()) {
-        Log->info("jsonPayload is empty no request created");
+        Log->info("JSON payload is empty. No request created");
         return jsonRespne;
     }
 
     if (endPoint == nullptr || headers == nullptr || sucsessStatus == nullptr) {
-        Log->error("One ore more of the provided pointers are null: endPoint, headers, sucsessStatus");
+        Log->error("One or more of the provided pointers are null: endPoint, headers, sucsessStatus");
 
         return jsonRespne;
     }
@@ -156,7 +156,7 @@ AyonApi::CPOST(const std::shared_ptr<std::string> endPoint,
         jsonRespne = nlohmann::json::parse(rawResponse);
     }
     else {
-        Log->warn("CPOST cant phrease json // response empty");
+        Log->warn("CPOST cant phrase JSON // response empty");
     }
     return jsonRespne;
 };
@@ -165,7 +165,7 @@ std::pair<std::string, std::string>
 AyonApi::resolvePath(const std::string &uriPath) {
     PerfTimer("AyonApi::resolvePath");
     if (uriPath.empty()) {
-        Log->info("path was empty: {}", uriPath.c_str());
+        Log->info("Path was empty: {}", uriPath.c_str());
         return {};
     }
     std::pair<std::string, std::string> resolvedAsset;
@@ -191,7 +191,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
     // the async work
 
     if (uriPaths.size() < 1) {
-        Log->warn("AyonApi::batchResolvePath got empty vector stoped reselution");
+        Log->warn("AyonApi::batchResolvePath Got empty vector stopped resolution");
         return {};
     }
 
@@ -203,7 +203,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
 
             for (unsigned i = 0; i < size; ++i) s.insert(uriPaths[i]);
             uriPaths.assign(s.begin(), s.end());
-            Log->info("Making shure that the vector has no duplicates vecSize before: {} after: {}", size,
+            Log->info("Make sure that the vector has no duplicates. vecSize before: {} after: {}", size,
                       uriPaths.size());
         }
     }
@@ -232,7 +232,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
     // set defaults for the grouping incase the vector is to small
     groupSize = uriPathsVecSize;
     groupAmount = 1;
-    grpReason = "Vector is to small";
+    grpReason = "The vector is too small.";
 
     // check what scaling the groups schould have
     if (uriPathsVecSize > minVecSizeForGroupSplitAsyncRequests) {
@@ -248,14 +248,14 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
                 groupAmount = std::floor(static_cast<double>(uriPathsVecSize) / groupSize);
 
                 // TODO explicit rounding .x group amount
-                grpReason = "5+ -500 build group amount by size";
+                grpReason = "5> <500 build group amount by size";
             }
             else {
                 // the groups are to beig
                 // we have to generate more groups than we have threads
                 groupSize = regroupSizeForAsyncRequests;
                 groupAmount = std::floor(static_cast<double>(uriPathsVecSize) / regroupSizeForAsyncRequests);
-                grpReason = "the groups are to big we will build more than we have threads ";
+                grpReason = "The groups are too big. We will build more than we have CPU cores.";
             }
         }
         else {
@@ -263,10 +263,10 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
 
             groupSize = std::min((int)regroupSizeForAsyncRequests, uriPathsVecSize);
             groupAmount = std::floor(static_cast<double>(uriPathsVecSize) / groupSize);
-            grpReason = "Groups are to small we will build them by size";
+            grpReason = "If groups are too small, we will build them by size.";
         }
     }
-    Log->info("AyonApi::batchResolvePath build groups with grpSize: {} grpAmount: {} grouingReason: {} vectorSize: {}",
+    Log->info("AyonApi::batchResolvePath Build groups with grpSize: {} grpAmount: {} grouingReason: {} vectorSize: {}",
               groupSize, groupAmount, grpReason, uriPathsVecSize);
 
     int groupStartPos = 0;
@@ -279,7 +279,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
         // check if we are to close to the end and extend the group to catch all the data and end the loop
 
         if (uriPathsVecSize - groupEndPos < groupSize + (groupSize / 2)) {
-            Log->warn("the group with the threadId: {} is to close to the end. this group will be extended  ", thread);
+            Log->warn("the group with the threadId: {} It is too close to the end. This group will be extended. ", thread);
             groupEndPos = uriPathsVecSize - 1;
             thread = groupAmount;
         }
@@ -325,7 +325,7 @@ AyonApi::getAssetIdent(const nlohmann::json &uriResolverRespone) {
                 }
             }
             else {
-                Log->info("there is at least one path in the entities thats missing a version number {}",
+                Log->info("At least one path in the entities is missing a version number. {}",
                           uriResolverRespone.dump());
             }
         }
@@ -388,7 +388,7 @@ AyonApi::serialCorePost(const std::string &endPoint,
             Log->warn("Request Failed because: {}");
             break;
         }
-        Log->warn("Connection failed Rety now");
+        Log->warn("The connection failed Rety now.");
     }
     return "";
 };
@@ -425,7 +425,7 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
                 ConcurentRequestAfterffoMutex.unlock();
             }
             else {
-                Log->info("AyonApi::GenerativeCorePost thread pool closed");
+                Log->info("AyonApi::GenerativeCorePost Thread pool closed");
 
                 ConcurentRequestAfterffoMutex.unlock();
                 std::this_thread::sleep_for(std::chrono::milliseconds(800));
@@ -445,13 +445,13 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
                 ConcurentRequestAfterffoMutex.unlock();
             }
             if (responeStatus == sucsessStatus) {
-                Log->info("AyonApi::GenerativeCorePost request worked unlocking and returning ");
+                Log->info("AyonApi::GenerativeCorePost The request worked, unlocking and returning. ");
 
                 return response->body;
             }
             else {
                 if (responeStatus == ServerBusyCode) {
-                    Log->warn("AyonApi::GenerativeCorePost Server responded with 503");
+                    Log->warn("AyonApi::GenerativeCorePost The server responded with 503");
 
                     retryes = 0;
                     ffoLocking = true;
@@ -477,7 +477,7 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
         }
     }
 
-    Log->warn("AyonApi::GenerativeCorePost to manny resolve retryes without correct response code  for: {}, on: {}",
+    Log->warn("AyonApi::GenerativeCorePost Too many resolve retries without the correct response code  for: {}, on: {}",
               Payload, endPoint);
     return "";
 };
