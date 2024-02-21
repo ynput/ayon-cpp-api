@@ -21,3 +21,16 @@ linux build
 ./build.sh 
 or 
 ./build.sh Debug ( for well debug build, also builds the testing applycatoin ) 
+
+
+## Environment Varibles. 
+The AyonLogger can be controlled via env variables. 
+
+`AYONLOGGERLOGLVL` = 
+`INFO,ERROR,WARN,CRITICAL,OFF`
+
+`AYONLOGGERFILELOGGING` =
+`OFF,ON`
+
+`AYONLOGGERFILEPOS` =
+`/path/to or relPath`
