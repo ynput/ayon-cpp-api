@@ -102,7 +102,6 @@ class AyonLogger {
             if (envVarFileLogging != nullptr) {
                 switch (envVarFileLogging[1]) {
                     case 'F':
-                        std::cout << "---------------------------" << std::endl;
                         enableFileLogging = false;
                         break;
                     default:
