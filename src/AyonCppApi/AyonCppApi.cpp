@@ -314,23 +314,7 @@ AyonApi::getAssetIdent(const nlohmann::json &uriResolverRespone) {
     PerfTimer("AyonApi::getAssetIdent");
     std::pair<std::string, std::string> AssetIdent;
     try {
-        uint16_t priorVersion;
-        std::smatch match;
-        for (const auto &versions: uriResolverRespone["entities"]) {
-            std::string versionPath = versions["filePath"];
-
-            if (std::regex_search(versionPath, match, regexVersionPattern)) {
-                uint16_t version = std::stoi(match[1]);
-                if (version > priorVersion) {
-                    priorVersion = version;
-                    AssetIdent.second = versions["filePath"];
-                }
-            }
-            else {
-                Log->info("At least one path in the entities is missing a version number. {}",
-                          uriResolverRespone.dump());
-            }
-        }
+        AssetIdent.second = uriResolverRespone["entities"][uriResolverRespone["entities"].size() - 1]["filePath"];
 
         AssetIdent.first = uriResolverRespone["uri"];
     }
