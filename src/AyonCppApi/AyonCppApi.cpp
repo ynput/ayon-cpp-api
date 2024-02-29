@@ -51,6 +51,7 @@ AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
         delete[] serverUrl;
         serverUrl = tempUri.c_str();
     }
+    std::cout << serverUrl << " server url" << std::endl;
     AyonServer = std::make_unique<httplib::Client>(serverUrl);
 
     AyonServer->set_bearer_token_auth(authKey);
@@ -173,14 +174,11 @@ AyonApi::resolvePath(const std::string &uriPath) {
     nlohmann::json jsonPayload = {{"resolveRoots", true}, {"uris", nlohmann::json::array({uriPath})}};
     httplib::Headers headers = {{"X-ayon-site-id", siteId}};
     uint8_t sucsessStatus = 200;
-
     nlohmann::json response
         = SPOST(std::make_shared<std::string>(uriResolverEndpoint + uriResolverEndpointPathOnlyVar),
                 std::make_shared<httplib::Headers>(headers), jsonPayload, std::make_shared<uint8_t>(sucsessStatus));
 
     resolvedAsset = getAssetIdent(response);
-
-    // std::pair<std::string, std::string> resolvedPath = {"this", "this"};
     return resolvedAsset;
 };
 
@@ -313,12 +311,15 @@ std::pair<std::string, std::string>
 AyonApi::getAssetIdent(const nlohmann::json &uriResolverRespone) {
     PerfTimer("AyonApi::getAssetIdent");
     std::pair<std::string, std::string> AssetIdent;
-    try {
-        AssetIdent.second = uriResolverRespone["entities"][uriResolverRespone["entities"].size() - 1]["filePath"];
-
-        AssetIdent.first = uriResolverRespone["uri"];
+    if (uriResolverRespone.empty()) {
+        return AssetIdent;
     }
-    catch (nlohmann::json_abi_v3_11_3::detail::type_error &e) {
+    try {
+        AssetIdent.first = uriResolverRespone.at("uri");
+        AssetIdent.second
+            = uriResolverRespone.at("entities").at(uriResolverRespone.at("entities").size() - 1).at("filePath");
+    }
+    catch (const nlohmann::json::exception &e) {
         Log->warn("asset identification cant be generated {}", uriResolverRespone.dump());
     }
     return AssetIdent;
