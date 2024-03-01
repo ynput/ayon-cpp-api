@@ -1,6 +1,6 @@
 
+#define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "AyonCppApi.h"
-
 #include <sys/types.h>
 #include "httplib.h"
 #include "nlohmann/json.hpp"
@@ -35,6 +35,11 @@
 AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
     PerfTimer("AyonApi::AyonApi");
 
+    httplib::SSLClient cli("localhost", 8000);
+
+    httplib::Client cli("https://cpp-httplib-server.yhirose.repl.co");
+
+    std::cout << "bbbbbb" << std::endl;
     // ----------- Init Logger
     std::filesystem::path log_File_path = std::filesystem::current_path() / "logFile.json";
     Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(log_File_path.string()));
@@ -45,13 +50,12 @@ AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
             " Environment Could not be initialised are you shure your running this libary in an AYON environment");
     }
 
-    std::string tempUri = serverUrl;
-    if (tempUri.size() >= 5 && tempUri[4] == 's') {
-        tempUri.erase(4, 1);
-        delete[] serverUrl;
-        serverUrl = tempUri.c_str();
-    }
-    std::cout << serverUrl << " server url" << std::endl;
+    // std::string tempUri = serverUrl;
+    // if (tempUri.size() >= 5 && tempUri[4] == 's') {
+    //     tempUri.erase(4, 1);
+    //     delete[] serverUrl;
+    //     serverUrl = tempUri.c_str();
+    // }
     AyonServer = std::make_unique<httplib::Client>(serverUrl);
 
     AyonServer->set_bearer_token_auth(authKey);
@@ -120,8 +124,10 @@ AyonApi::SPOST(const std::shared_ptr<std::string> endPoint,
     }
 
     AyonServerMutex.lock();
+
     std::string payload = jsonPayload.dump();
     std::string rawResponse = serialCorePost(*endPoint, *headers, payload, *sucsessStatus);
+
     if (!rawResponse.empty()) {
         jsonRespne = nlohmann::json::parse(rawResponse)[0];   // TODO figure out why this is isnt the same as CPOST and
                                                               // find a better way to make shure its not a array
@@ -174,6 +180,7 @@ AyonApi::resolvePath(const std::string &uriPath) {
     nlohmann::json jsonPayload = {{"resolveRoots", true}, {"uris", nlohmann::json::array({uriPath})}};
     httplib::Headers headers = {{"X-ayon-site-id", siteId}};
     uint8_t sucsessStatus = 200;
+
     nlohmann::json response
         = SPOST(std::make_shared<std::string>(uriResolverEndpoint + uriResolverEndpointPathOnlyVar),
                 std::make_shared<httplib::Headers>(headers), jsonPayload, std::make_shared<uint8_t>(sucsessStatus));

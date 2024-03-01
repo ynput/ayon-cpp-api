@@ -1,6 +1,9 @@
 add_compile_definitions(JTRACE=${JTRACE})
 
 
+#find_package(OpenSSL REQUIRED)
+
+
 set(AR_PROJECT_NAME AyonCppApi)
 option(BUILD_TEST "Build the test application" OFF)
 
