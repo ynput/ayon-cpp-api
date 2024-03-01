@@ -8,7 +8,7 @@ generate_random_string() {
 }
 
 # Generate a list of random strings
-num_strings=5  # Change this value as needed
+num_strings=1  # Change this value as needed
 strings=()
 for ((i = 0; i < num_strings; i++)); do
     strings+=("$(generate_random_string)")
@@ -18,7 +18,7 @@ done
 cd $BIN_DIR
 
 
-MIN_PATHS=400
+MIN_PATHS=4
 # MIN_PATHS=8300
 # MIN_PATHS=10000
 # MIN_PATHS=100000

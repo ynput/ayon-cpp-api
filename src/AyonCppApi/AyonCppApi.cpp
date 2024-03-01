@@ -45,12 +45,6 @@ AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
             " Environment Could not be initialised are you shure your running this libary in an AYON environment");
     }
 
-    // std::string tempUri = serverUrl;
-    // if (tempUri.size() >= 5 && tempUri[4] == 's') {
-    //     tempUri.erase(4, 1);
-    //     delete[] serverUrl;
-    //     serverUrl = tempUri.c_str();
-    // }
     AyonServer = std::make_unique<httplib::Client>(serverUrl);
 
     AyonServer->set_bearer_token_auth(authKey);
@@ -318,6 +312,9 @@ AyonApi::getAssetIdent(const nlohmann::json &uriResolverRespone) {
     }
     try {
         AssetIdent.first = uriResolverRespone.at("uri");
+        if (uriResolverRespone.at("entities").size() > 1) {
+            Log->warn("Uri reselution returned more than one path (%s)", uriResolverRespone.at("entities").dump());
+        }
         AssetIdent.second
             = uriResolverRespone.at("entities").at(uriResolverRespone.at("entities").size() - 1).at("filePath");
     }
