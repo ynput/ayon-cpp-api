@@ -30,7 +30,7 @@ getAppDataDir() {
     if (appDataPath) {
         std::filesystem::path winPath = std::filesystem::path(appDataPath);
         appDataDir = winPath.string();
-}
+    }
 #elif defined(OS_MACOS)
     const char* homeDir = getenv("HOME");
     if (homeDir) {

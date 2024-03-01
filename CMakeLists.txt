@@ -1,13 +1,13 @@
 add_compile_definitions(JTRACE=${JTRACE})
 
-
-#find_package(OpenSSL REQUIRED)
+#we need to define this varible in order for httplib to suport https clients 
+add_compile_definitions(CPPHTTPLIB_OPENSSL_SUPPORT)
 
 
 set(AR_PROJECT_NAME AyonCppApi)
 option(BUILD_TEST "Build the test application" OFF)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
@@ -19,6 +19,7 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 
+find_package(OpenSSL REQUIRED)
 
 # add the dependency directory but exclude the cmake because we don't need it
 

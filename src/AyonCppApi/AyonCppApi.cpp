@@ -1,5 +1,4 @@
 
-#define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "AyonCppApi.h"
 #include <sys/types.h>
 #include "httplib.h"
@@ -34,10 +33,6 @@
 
 AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
     PerfTimer("AyonApi::AyonApi");
-
-    httplib::SSLClient cli("localhost", 8000);
-
-    httplib::Client cli("https://cpp-httplib-server.yhirose.repl.co");
 
     std::cout << "bbbbbb" << std::endl;
     // ----------- Init Logger

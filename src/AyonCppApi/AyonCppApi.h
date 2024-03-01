@@ -1,5 +1,4 @@
 #pragma once
-#define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "AyonCppApiCrossPlatformMacros.h"
 #include <sys/types.h>
 #include <cstddef>
