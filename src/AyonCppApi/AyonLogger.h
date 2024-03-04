@@ -93,7 +93,7 @@ class AyonLogger {
 
             if (envVarFileLoggingPath != nullptr) {
                 fileLoggerFilePath
-                    = std::string(std::filesystem::absolute(std::string(envVarFileLoggingPath) + "/logFile.json"));
+                    = std::string(std::filesystem::absolute(std::string(envVarFileLoggingPath) + "/logFile.json").string());
                 fileLoggerFilePathOverwrite = true;
             }
 
