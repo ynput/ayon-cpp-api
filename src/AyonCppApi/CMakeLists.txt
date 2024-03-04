@@ -11,8 +11,9 @@ target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../e
 target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/json/include)
 target_link_libraries(AyonCppApi PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(AyonCppApi PRIVATE PUBLIC Backward::Interface)
-target_link_libraries(AyonCppApi PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 
+target_link_libraries(AyonCppApi PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+# Link OpenSSL libraries
 
 target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/spdlog)
 

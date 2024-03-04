@@ -34,7 +34,6 @@
 AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
     PerfTimer("AyonApi::AyonApi");
 
-    std::cout << "bbbbbb" << std::endl;
     // ----------- Init Logger
     std::filesystem::path log_File_path = std::filesystem::current_path() / "logFile.json";
     Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(log_File_path.string()));

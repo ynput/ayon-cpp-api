@@ -7,7 +7,7 @@ TESTDIR=$SCRIPT_DIR/test
 #-------- Seting Default Vars
 # export AYON_SITE_ID="optimal-boisterous-jaybird"
 
-export AYON_API_KEY="4994faaec0b431dcf75f62c738ecbe389e06184da61e027b89ef958f21b2d1ed"
+export AYON_API_KEY="7d2b717473e48a8b219103096472dc07c1103c575cb1dd24eccbece73e87c721"
 export AYON_SERVER_URL="http://192.168.178.42:5000"
 
 export AYONLOGGERLOGLVL="INFO"
