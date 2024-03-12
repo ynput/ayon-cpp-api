@@ -21,20 +21,12 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 
 
-# Path to the directory containing OpenSSL libraries and headers
-set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/openssl")
-
 if(WIN32)
   set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/opensslW")
 else()
   set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/opensslL")
 endif()
-
-
 include_directories(${OPENSSL_ROOT_DIR}/include)
-find_package(OpenSSL REQUIRED)
-
-# add the dependency directory but exclude the cmake because we don't need it
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/AyonCppApi")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/AyonCppApi")
