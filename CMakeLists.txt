@@ -25,6 +25,7 @@ if(WIN32)
   set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/opensslW")
 else()
   set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/opensslL")
+  find_package(OpenSSL REQUIRED)
 endif()
 include_directories(${OPENSSL_ROOT_DIR}/include)
 

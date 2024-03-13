@@ -1,7 +1,7 @@
+#!/bin/bash
+cd ../
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BUILD_DIR=$SCRIPT_DIR/build
-
-
 
 #-------- Seting Default Vars 
 DEBUG=0
@@ -10,9 +10,8 @@ BUILD_TEST="OFF"
 JTRACE=0
 build_type="Release"
   
-
 #----------- Checking for build mode
-if [ "$1" == "Debug" ]; then
+if [ "$@" == "Debug" ]; then
   echo "Build running in debug mode"
   DEBUG=1
 fi
@@ -27,8 +26,6 @@ if [[ " $@ " =~ " Debug " && " $@ " =~ " Clean " ]]; then
 fi
 
 
-
-
 #------------ Setting up project depending on build setup
 if [ "$CLEAN_BUILD" -eq 1 ]; then
   echo "Clean build is activated"
@@ -37,7 +34,6 @@ if [ "$CLEAN_BUILD" -eq 1 ]; then
   mkdir bin
   mkdir build
 fi
-
 
 if [ "$DEBUG" -eq 1 ]; then
   BUILD_TEST="ON"
@@ -54,14 +50,4 @@ if [ "$CLEAN_BUILD" -eq 1 ]; then
 else
   cmake --build build
 fi
-
 cmake --install build    
-
-
-if [ "$DEBUG" -eq 0 ]; then
-  echo "Post Build and install"
-  # doxygen Doxyfile
-fi
- 
-
-
