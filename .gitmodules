@@ -1,12 +1,12 @@
 [submodule "ext/cpp-httplib"]
 	path = ext/cpp-httplib
-	url = git@github.com:yhirose/cpp-httplib.git
+	url = https://github.com/yhirose/cpp-httplib.git
 [submodule "ext/json"]
 	path = ext/json
-	url = git@github.com:nlohmann/json.git
+	url = https://github.com/nlohmann/json.git
 [submodule "ext/spdlog"]
 	path = ext/spdlog
-	url = git@github.com:gabime/spdlog.git
+	url = https://github.com/gabime/spdlog.git
 [submodule "ext/backward-cpp"]
 	path = ext/backward-cpp
-	url = git@github.com:bombela/backward-cpp.git
+	url = https://github.com/bombela/backward-cpp.git
