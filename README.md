@@ -23,19 +23,23 @@ git submodule update --init --recursive
 
 **Linux**
 ```sh
-./build_scripts/build.sh 
+./scripts/build.sh 
 ```
 
 **Windows**
 
 Run it from your Developer console for Visual Studio
 ```sh
-.\build_scripts\build.bat
+.\scripts\build.bat
 ```
 
 ### Manual
-```
+```sh
 cmake -S . -B build -DBUILD_TEST="OFF" -DJTRACE=0 DCMAKE_BUILD_TYPE=Release
+# build it into ./build directory
+cmake --build build --clean-first
+# install to ./bin 
+cmake --install build 
 ```
 
 ## Environment Varibles. 

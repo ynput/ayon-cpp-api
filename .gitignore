@@ -13,5 +13,5 @@ build/
 *pluginInfo.json
 .cache
 bin/
-Docs/docs/
+docs/html/
 
