@@ -1,36 +1,52 @@
-# ayon-cpp-api
+# AYON CPP API
 
-An API Wrapper for AYON server written in cpp
+An API Wrapper for [AYON server](https://ayon.ynput.io/) written in cpp
 
-requiered: 
+## Requirements: 
 - C++ Compiler
 - Cmake
-- GitHub public key setup ( this is because the submodules are linked via git@ )
 
-Tested Platforms: 
+## Tested Platforms: 
 - AlmaLinux9
 - Ubunto 22.04.3LTS
-- 
+- Windows 11
 
+## Build instructions
+Coling the repository:
 
-git clone --recurse-submodules git@github.com:ynput/ayon-cpp-api.git
-
+```sh
+git clone --recurse-submodules https://github.com/ynput/ayon-cpp-api.git
 git submodule update --init --recursive
+```
 
-linux build 
-./build.sh 
-or 
-./build.sh Debug ( for well debug build, also builds the testing applycatoin ) 
+### Using Script
 
+**Linux**
+```sh
+./scripts/build.sh 
+```
+
+**Windows**
+
+Run it from your Developer console for Visual Studio
+```sh
+.\scripts\build.bat
+```
+
+### Manual
+```sh
+cmake -S . -B build -DBUILD_TEST="OFF" -DJTRACE=0 DCMAKE_BUILD_TYPE=Release
+# build it into ./build directory
+cmake --build build --clean-first
+# install to ./bin 
+cmake --install build 
+```
 
 ## Environment Varibles. 
-The AyonLogger can be controlled via env variables. 
+The `AyonLogger` can be controlled with environment variables:
 
-`AYONLOGGERLOGLVL` = 
-`INFO,ERROR,WARN,CRITICAL,OFF`
-
-`AYONLOGGERFILELOGGING` =
-`OFF,ON`
-
-`AYONLOGGERFILEPOS` =
-`/path/to or relPath`
+| variable | value |
+| -------- | ----- |
+| `AYONLOGGERLOGLVL` | `INFO` `ERROR` `WARN` `CRITICAL` `OFF` |
+| `AYONLOGGERFILELOGGING` | `OFF` / `ON` |
+| `AYONLOGGERFILEPOS` | `/path/to or ./relative/path` |

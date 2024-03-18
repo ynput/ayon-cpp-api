@@ -10,10 +10,22 @@ target_precompile_headers(AyonCppApi PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../e
 target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/json)
 target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/json/include)
 target_link_libraries(AyonCppApi PRIVATE nlohmann_json::nlohmann_json)
+
 target_link_libraries(AyonCppApi PRIVATE PUBLIC Backward::Interface)
 
-target_link_libraries(AyonCppApi PRIVATE OpenSSL::SSL OpenSSL::Crypto)
-# Link OpenSSL libraries
+if(WIN32)
+  target_link_libraries(AyonCppApi PRIVATE 
+    ${OPENSSL_ROOT_DIR}/lib/libcrypto_static.lib
+    ${OPENSSL_ROOT_DIR}/lib/libssl_static.lib
+  )
+else()
+  #target_link_libraries(AyonCppApi PRIVATE 
+  #  ${OPENSSL_ROOT_DIR}/lib/libcrypto.a
+  #  ${OPENSSL_ROOT_DIR}/lib/libssl.a
+  #)
+  target_link_libraries(AyonCppApi PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+endif()
+
 
 target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/spdlog)
 
