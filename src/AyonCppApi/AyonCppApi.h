@@ -35,9 +35,7 @@ class AyonApi {
          */
         std::string getUrl();
 
-        nlohmann::json GET(const std::shared_ptr<std::string> endPoint,
-                           const std::shared_ptr<httplib::Headers> headers,
-                           uint8_t sucsessStatus);
+        nlohmann::json GET(const std::string &endPoint);
 
         /**
          * @brief calls the server via a shared httplib client ( serial )
@@ -92,12 +90,6 @@ class AyonApi {
          */
         bool loadEnvVars();
 
-        std::shared_ptr<AyonLogger> logPointer();
-
-        std::unordered_map<std::string, std::string>* getSiteRoots();
-
-        std::string rootReplace(const std::string &rootLessPath);
-
     private:
         /**
          * @brief calls the server in an serial way by sharing the AyonServer pointer
@@ -149,8 +141,6 @@ class AyonApi {
 
         std::unique_ptr<httplib::Client> AyonServer;
 
-        std::unordered_map<std::string, std::string> siteRoots;
-
         const char* authKey;
         const char* serverUrl;
 
@@ -181,7 +171,7 @@ class AyonApi {
 
         uint16_t GenerativeCorePostMaxLoopIterations = 200;
 
-        u_int16_t connectionTimeOutMax = 200;
+        u_int16_t connectionTimeOutMax = 400;
         u_int8_t readTimeOutMax = 160;
         // bool enableThreadWaithing = false;
         bool enableBigBlockThreadWaithing = true;

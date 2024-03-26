@@ -1,0 +1,9 @@
+-- Install configuration: "Release"
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/libAyonCppApi.a
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/AyonCppApi.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/appDataFoulder.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/AyonLogger.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/devMacros.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/Instrumentor.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/backward.hpp
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/cmake/backward/BackwardConfig.cmake
