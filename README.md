@@ -10,6 +10,7 @@ An API Wrapper for [AYON server](https://ayon.ynput.io/) written in cpp
 - AlmaLinux9
 - Ubunto 22.04.3LTS
 - Windows 11
+- Windows 10
 
 ## Build instructions
 Coling the repository:
@@ -50,3 +51,4 @@ The `AyonLogger` can be controlled with environment variables:
 | `AYONLOGGERLOGLVL` | `INFO` `ERROR` `WARN` `CRITICAL` `OFF` |
 | `AYONLOGGERFILELOGGING` | `OFF` / `ON` |
 | `AYONLOGGERFILEPOS` | `/path/to or ./relative/path` |
+|`AYON_LOGGIN_LOGGIN_KEYS` | `AyonApi/AyonApiDebugEnvVars/` |
