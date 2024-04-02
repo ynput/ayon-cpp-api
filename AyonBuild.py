@@ -1,29 +1,19 @@
-from os.path import abspath, exists
-import subprocess
 import shutil
-from sys import path
-from AyonCiCd import pipfuncs, Cmake, Project 
+from AyonCiCd import Cmake, Project, docGen
 import os
 
-# foulderfuncs.check_and_install_package("cmake")
-# foulderfuncs.check_and_install_package("importlib-metadata")
-
-# shutil.rmtree("build", ignore_errors=True)
-# shutil.rmtree("bin", ignore_errors=True)
-#
-#
-# with Cmake.CMakeCommandsContext("BuildManifest") as cmake:
-#     cmake.add_command(["cmake", "-S", ".", "-B", "build", "-DBUILD_TEST=OFF", "-DJTRACE=0", "-DCMAKE_BUILD_TYPE=Release"])
-#     cmake.add_command(["cmake", "--build", "build", "--config", "Release"])
-#     cmake.add_command(["cmake", "--install", "build"])
-
-AyonCppApiPrj = Project.Project("BuildArtefacts")
+# define a Project that you want to CiCd
+AyonCppApiPrj = Project.Project("AyonCppApi")
+# add packages to the project
+AyonCppApiPrj.addPipPackage("pytest")
 
 
+# define stages for this project
 CleanUpStage = Project.Stage("Cleanup")
-
+# define what happens in this stage
 binFoulder = os.path.join(os.getcwd(), "bin")
 buildFoulder = os.path.join(os.getcwd(), "build")
+print("bin foulder:" , binFoulder)
 CleanUpStage.addFuncs(
     lambda: print("build foulder path:", buildFoulder),
     lambda: shutil.rmtree(buildFoulder, ignore_errors=True) if os.path.exists(buildFoulder) else print("no build foulder"),
@@ -31,7 +21,7 @@ CleanUpStage.addFuncs(
     lambda: print("build foulder path:", binFoulder),
     lambda: shutil.rmtree(binFoulder, ignore_errors=True) if os.path.exists(binFoulder) else print("no bin foulder"),
 )
-
+# add the stage to the project
 AyonCppApiPrj.addStage(CleanUpStage)
 
 
@@ -41,7 +31,22 @@ BuildStage.addFuncs(
     lambda: Cmake.Command("--build", "build", "--config", "Release"),
     lambda: Cmake.Command("--install", "build"),
 )
+BuildStage.addArtefactFoulder("bin")
 AyonCppApiPrj.addStage(BuildStage)
 
-AyonCppApiPrj.execAllStages()
 
+DoxyGenStage = Project.Stage("DocumentationGeneration")
+DoxyGenStage.addFuncs(
+    lambda: docGen.DoxygenRun(os.path.join(os.getcwd(), "Docs/src/Doxyfile")),
+)
+DoxyGenStage.addArtefactFoulder("Docs/html")
+AyonCppApiPrj.addStage(DoxyGenStage)
+
+
+TestStage = Project.Stage("Test")
+TestStage.addFuncs(
+    lambda: print("Start Testing")
+)
+
+
+AyonCppApiPrj.execAllStages()
