@@ -1,5 +1,5 @@
 import shutil
-from AyonCiCd import Cmake, Project, docGen
+from AyonCiCdTools.AyonCiCd import Cmake, Project, docGen
 import os
 
 # define a Project that you want to CiCd
@@ -35,9 +35,10 @@ BuildStage.addArtefactFoulder("bin")
 AyonCppApiPrj.addStage(BuildStage)
 
 
-DoxyGenStage = Project.Stage("DocumentationGeneration")
+DoxyGenStage = Project.Stage("DocumentationGen")
 DoxyGenStage.addFuncs(
-    lambda: docGen.DoxygenRun(os.path.join(os.getcwd(), "Docs/src/Doxyfile")),
+    lambda: shutil.rmtree("Docs/html") if os.path.exists("Docs/html") else print("Docs dir clean"),
+    lambda: docGen.DoxygenRun(os.path.join(os.getcwd(), "Docs/src/Doxyfile"), AyonCppApiPrj),
 )
 DoxyGenStage.addArtefactFoulder("Docs/html")
 AyonCppApiPrj.addStage(DoxyGenStage)
@@ -47,6 +48,7 @@ TestStage = Project.Stage("Test")
 TestStage.addFuncs(
     lambda: print("Start Testing")
 )
+AyonCppApiPrj.addStage(TestStage)
 
-
-AyonCppApiPrj.execAllStages()
+# make the CiCd class available to the Cli so we can interact with it
+AyonCppApiPrj.makeClassCliAvailable()

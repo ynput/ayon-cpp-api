@@ -10,3 +10,9 @@
 [submodule "ext/backward-cpp"]
 	path = ext/backward-cpp
 	url = https://github.com/bombela/backward-cpp.git
+[submodule "AyonCiCd-Automator"]
+	path = AyonCiCd-Automator
+	url = git@github.com:ynput/AyonCiCd-Automator.git
+[submodule "AyonCiCdTools"]
+	path = AyonCiCdTools
+	url = git@github.com:ynput/AyonCiCd-Automator.git
