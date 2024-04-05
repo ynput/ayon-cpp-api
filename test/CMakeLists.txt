@@ -1,11 +1,12 @@
 
 if(BUILD_TEST)
-    add_executable(test_app test.cpp) 
+  add_executable(AyonCppApiBenchMain benchMain.cpp) 
 
-    target_link_libraries(test_app PRIVATE AyonCppApi)
+    target_link_libraries(AyonCppApiBenchMain PRIVATE AyonCppApi)
+    target_link_libraries(AyonCppApiBenchMain PRIVATE benchmark::benchmark)
 
     install (
-      TARGETS test_app
+      TARGETS AyonCppApiBenchMain
       DESTINATION ${CMAKE_INSTALL_PREFIX}
     )
 

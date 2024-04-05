@@ -47,6 +47,8 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/backward-cpp")
 
 
 if(BUILD_TEST)
+  add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/googletest")
+  add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/benchmark")
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")       # Dont add / Build test app 
 endif()
 

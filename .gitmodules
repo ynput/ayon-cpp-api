@@ -16,3 +16,9 @@
 [submodule "AyonCiCdTools"]
 	path = AyonCiCdTools
 	url = git@github.com:ynput/AyonCiCd-Automator.git
+[submodule "ext/benchmark"]
+	path = ext/benchmark
+	url = https://github.com/google/benchmark.git
+[submodule "ext/googletest"]
+	path = ext/googletest
+	url = https://github.com/google/googletest.git

@@ -1,11 +1,20 @@
 import shutil
+from time import process_time
 from AyonCiCdTools.AyonCiCd import Cmake, Project, docGen
 import os
+import subprocess
 
 # define a Project that you want to CiCd
 AyonCppApiPrj = Project.Project("AyonCppApi")
+AyonCppApiPrj.setVar("BuildTest", "ON")
+AyonCppApiPrj.setVar("JTRACE", "0")
+AyonCppApiPrj.setVar("ReleaseType", "Release")
 # add packages to the project
 AyonCppApiPrj.addPipPackage("pytest")
+AyonCppApiPrj.addPipPackage("fastapi")
+AyonCppApiPrj.addPipPackage("uvicorn[standard]")
+AyonCppApiPrj.addPipPackage("requests")
+AyonCppApiPrj.addPipPackage("universal-startfile")
 
 
 # define stages for this project
@@ -27,11 +36,11 @@ AyonCppApiPrj.addStage(CleanUpStage)
 
 BuildStage = Project.Stage("Build")
 BuildStage.addFuncs(
-    lambda: Cmake.Command("-S", ".", "-B", "build", "-DBUILD_TEST=OFF", "-DJTRACE=0", "-DCMAKE_BUILD_TYPE=Release"),
-    lambda: Cmake.Command("--build", "build", "--config", "Release"),
+    lambda: Cmake.Command("-S", ".", "-B", "build", f"-DBUILD_TEST={AyonCppApiPrj.Variables['BuildTest']}", f"-DJTRACE={AyonCppApiPrj.Variables['JTRACE']}", f"-DCMAKE_BUILD_TYPE={AyonCppApiPrj.Variables['ReleaseType']}"),
+    lambda: Cmake.Command("--build", "build", "--config", f"{AyonCppApiPrj.Variables['ReleaseType']}"),
     lambda: Cmake.Command("--install", "build"),
 )
-BuildStage.addArtefactFoulder("bin")
+# BuildStage.addArtefactFoulder("bin")
 AyonCppApiPrj.addStage(BuildStage)
 
 
@@ -44,11 +53,37 @@ DoxyGenStage.addArtefactFoulder("Docs/html")
 AyonCppApiPrj.addStage(DoxyGenStage)
 
 
+def startMockingServer():
+    from AyonCiCdTools.AyonCiCd import VenvFuncs
+    venvCommand = VenvFuncs.getVenvActivateCommand(AyonCppApiPrj.venvPath)
+    ServerProcessPID = subprocess.Popen([f"{venvCommand} && uvicorn test.Mockingbird:app --host 0.0.0.0 --port 8000"],
+                                      stdout=subprocess.PIPE,
+                                      shell=True,
+                                      preexec_fn=os.setsid)
+    AyonCppApiPrj.setVar("ServerProcessPID", f"{ServerProcessPID.pid}")
+
+def stopMockingServer():
+    import signal
+    os.killpg(os.getpgid(int(AyonCppApiPrj.getVar("ServerProcessPID"))), signal.SIGTERM)
+
+def getCheckMockingServer():
+    import requests
+    response = requests.get("http://localhost:8000/")
+    print("Response from /:", response.json())
+
+def startTestApp():
+    from AyonCiCdTools.AyonCiCd import SysCon
+    SysCon.open_software("bin/AyonCppApiBenchMain")
+
 TestStage = Project.Stage("Test")
-TestStage.addFuncs(
-    lambda: print("Start Testing")
+TestStage.addFuncs( 
+    # lambda: startMockingServer(),
+    # lambda: getCheckMockingServer(),
+    # lambda: stopMockingServer(),
+    lambda: startTestApp(),
 )
 AyonCppApiPrj.addStage(TestStage)
 
 # make the CiCd class available to the Cli so we can interact with it
-AyonCppApiPrj.makeClassCliAvailable()
+with AyonCppApiPrj as PRJ:
+    PRJ.makeClassCliAvailable()
