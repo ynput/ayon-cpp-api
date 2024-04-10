@@ -41,7 +41,7 @@ AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
     // ------------- Init Environment
     if (!loadEnvVars()) {
         throw std::invalid_argument(
-            " Environment Could not be initialised are you shure your running this libary in an AYON environment");
+            " Environment Could not be initialized are you sure your running this libary in an AYON Environment");
     }
 
     AyonServer = std::make_unique<httplib::Client>(serverUrl);

@@ -4,6 +4,8 @@ if(BUILD_TEST)
 
     target_link_libraries(AyonCppApiBenchMain PRIVATE AyonCppApi)
     target_link_libraries(AyonCppApiBenchMain PRIVATE benchmark::benchmark)
+    target_link_libraries(AyonCppApiBenchMain PRIVATE GTest::gtest_main)
+
 
     install (
       TARGETS AyonCppApiBenchMain

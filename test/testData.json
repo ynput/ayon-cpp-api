@@ -1,0 +1,24 @@
+{
+  "Resolve": {
+    "ayon+entity://Usd_Base//trees?product=usdtree_1&version=v002&representation=usd": {
+      "Server": [
+        {
+          "uri": "ayon+entity://Usd_Base//trees?product=usdtree_1&version=v002&representation=usd",
+          "entities": [
+            {
+              "projectName": "Usd_Base",
+              "folderId": "a8bb8d90c9c811eeb61723f787be2865",
+              "productId": "767828d0c9cc11ee87a23497f631ac3c",
+              "versionId": "1b4dcbeec9cd11ee87a23497f631ac3c",
+              "representationId": "1b4f07fcc9cd11ee87a23497f631ac3c",
+              "filePath": "{root[work]}/Usd_Base/trees/publish/usd/usdtree_1/v002/UB_trees_usdtree_1_v002.usd",
+              "target": "representation"
+            }
+          ]
+        }
+      ],
+      "NoRootResolve": "{root[work]}/Usd_Base/trees/publish/usd/usdtree_1/v002/UB_trees_usdtree_1_v002.usd",
+      "RootResolved": "{root[work]}/Usd_Base/trees/publish/usd/usdtree_1/v002/UB_trees_usdtree_1_v002.usd"
+    }
+  }
+}

@@ -37,8 +37,7 @@ main(int argc, char* argv[]) {
     //-------------- Testing
 
     Ayon = new AyonApi;
-    *PlotLogger << std::string("Uri Paths") + "," + "Time in ms"
-                << "\n";
+    *PlotLogger << std::string("Uri Paths") + "," + "Time in ms" << "\n";
     batchResolveTest();
     // serialResolveTest();
 
