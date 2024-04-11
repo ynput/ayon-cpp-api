@@ -153,6 +153,7 @@ class AyonApi {
 
         const char* authKey;
         const char* serverUrl;
+        std::string ayonProjectName;
 
         std::string ayonAppData = getAppDataDir() + "/AYON";
 

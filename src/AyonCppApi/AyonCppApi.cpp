@@ -57,8 +57,13 @@ AyonApi::loadEnvVars() {
     PerfTimer("AyonApi::loadEnvVars");
     Log->info(Log->key("AyonApi"), "AyonApi::loadEnvVars()");
 
+    // TODO convert the if tree into a for loop
+    // std::vector<std::string> envVars{"AYON_API_KEY", "AYON_SERVER_URL", "AYON_PROJECT_NAME"};
+    // for (std::vector<std::string>::iterator it = envVars.begin(); it != envVars.end(); it++) {
+    //}
     authKey = std::getenv("AYON_API_KEY");
     serverUrl = std::getenv("AYON_SERVER_URL");
+    const char* ayonProjectNameEnvVar = std::getenv("AYON_PROJECT_NAME");
 
     if (authKey == nullptr) {
         Log->warn("AYON_API_KEY Env varbile could not be found.");
@@ -68,6 +73,11 @@ AyonApi::loadEnvVars() {
         Log->warn("AYON_SERVER_URL Env varbile could not be found");
         return false;
     }
+    if (ayonProjectNameEnvVar == nullptr) {
+        Log->warn("AYON_PROJECT_NAME Env varbile could not be found");
+        return false;
+    }
+    ayonProjectName = std::string(ayonProjectNameEnvVar);
 
     Log->info("Loaded AYON_API_KEY and AYON_SERVER_URL");
 
@@ -102,7 +112,7 @@ AyonApi::getSiteRoots() {
     Log->info(Log->key("AyonApi"), "AyonApi::getSiteRoots()");
     if (siteRoots.size() < 1) {
         httplib::Headers headers = {{"X-ayon-site-id", siteId}};
-        nlohmann::json response = GET(std::make_shared<std::string>("/api/projects/Usd_Base/siteRoots"),
+        nlohmann::json response = GET(std::make_shared<std::string>("/api/projects/" + ayonProjectName + "/siteRoots"),
                                       std::make_shared<httplib::Headers>(headers), 200);
         siteRoots = response;
     }

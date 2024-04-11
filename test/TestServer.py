@@ -53,9 +53,9 @@ async def resolve_uris(request: RequestModel) -> List[ResolvedURIModel]:
     return resolved_uris
 
 @app.get("/api/projects/{projectName}/siteRoots")
-async def SiteRoots():
-
-    return{"work": "/home/workh/Documents/AyonAos"} 
+async def SiteRoots(projectName: str):
+    if (projectName == "TestPrjName"):
+        return{"work": "/home/workh/Documents/AyonAos"} 
 
 
 

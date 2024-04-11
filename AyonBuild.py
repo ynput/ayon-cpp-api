@@ -1,11 +1,7 @@
 import shutil
-from time import process_time
-from typing import Set
 from AyonCiCdTools.AyonCiCd import Cmake, Project, docGen
 import os
-import subprocess
-from multiprocessing import Process
-import requests
+
 
 # define a Project that you want to CiCd
 AyonCppApiPrj = Project.Project("AyonCppApi")
@@ -25,7 +21,6 @@ CleanUpStage = Project.Stage("Cleanup")
 # define what happens in this stage
 binFoulder = os.path.join(os.getcwd(), "bin")
 buildFoulder = os.path.join(os.getcwd(), "build")
-print("bin foulder:" , binFoulder)
 CleanUpStage.addFuncs(
     lambda: print("build foulder path:", buildFoulder),
     lambda: shutil.rmtree(buildFoulder, ignore_errors=True) if os.path.exists(buildFoulder) else print("no build foulder"),
@@ -43,7 +38,7 @@ BuildStage.addFuncs(
     lambda: Cmake.Command(AyonCppApiPrj, "--build", "build", "--config", f"{AyonCppApiPrj.Variables['ReleaseType']}"),
     lambda: Cmake.Command(AyonCppApiPrj, "--install", "build"),
 )
-# BuildStage.addArtefactFoulder("bin")
+BuildStage.addArtefactFoulder("bin")
 AyonCppApiPrj.addStage(BuildStage)
 
 
@@ -56,14 +51,24 @@ DoxyGenStage.addArtefactFoulder("Docs/html")
 AyonCppApiPrj.addStage(DoxyGenStage)
 
 
-# TODO google benchmark writes system info into sed::error there needs to be an function for that 
 def startTestApp():
     from AyonCiCdTools.AyonCiCd import GTest
-# "--gtest_filter=AyonCppApi.AyonCppApiCreaion"
     os.environ["AYON_API_KEY"] = "SuperSaveTestKey"
     os.environ["AYON_SERVER_URL"] = "http://localhost:8003"
     os.environ["AYON_SITE_ID"] = "TestId"
-    GTest.GTestRun("bin/AyonCppApiBenchMain", f"{AyonCppApiPrj.buildArtefactsPath}/GTest/TestA.xml", AyonCppApiPrj , )
+    os.environ["AYON_PROJECT_NAME"] = "TestPrjName"
+    GTest.GTestRun("bin/AyonCppApiGtestMain", f"{AyonCppApiPrj.buildArtefactsPath}/GTest/Test.xml", AyonCppApiPrj , )
+
+def startBnechApp():
+    from AyonCiCdTools.AyonCiCd import GBench
+    os.environ["AYON_API_KEY"] = "SuperSaveTestKey"
+    os.environ["AYON_SERVER_URL"] = "http://localhost:8003"
+    os.environ["AYON_SITE_ID"] = "TestId"
+    os.environ["AYON_PROJECT_NAME"] = "TestPrjName"
+    os.environ["AYONLOGGERLOGLVL"] = "CRITICAL"
+    os.environ["AYONLOGGERFILELOGGING"] = "OFF"
+    GBench.GBnechRun("bin/AyonCppApiGBenchMain",f"{AyonCppApiPrj.buildArtefactsPath}/GBench/Test.json", AyonCppApiPrj)
+
 
 def startTestServer():
     from test import TestServer
@@ -73,7 +78,7 @@ def startTestServer():
     time.sleep(2)
 
 def CheckTestServer():
-
+    import requests
     response = requests.get("http://localhost:8003/")
     print("Test Respone", response.text)
 
@@ -84,12 +89,14 @@ TestStage = Project.Stage("Test")
 TestStage.addFuncs( 
     lambda: startTestServer(),
     lambda: CheckTestServer(),
-    #
+
     lambda: startTestApp(),
+    lambda: startBnechApp(),
     lambda: stopTestServer(),
 
 )
-TestStage.addArtefactFoulder("bin/prof.json")
+TestStage.addArtefactFoulder("bin/profBatch.json")
+TestStage.addArtefactFoulder("bin/profSerial.json")
 AyonCppApiPrj.addStage(TestStage)
 
 
@@ -101,8 +108,12 @@ SetTestVars.addFuncs(
 )
 
 
+AyonCppApiPrj.CreateStageGRP("CleanBuild", CleanUpStage, BuildStage)
+AyonCppApiPrj.CreateStageGRP("CleanBuildAndDocs", CleanUpStage, BuildStage, DoxyGenStage)
 AyonCppApiPrj.CreateStageGRP("BuildAndTest", SetTestVars, BuildStage, TestStage)
 AyonCppApiPrj.CreateStageGRP("CleanBuildAndTest", CleanUpStage, SetTestVars, BuildStage, TestStage)
+
+
 # make the CiCd class available to the Cli so we can interact with it
 with AyonCppApiPrj as PRJ:
     PRJ.makeClassCliAvailable()
