@@ -18,6 +18,10 @@ An API Wrapper for [AYON server](https://ayon.ynput.io/) written in cpp
 > git submodule update --remote
 > ```
 
+> [!INFO]\
+> currently the setup is developed on Linux and windows Dev setups are not the
+> high priority so if you find a bug on Windows report it.
+
 ## Requirements:
 
 - C++ Compiler
