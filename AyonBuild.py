@@ -13,7 +13,8 @@ AyonCppApiPrj.addPipPackage("pytest")
 AyonCppApiPrj.addPipPackage("fastapi")
 AyonCppApiPrj.addPipPackage("uvicorn[standard]")
 AyonCppApiPrj.addPipPackage("requests")
-AyonCppApiPrj.addPipPackage("universal-startfile")
+
+# AyonCppApiPrj.addPipPackage("universal-startfile")
 
 
 # define stages for this project
@@ -67,7 +68,7 @@ def startBnechApp():
     os.environ["AYON_PROJECT_NAME"] = "TestPrjName"
     os.environ["AYONLOGGERLOGLVL"] = "CRITICAL"
     os.environ["AYONLOGGERFILELOGGING"] = "OFF"
-    GBench.GBnechRun("bin/AyonCppApiGBenchMain",f"{AyonCppApiPrj.buildArtefactsPath}/GBench/Test.json", AyonCppApiPrj)
+    GBench.GBnechRun("bin/AyonCppApiGBenchMain",f"{AyonCppApiPrj.buildArtefactsPath}/GBench/Test.json")
 
 
 def startTestServer():
@@ -86,9 +87,9 @@ def stopTestServer():
     ServerPocVar.terminate()
 
 TestStage = Project.Stage("Test")
-TestStage.addFuncs( 
+TestStage.addFuncs(
     lambda: startTestServer(),
-    lambda: CheckTestServer(),
+    # lambda: CheckTestServer(),
 
     lambda: startTestApp(),
     lambda: startBnechApp(),
