@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AYONCPPAPI_H
+#define AYONCPPAPI_H
 #include "AyonCppApiCrossPlatformMacros.h"
 #include <sys/types.h>
 #include <cstddef>
@@ -196,3 +197,5 @@ class AyonApi {
 
         std::mutex AyonServerMutex;
 };
+
+#endif   // !AYONCPPAPI_H

@@ -1,3 +1,5 @@
+#ifndef AYONLOGGER_H
+#define AYONLOGGER_H
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
@@ -244,3 +246,4 @@ class AyonLogger {
         std::string fileLoggerFilePath;
         std::set<std::string> EnabledLoggingKeys;
 };
+#endif
