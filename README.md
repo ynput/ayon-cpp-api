@@ -3,24 +3,24 @@
 An API Wrapper for [AYON server](https://ayon.ynput.io/) written in cpp
 
 > [!NOTE]\
-> we use git Submodules to pull in external dependencys so you might want to use
+> we use [git-Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to pull in external dependencys so you might want to use
 > these commands
 > `git clone --recurse-submodules git@github.com:ynput/ayon-cpp-api.git` to
-> clone the with all its submodules `git submodule update --init --recursive` to
-> initialize submodules when you change the branch
+> clone the repo with all its submodules.   
+> `git submodule update --init --recursive` to can then be used to initialize [Submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) when you change the branch or update other [Submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) related parts
 
 > [!NOTE]\
-> we use tags in our .gitmodules so you might need those commands if you change
-> said tags
+> we use tags in our [.gitmodules](https://git-scm.com/docs/gitmodules) in order to give a better overview towards the used [Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) used in this repo. 
+> you might need those commands if you change [Submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) tags. 
 >
 > ```sh
 > git submodule sync
 > git submodule update --remote
 > ```
 
-> [!INFO]\
-> currently the setup is developed on Linux and windows Dev setups are not the
-> high priority so if you find a bug on Windows report it.
+> [!IMPORTANT]\
+> we allways run tests for both linux and windows on the compiled libarys but the developemnt setup is build on linux with the intention to be as cross platform as posible. but it can allways happend that something is not working on windows so if you have a wish or a bug report it. 
+
 
 ## Requirements:
 
@@ -30,6 +30,8 @@ An API Wrapper for [AYON server](https://ayon.ynput.io/) written in cpp
 - pip
 
 ## Tested Platforms:
+- Alma Linux9
+- win 10
 
 ## Build Setps
 
@@ -55,9 +57,9 @@ Run one off the following build Setups
 
 ## Usage / Config
 
-## Using environment variablesto Controle the API
+## Using environment variables to Controle the API
 
-The `AyonLogger` can be controlled with environment variables:
+The `AyonLogger` can be controlled with these environment variables:
 
 | variable                  | value                                  |
 | ------------------------- | -------------------------------------- |
