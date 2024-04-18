@@ -19,44 +19,61 @@
 /**
  * @class AyonApi
  * @brief Central Ayon api class \n
- * This class exposes functions off the ayon api to the user while wrapping around httplib for requests
+ * Class for exposing Ayon server functions to C++ users. Uses httplib internally for communication with the server
  *
  */
 class AyonApi {
     public:
+        /**
+         * @brief constructor
+         */
         AyonApi();
+        /**
+         * @brief destructor
+         */
         ~AyonApi();
 
         /**
-         * @brief returns the stored apikey
+         * @brief returns the stored apikey. Retrieved from the appropriate env variable. (the variable is loaded from
+         * loadEnvVars())
          */
         std::string getKey();
         /**
-         * @brief returns the stored AYON server url
+         * @brief returns the stored AYON server url. Retrieved from the appropriate env variable. (the variable is
+         * loaded from loadEnvVars())
          */
         std::string getUrl();
 
+        /**
+         * @brief runns a get command and returns the response body as std::string
+         *
+         * @param endPoint reachable http / https endpoint
+         * @param headers http headers
+         * @param sucsessStatus define what http response code should be considered a success.
+         */
         nlohmann::json GET(const std::shared_ptr<std::string> endPoint,
                            const std::shared_ptr<httplib::Headers> headers,
                            uint8_t sucsessStatus);
 
         /**
-         * @brief calls the server via a shared httplib client ( serial )
+         * @brief post Request via a shared httplib client ( serial )
          *
          * @param endPoint the AYON enpoint to hit
          * @param headers the http header that you want to send
          * @param jsonPayload the payload in json format
+         * @param sucsessStatus defines what status code is considered a success and brakes the retry loop.
          */
         nlohmann::json SPOST(const std::shared_ptr<std::string> endPoint,
                              const std::shared_ptr<httplib::Headers> headers,
                              nlohmann::json jsonPayload,
                              const std::shared_ptr<uint8_t> sucsessStatus);
         /**
-         * @brief calls the AYON server while also creation a new httplib client ( Generative Async )
+         * @brief http post request utilizing the creation of a new httplib client ( Generative Async )
          *
          * @param endPoint the AYON enpoint to hit
          * @param headers the http header that you want to send
          * @param jsonPayload the payload in json format
+         * @param sucsessStatus defines what status code is considered a success and brakes the retry loop.
          */
         nlohmann::json CPOST(const std::shared_ptr<std::string> endPoint,
                              const std::shared_ptr<httplib::Headers> headers,
@@ -65,23 +82,23 @@ class AyonApi {
 
         /**
          * @brief uses the uri resolve endpoint on the AYON server in order to resolve an uri path towards the local
-         * path \n it gets the siteId from a varible stored in the class
+         * path \n gets the siteId from an variable stored in the class
          *
          * @param uriPath
          */
         std::pair<std::string, std::string> resolvePath(const std::string &uriPath);
         /**
-         * @brief resolves manny paths against the AYON server in an async way
+         * @brief resolves a vector off paths against the AYON server in an async way uses auto generated batch requests
          *
          * @param uriPaths
          */
         std::unordered_map<std::string, std::string> batchResolvePath(std::vector<std::string> &uriPaths);
 
         /**
-         * @brief this function takes an ayon:// path and returns a pair of assetIdentifier(ayon:// path) and the
-         * machine local file location
+         * @brief this function takes a ayon path uri response(resolved ayon://path) and returns a pair of
+         * assetIdentifier(ayon:// path) and the machine local file location
          *
-         * @param assetIdentifier
+         * @param uriResolverRespone json representation off the resolves the ayon/api/resolve endpoint returns
          */
         std::pair<std::string, std::string> getAssetIdent(const nlohmann::json &uriResolverRespone);
 
@@ -93,19 +110,34 @@ class AyonApi {
          */
         bool loadEnvVars();
 
+        /**
+         * @brief get function for shared AyonLogger pointer used by this class instance
+         */
         std::shared_ptr<AyonLogger> logPointer();
 
-        std::unordered_map<std::string, std::string>* getSiteRoots();
+        /**
+         * @brief gets the site root overwrites for the current project. Current project is defined via an env variable
+         * for now
+         */
+        std::unordered_map<std::string, std::string>*
+        getSiteRoots();   // TODO think about if this should only support current project or multiple projects
 
+        /**
+         * @brief replaces {root[var]} for ayon:// paths
+         *
+         * @param rootLessPath endpoint response for ayon://path with {root[var]} available if no root can be found the
+         * path will be returned as is
+         */
         std::string rootReplace(const std::string &rootLessPath);
 
     private:
         /**
          * @brief calls the server in an serial way by sharing the AyonServer pointer
          *
-         * @param endPoint
-         * @param headers
-         * @param Payload
+         * @param endPoint endpoint that ayon resolve is loaded on
+         * @param headers http headers
+         * @param Payload json payload to be resolved by endpoint
+         * @param sucsessStatus defines what is considered a success response to break the retry loop
          */
         std::string serialCorePost(const std::string &endPoint,
                                    httplib::Headers headers,
@@ -114,9 +146,10 @@ class AyonApi {
         /**
          * @brief calls the server while creating a new client instance to stay async
          *
-         * @param endPoint
-         * @param headers
-         * @param Payload
+         * @param endPoint endpoint that ayon resolve is loaded on
+         * @param headers http headers
+         * @param Payload json payload to be resolved by endpoint
+         * @param sucsessStatus defines what is considered a success response to break the retry loop
          */
         std::string GenerativeCorePost(const std::string &endPoint,
                                        httplib::Headers headers,
@@ -126,25 +159,9 @@ class AyonApi {
         /**
          * @brief converts a vector off uris into an string to serve into CorePost funcs
          *
-         * @param uriVec
+         * @param uriVec vector off str uris
          */
         std::string convertUriVecToString(const std::vector<std::string> &uriVec);
-
-        /**
-         * @brief returns the version off a file when you give it an array off version (resolve version=* que)
-         *
-         * @param jsonData a single server response
-         * @param versionNum optinal field that allows you to chose a version number (set to 65535 by default as its max
-         * numver )
-         */
-        std::string getFileVersion(const nlohmann::json &jsonData, u_int16_t versionNum);
-
-        /**
-         * @brief splits the response group that Ayon uri resolve can return into individuale responses\n
-         *
-         * @param jsonDataGrp
-         */
-        std::vector<nlohmann::json> splitBatchResolveResponse(const nlohmann::json &jsonDataGrp);
 
         // ----- Env Varibles
 
@@ -163,17 +180,20 @@ class AyonApi {
         std::string userName;
 
         // --- Runtime Dep Vars
+
         // Async Grp Generation Varibles
         u_int8_t minGrpSizeForAsyncRequests = 10;
-        u_int16_t regroupSizeForAsyncRequests = 200;   // 300
+        u_int16_t regroupSizeForAsyncRequests = 200;
         u_int16_t maxGroupSizeForAsyncRequests = 300;
         u_int16_t minVecSizeForGroupSplitAsyncRequests = 50;
         u_int8_t maxCallRetrys = 8;
         u_int16_t retryWaight = 800;
 
-        const int num_threads;
+        /**
+         * @brief maximum number off threads that the cpu can handle at the same time. Will be set via constructor
+         */
+        const int num_threads;   // set by constructor
         std::shared_ptr<AyonLogger> Log;
-        std::regex regexVersionPattern = std::regex("/v(\\d{3})/");
         std::string uriResolverEndpoint = "/api/resolve";
         std::string uriResolverEndpointPathOnlyVar = "?pathOnly=true";
         bool pathOnlyReselution = true;
@@ -186,15 +206,24 @@ class AyonApi {
         u_int16_t connectionTimeOutMax = 200;
         u_int8_t readTimeOutMax = 160;
         // bool enableThreadWaithing = false;
-        bool enableBigBlockThreadWaithing = true;
-        bool batchResolveOptimizeVector = false;
+        // bool enableBigBlockThreadWaithing = true;
+        /**
+         * @brief decides if the cpp api removes duplicates from batch request vector default is true
+         */
+        bool batchResolveOptimizeVector = true;
 
         uint16_t ServerBusyCode = 503;
         uint16_t RequestDelayWhenServerBusy = 10000;
-        std::mutex allowRequest;
+        // std::mutex allowRequest;
 
+        /**
+         * @brief this bool will be set to true if a 503 is encountered
+         */
         bool serverBusy = false;
 
+        /**
+         * @brief needed for serial resolve operations. to lock acces to AyonServer shared pointer
+         */
         std::mutex AyonServerMutex;
 };
 
