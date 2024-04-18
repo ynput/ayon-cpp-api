@@ -14,8 +14,6 @@ AyonCppApiPrj.addPipPackage("fastapi")
 AyonCppApiPrj.addPipPackage("uvicorn[standard]")
 AyonCppApiPrj.addPipPackage("requests")
 
-# AyonCppApiPrj.addPipPackage("universal-startfile")
-
 
 # define stages for this project
 CleanUpStage = Project.Stage("Cleanup")
