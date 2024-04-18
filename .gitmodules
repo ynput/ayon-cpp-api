@@ -17,7 +17,7 @@
 [submodule "AyonCiCdTools"]
 	path = AyonCiCdTools
   url = git@github.com:ynput/AyonCiCd-Automator.git
-  tag = v000.01.1 
+  commit = 6f0b571babd56ec03e00d83982b108e3da5a7d94
 [submodule "ext/benchmark"]
 	path = ext/benchmark
   url = https://github.com/google/benchmark.git
