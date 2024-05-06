@@ -6,6 +6,7 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <sstream>
 #include <string>
 #include "spdlog/common.h"
 #include "spdlog/sinks/basic_file_sink.h"
@@ -223,8 +224,6 @@ class AyonLogger {
                 while (std::getline(tokenStream, token, '/')) {
                     EnabledLoggingKeys.insert(token);
                 }
-            }
-            else {
             }
         }
 

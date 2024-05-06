@@ -1,4 +1,4 @@
-
+cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
 add_compile_definitions(JTRACE=${JTRACE})
 #we need to define this varible in order for httplib to suport https clients 
@@ -8,18 +8,15 @@ add_compile_definitions(CPPHTTPLIB_OPENSSL_SUPPORT)
 set(AR_PROJECT_NAME AyonCppApi)
 option(BUILD_TEST "Build the test application" OFF)
 
-set(CMAKE_CXX_STANDARD 17)
-
-
-cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
-project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 
-set(JSON_BuildTests OFF CACHE INTERNAL "")
+set(BUILD_SHARED_LIBS ON)
+# set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+set(JSON_BuildTests OFF CACHE INTERNAL "")
 
 if(WIN32)
   set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/opensslW")
@@ -29,8 +26,9 @@ else()
 endif()
 include_directories(${OPENSSL_ROOT_DIR}/include)
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/AyonCppApi")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/AyonCppApi")
+
+
+project(${AR_PROJECT_NAME} VERSION 1.0.0)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/cpp-httplib" EXCLUDE_FROM_ALL)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/cpp-httplib")
@@ -43,7 +41,8 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/spdlog/include")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/backward-cpp")
 
-
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/AyonCppApi")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/AyonCppApi")
 
 if(BUILD_TEST)
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/googletest")
