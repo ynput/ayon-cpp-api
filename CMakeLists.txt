@@ -12,7 +12,7 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 
 set(BUILD_SHARED_LIBS ON)
-# set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -22,13 +22,13 @@ if(WIN32)
   set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/opensslW")
 else()
   set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/opensslL")
-  find_package(OpenSSL REQUIRED)
+  # find_package(OpenSSL REQUIRED)
 endif()
 include_directories(${OPENSSL_ROOT_DIR}/include)
 
 
 
-project(${AR_PROJECT_NAME} VERSION 1.0.0)
+project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/cpp-httplib" EXCLUDE_FROM_ALL)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/cpp-httplib")
