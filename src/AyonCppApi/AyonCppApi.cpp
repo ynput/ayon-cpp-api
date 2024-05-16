@@ -47,10 +47,11 @@ AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
 
     AyonServer = std::make_unique<httplib::Client>(serverUrl);
     AyonServer->set_bearer_token_auth(authKey);
-
     getSiteRoots();
 };
-AyonApi::~AyonApi(){};
+AyonApi::~AyonApi() {
+    Log->info(Log->key("AyonApi"), "AyonApi::~AyonApi()");
+};
 
 bool
 AyonApi::loadEnvVars() {
@@ -137,6 +138,7 @@ AyonApi::rootReplace(const std::string &rootLessPath) {
             try {
                 std::string replacement = siteRoots.at(breakedString);
                 rootedPath = std::regex_replace(rootLessPath, rootFindPattern, replacement);
+                Log->info(Log->key("AyonApi"), "AyonApi::rootReplace({}) rooted", rootedPath);
                 return rootedPath;
             }
             catch (std::out_of_range &e) {
