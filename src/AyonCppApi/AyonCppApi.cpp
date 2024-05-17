@@ -32,6 +32,10 @@
 #include <cstdlib>
 #include <filesystem>
 
+#include "backward.hpp"
+backward::StackTrace st;
+
+#include "perfPrinter.h"
 AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
     PerfTimer("AyonApi::AyonApi");
 
@@ -45,8 +49,11 @@ AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
             " Environment Could not be initialised are you shure your running this libary in an AYON environment");
     }
 
+    Log->info(Log->key("AyonApi"), "Init AyonServer httplib::Client");
     AyonServer = std::make_unique<httplib::Client>(serverUrl);
     AyonServer->set_bearer_token_auth(authKey);
+
+    Log->info(Log->key("AyonApi"), "Constructor Getting Site Roots");
     getSiteRoots();
 };
 AyonApi::~AyonApi() {
@@ -102,8 +109,8 @@ AyonApi::loadEnvVars() {
     Log->info("Found SideId");
 
     Log->info(Log->key("AyonApiDebugEnvVars"),
-              "Loaded Environment Variables: AYON_API_KEY={}, AYON_SERVER_URL={}, AYON_SITE_ID={}", authKey, serverUrl,
-              siteId);
+              "Loaded Environment Variables(funcEnd): AYON_API_KEY={}, AYON_SERVER_URL={}, AYON_SITE_ID={}", authKey,
+              serverUrl, siteId);
 
     return true;
 };
@@ -117,6 +124,13 @@ AyonApi::getSiteRoots() {
                                       std::make_shared<httplib::Headers>(headers), 200);
         siteRoots = response;
     }
+    if (Log->isKeyActive(Log->key("AyonApi"))) {
+        Log->info(Log->key("AyonApi"), "found site Roots: ");
+        for (auto &e: siteRoots) {
+            Log->info("{}, {}", e.first, e.second);
+        }
+    }
+
     return &siteRoots;
 };
 

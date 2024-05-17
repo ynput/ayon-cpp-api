@@ -52,6 +52,14 @@ class AyonLogger {
             return false;
         }
 
+        bool
+        isKeyActive(const std::set<std::string>::iterator &logginIterator) {
+            if (logginIterator != EnabledLoggingKeys.end()) {
+                return true;
+            }
+            return false;
+        };
+
         template<typename... Args>
         void
         error(const std::set<std::string>::iterator &logginIterator, const std::string &format, const Args &... args) {
