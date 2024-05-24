@@ -1,0 +1,388 @@
+CMake output:
+-- The CXX compiler identification is GNU 11.4.1
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Could NOT find libdw (missing: LIBDW_LIBRARY LIBDW_INCLUDE_DIR) 
+-- Could NOT find libbfd (missing: LIBBFD_LIBRARY LIBBFD_INCLUDE_DIR) 
+-- Could NOT find libdwarf (missing: LIBDWARF_LIBRARY LIBDWARF_INCLUDE_DIR) 
+-- Found Backward: $<BUILD_INTERFACE:/home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/ext/backward-cpp>;$<INSTALL_INTERFACE:include>  
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Using the multi-header code from /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/ext/json/include/
+-- Build spdlog: 1.13.0
+-- Build type: Release
+-- The C compiler identification is GNU 11.4.1
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- LLVM FileCheck Found: /usr/bin/FileCheck
+-- Found Git: /usr/bin/git (found version "2.43.0") 
+-- Google Benchmark version: v1.8.3-73-gbc946b91-dirty, normalized to 1.8.3.73
+-- Looking for shm_open in rt
+-- Looking for shm_open in rt - found
+-- Performing Test HAVE_CXX_FLAG_WALL
+-- Performing Test HAVE_CXX_FLAG_WALL - Success
+-- Performing Test HAVE_CXX_FLAG_WEXTRA
+-- Performing Test HAVE_CXX_FLAG_WEXTRA - Success
+-- Performing Test HAVE_CXX_FLAG_WSHADOW
+-- Performing Test HAVE_CXX_FLAG_WSHADOW - Success
+-- Performing Test HAVE_CXX_FLAG_WFLOAT_EQUAL
+-- Performing Test HAVE_CXX_FLAG_WFLOAT_EQUAL - Success
+-- Performing Test HAVE_CXX_FLAG_WOLD_STYLE_CAST
+-- Performing Test HAVE_CXX_FLAG_WOLD_STYLE_CAST - Success
+-- Performing Test HAVE_CXX_FLAG_WCONVERSION
+-- Performing Test HAVE_CXX_FLAG_WCONVERSION - Success
+-- Performing Test HAVE_CXX_FLAG_WERROR
+-- Performing Test HAVE_CXX_FLAG_WERROR - Success
+-- Performing Test HAVE_CXX_FLAG_PEDANTIC
+-- Performing Test HAVE_CXX_FLAG_PEDANTIC - Success
+-- Performing Test HAVE_CXX_FLAG_PEDANTIC_ERRORS
+-- Performing Test HAVE_CXX_FLAG_PEDANTIC_ERRORS - Success
+-- Performing Test HAVE_CXX_FLAG_WSHORTEN_64_TO_32
+-- Performing Test HAVE_CXX_FLAG_WSHORTEN_64_TO_32 - Failed
+-- Performing Test HAVE_CXX_FLAG_FSTRICT_ALIASING
+-- Performing Test HAVE_CXX_FLAG_FSTRICT_ALIASING - Success
+-- Performing Test HAVE_CXX_FLAG_WNO_DEPRECATED_DECLARATIONS
+-- Performing Test HAVE_CXX_FLAG_WNO_DEPRECATED_DECLARATIONS - Success
+-- Performing Test HAVE_CXX_FLAG_WNO_DEPRECATED
+-- Performing Test HAVE_CXX_FLAG_WNO_DEPRECATED - Success
+-- Performing Test HAVE_CXX_FLAG_WSTRICT_ALIASING
+-- Performing Test HAVE_CXX_FLAG_WSTRICT_ALIASING - Success
+-- Performing Test HAVE_CXX_FLAG_WD654
+-- Performing Test HAVE_CXX_FLAG_WD654 - Failed
+-- Performing Test HAVE_CXX_FLAG_WTHREAD_SAFETY
+-- Performing Test HAVE_CXX_FLAG_WTHREAD_SAFETY - Failed
+-- Performing Test HAVE_CXX_FLAG_COVERAGE
+-- Performing Test HAVE_CXX_FLAG_COVERAGE - Success
+-- Compiling and running to test HAVE_STD_REGEX
+-- Performing Test HAVE_STD_REGEX -- success
+-- Compiling and running to test HAVE_GNU_POSIX_REGEX
+-- Performing Test HAVE_GNU_POSIX_REGEX -- failed to compile
+-- Compiling and running to test HAVE_POSIX_REGEX
+-- Performing Test HAVE_POSIX_REGEX -- success
+-- Compiling and running to test HAVE_STEADY_CLOCK
+-- Performing Test HAVE_STEADY_CLOCK -- success
+-- Compiling and running to test HAVE_PTHREAD_AFFINITY
+-- Performing Test HAVE_PTHREAD_AFFINITY -- success
+-- Performing Test HAVE_CXX_FLAG_WNO_UNUSED_VARIABLE
+-- Performing Test HAVE_CXX_FLAG_WNO_UNUSED_VARIABLE - Success
+-- Performing Test BENCHMARK_HAS_O3_FLAG
+-- Performing Test BENCHMARK_HAS_O3_FLAG - Success
+-- Performing Test BENCHMARK_HAS_DEPRECATED_DECLARATIONS_FLAG
+-- Performing Test BENCHMARK_HAS_DEPRECATED_DECLARATIONS_FLAG - Success
+-- Performing Test BENCHMARK_HAS_WNO_ODR
+-- Performing Test BENCHMARK_HAS_WNO_ODR - Success
+-- Performing Test BENCHMARK_HAS_WNO_LTO_TYPE_MISMATCH
+-- Performing Test BENCHMARK_HAS_WNO_LTO_TYPE_MISMATCH - Success
+-- Performing Test BENCHMARK_HAS_G0_FLAG
+-- Performing Test BENCHMARK_HAS_G0_FLAG - Success
+-- Performing Test BENCHMARK_HAS_FNO_STACK_PROTECTOR_FLAG
+-- Performing Test BENCHMARK_HAS_FNO_STACK_PROTECTOR_FLAG - Success
+-- Configuring done (5.5s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/build
+
+CMake warnings:
+Warning at ext/benchmark/test/AssemblyTests.cmake:13 (message):
+  Unsupported GCC version 11.4.1.  Expected is 5.5.0.  Assembly tests may be
+  broken.
+Call Stack (most recent call first):
+  ext/benchmark/test/CMakeLists.txt:264 (include)
+
+CMake output:
+[  1%] Building CXX object ext/backward-cpp/CMakeFiles/backward_object.dir/backward.cpp.o
+[  1%] Built target backward_object
+[  1%] Building CXX object ext/backward-cpp/CMakeFiles/backward.dir/backward.cpp.o
+[  2%] Linking CXX static library libbackward.a
+[  2%] Built target backward
+[  3%] Building CXX object ext/googletest/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o
+[  4%] Linking CXX static library ../../../lib/libgtest.a
+[  4%] Built target gtest
+[  5%] Building CXX object ext/googletest/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o
+[  6%] Linking CXX static library ../../../lib/libgmock.a
+[  6%] Built target gmock
+[  7%] Building CXX object ext/googletest/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o
+[  7%] Linking CXX static library ../../../lib/libgmock_main.a
+[  7%] Built target gmock_main
+[  8%] Building CXX object ext/googletest/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o
+[  8%] Linking CXX static library ../../../lib/libgtest_main.a
+[  8%] Built target gtest_main
+[  9%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/benchmark.cc.o
+[ 10%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/benchmark_api_internal.cc.o
+[ 11%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/benchmark_name.cc.o
+[ 11%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/benchmark_register.cc.o
+[ 12%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/benchmark_runner.cc.o
+[ 13%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/check.cc.o
+[ 14%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/colorprint.cc.o
+[ 14%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/commandlineflags.cc.o
+[ 15%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/complexity.cc.o
+[ 16%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/console_reporter.cc.o
+[ 17%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/counter.cc.o
+[ 17%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/csv_reporter.cc.o
+[ 18%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/json_reporter.cc.o
+[ 20%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/perf_counters.cc.o
+[ 20%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/reporter.cc.o
+[ 21%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/statistics.cc.o
+[ 22%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/string_util.cc.o
+[ 23%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/sysinfo.cc.o
+[ 23%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark.dir/timers.cc.o
+[ 24%] Linking CXX static library libbenchmark.a
+[ 24%] Built target benchmark
+[ 24%] Building CXX object ext/benchmark/src/CMakeFiles/benchmark_main.dir/benchmark_main.cc.o
+[ 25%] Linking CXX static library libbenchmark_main.a
+[ 25%] Built target benchmark_main
+[ 25%] Building CXX object ext/benchmark/test/CMakeFiles/output_test_helper.dir/output_test_helper.cc.o
+[ 26%] Linking CXX static library liboutput_test_helper.a
+[ 26%] Built target output_test_helper
+[ 26%] Building CXX object ext/benchmark/test/CMakeFiles/benchmark_test.dir/benchmark_test.cc.o
+[ 27%] Linking CXX executable benchmark_test
+[ 27%] Built target benchmark_test
+[ 28%] Building CXX object ext/benchmark/test/CMakeFiles/spec_arg_test.dir/spec_arg_test.cc.o
+[ 29%] Linking CXX executable spec_arg_test
+[ 29%] Built target spec_arg_test
+[ 30%] Building CXX object ext/benchmark/test/CMakeFiles/spec_arg_verbosity_test.dir/spec_arg_verbosity_test.cc.o
+[ 30%] Linking CXX executable spec_arg_verbosity_test
+[ 30%] Built target spec_arg_verbosity_test
+[ 31%] Building CXX object ext/benchmark/test/CMakeFiles/benchmark_setup_teardown_test.dir/benchmark_setup_teardown_test.cc.o
+[ 32%] Linking CXX executable benchmark_setup_teardown_test
+[ 32%] Built target benchmark_setup_teardown_test
+[ 33%] Building CXX object ext/benchmark/test/CMakeFiles/filter_test.dir/filter_test.cc.o
+[ 34%] Linking CXX executable filter_test
+[ 34%] Built target filter_test
+[ 34%] Building CXX object ext/benchmark/test/CMakeFiles/benchmark_min_time_flag_time_test.dir/benchmark_min_time_flag_time_test.cc.o
+[ 35%] Linking CXX executable benchmark_min_time_flag_time_test
+[ 35%] Built target benchmark_min_time_flag_time_test
+[ 36%] Building CXX object ext/benchmark/test/CMakeFiles/benchmark_min_time_flag_iters_test.dir/benchmark_min_time_flag_iters_test.cc.o
+[ 37%] Linking CXX executable benchmark_min_time_flag_iters_test
+[ 37%] Built target benchmark_min_time_flag_iters_test
+[ 38%] Building CXX object ext/benchmark/test/CMakeFiles/options_test.dir/options_test.cc.o
+[ 40%] Linking CXX executable options_test
+[ 40%] Built target options_test
+[ 41%] Building CXX object ext/benchmark/test/CMakeFiles/basic_test.dir/basic_test.cc.o
+[ 41%] Linking CXX executable basic_test
+[ 41%] Built target basic_test
+[ 41%] Building CXX object ext/benchmark/test/CMakeFiles/repetitions_test.dir/repetitions_test.cc.o
+[ 42%] Linking CXX executable repetitions_test
+[ 42%] Built target repetitions_test
+[ 43%] Building CXX object ext/benchmark/test/CMakeFiles/diagnostics_test.dir/diagnostics_test.cc.o
+[ 44%] Linking CXX executable diagnostics_test
+[ 44%] Built target diagnostics_test
+[ 45%] Building CXX object ext/benchmark/test/CMakeFiles/skip_with_error_test.dir/skip_with_error_test.cc.o
+[ 46%] Linking CXX executable skip_with_error_test
+[ 46%] Built target skip_with_error_test
+[ 47%] Building CXX object ext/benchmark/test/CMakeFiles/donotoptimize_test.dir/donotoptimize_test.cc.o
+[ 47%] Linking CXX executable donotoptimize_test
+[ 47%] Built target donotoptimize_test
+[ 48%] Building CXX object ext/benchmark/test/CMakeFiles/fixture_test.dir/fixture_test.cc.o
+[ 48%] Linking CXX executable fixture_test
+[ 48%] Built target fixture_test
+[ 49%] Building CXX object ext/benchmark/test/CMakeFiles/register_benchmark_test.dir/register_benchmark_test.cc.o
+[ 50%] Linking CXX executable register_benchmark_test
+[ 50%] Built target register_benchmark_test
+[ 51%] Building CXX object ext/benchmark/test/CMakeFiles/map_test.dir/map_test.cc.o
+[ 52%] Linking CXX executable map_test
+[ 52%] Built target map_test
+[ 52%] Building CXX object ext/benchmark/test/CMakeFiles/multiple_ranges_test.dir/multiple_ranges_test.cc.o
+[ 53%] Linking CXX executable multiple_ranges_test
+[ 53%] Built target multiple_ranges_test
+[ 54%] Building CXX object ext/benchmark/test/CMakeFiles/args_product_test.dir/args_product_test.cc.o
+[ 55%] Linking CXX executable args_product_test
+[ 55%] Built target args_product_test
+[ 56%] Building CXX object ext/benchmark/test/CMakeFiles/link_main_test.dir/link_main_test.cc.o
+[ 56%] Linking CXX executable link_main_test
+[ 56%] Built target link_main_test
+[ 56%] Building CXX object ext/benchmark/test/CMakeFiles/reporter_output_test.dir/reporter_output_test.cc.o
+[ 57%] Linking CXX executable reporter_output_test
+[ 57%] Built target reporter_output_test
+[ 58%] Building CXX object ext/benchmark/test/CMakeFiles/templated_fixture_test.dir/templated_fixture_test.cc.o
+[ 60%] Linking CXX executable templated_fixture_test
+[ 60%] Built target templated_fixture_test
+[ 60%] Building CXX object ext/benchmark/test/CMakeFiles/user_counters_test.dir/user_counters_test.cc.o
+[ 61%] Linking CXX executable user_counters_test
+[ 61%] Built target user_counters_test
+[ 61%] Building CXX object ext/benchmark/test/CMakeFiles/perf_counters_test.dir/perf_counters_test.cc.o
+[ 62%] Linking CXX executable perf_counters_test
+[ 62%] Built target perf_counters_test
+[ 63%] Building CXX object ext/benchmark/test/CMakeFiles/internal_threading_test.dir/internal_threading_test.cc.o
+[ 64%] Linking CXX executable internal_threading_test
+[ 64%] Built target internal_threading_test
+[ 65%] Building CXX object ext/benchmark/test/CMakeFiles/report_aggregates_only_test.dir/report_aggregates_only_test.cc.o
+[ 66%] Linking CXX executable report_aggregates_only_test
+[ 66%] Built target report_aggregates_only_test
+[ 66%] Building CXX object ext/benchmark/test/CMakeFiles/display_aggregates_only_test.dir/display_aggregates_only_test.cc.o
+[ 67%] Linking CXX executable display_aggregates_only_test
+[ 67%] Built target display_aggregates_only_test
+[ 68%] Building CXX object ext/benchmark/test/CMakeFiles/user_counters_tabular_test.dir/user_counters_tabular_test.cc.o
+[ 69%] Linking CXX executable user_counters_tabular_test
+[ 69%] Built target user_counters_tabular_test
+[ 70%] Building CXX object ext/benchmark/test/CMakeFiles/user_counters_thousands_test.dir/user_counters_thousands_test.cc.o
+[ 71%] Linking CXX executable user_counters_thousands_test
+[ 71%] Built target user_counters_thousands_test
+[ 71%] Building CXX object ext/benchmark/test/CMakeFiles/memory_manager_test.dir/memory_manager_test.cc.o
+[ 72%] Linking CXX executable memory_manager_test
+[ 72%] Built target memory_manager_test
+[ 72%] Building CXX object ext/benchmark/test/CMakeFiles/cxx03_test.dir/cxx03_test.cc.o
+[ 73%] Linking CXX executable cxx03_test
+[ 73%] Built target cxx03_test
+[ 74%] Building CXX object ext/benchmark/test/CMakeFiles/complexity_test.dir/complexity_test.cc.o
+[ 75%] Linking CXX executable complexity_test
+[ 75%] Built target complexity_test
+[ 76%] Building CXX object ext/benchmark/test/CMakeFiles/benchmark_gtest.dir/benchmark_gtest.cc.o
+[ 77%] Linking CXX executable benchmark_gtest
+[ 77%] Built target benchmark_gtest
+[ 78%] Building CXX object ext/benchmark/test/CMakeFiles/benchmark_name_gtest.dir/benchmark_name_gtest.cc.o
+[ 80%] Linking CXX executable benchmark_name_gtest
+[ 80%] Built target benchmark_name_gtest
+[ 80%] Building CXX object ext/benchmark/test/CMakeFiles/benchmark_random_interleaving_gtest.dir/benchmark_random_interleaving_gtest.cc.o
+[ 81%] Linking CXX executable benchmark_random_interleaving_gtest
+[ 81%] Built target benchmark_random_interleaving_gtest
+[ 82%] Building CXX object ext/benchmark/test/CMakeFiles/commandlineflags_gtest.dir/commandlineflags_gtest.cc.o
+[ 82%] Linking CXX executable commandlineflags_gtest
+[ 82%] Built target commandlineflags_gtest
+[ 83%] Building CXX object ext/benchmark/test/CMakeFiles/statistics_gtest.dir/statistics_gtest.cc.o
+[ 84%] Linking CXX executable statistics_gtest
+[ 84%] Built target statistics_gtest
+[ 84%] Building CXX object ext/benchmark/test/CMakeFiles/string_util_gtest.dir/string_util_gtest.cc.o
+[ 85%] Linking CXX executable string_util_gtest
+[ 85%] Built target string_util_gtest
+[ 86%] Building CXX object ext/benchmark/test/CMakeFiles/perf_counters_gtest.dir/perf_counters_gtest.cc.o
+[ 87%] Linking CXX executable perf_counters_gtest
+[ 87%] Built target perf_counters_gtest
+[ 87%] Building CXX object ext/benchmark/test/CMakeFiles/time_unit_gtest.dir/time_unit_gtest.cc.o
+[ 88%] Linking CXX executable time_unit_gtest
+[ 88%] Built target time_unit_gtest
+[ 89%] Building CXX object ext/benchmark/test/CMakeFiles/min_time_parse_gtest.dir/min_time_parse_gtest.cc.o
+[ 90%] Linking CXX executable min_time_parse_gtest
+[ 90%] Built target min_time_parse_gtest
+[ 91%] Building CXX object ext/benchmark/test/CMakeFiles/donotoptimize_assembly_test.dir/donotoptimize_assembly_test.cc.o
+[ 91%] Built target donotoptimize_assembly_test
+[ 91%] Built target copy_donotoptimize_assembly_test
+[ 92%] Building CXX object ext/benchmark/test/CMakeFiles/state_assembly_test.dir/state_assembly_test.cc.o
+[ 92%] Built target state_assembly_test
+[ 92%] Built target copy_state_assembly_test
+[ 93%] Building CXX object ext/benchmark/test/CMakeFiles/clobber_memory_assembly_test.dir/clobber_memory_assembly_test.cc.o
+[ 93%] Built target clobber_memory_assembly_test
+[ 93%] Built target copy_clobber_memory_assembly_test
+[ 93%] Building CXX object src/AyonCppApi/CMakeFiles/AyonCppApi.dir/cmake_pch.hxx.gch
+[ 94%] Building CXX object src/AyonCppApi/CMakeFiles/AyonCppApi.dir/AyonCppApi.cpp.o
+[ 95%] Linking CXX static library libAyonCppApi.a
+[ 95%] Built target AyonCppApi
+[ 96%] Building CXX object test/CMakeFiles/AyonCppApiGtestMain.dir/GTestMain.cpp.o
+[ 96%] Building CXX object test/CMakeFiles/AyonCppApiGtestMain.dir/AyonCppApiTestsMain.cpp.o
+[ 97%] Linking CXX executable AyonCppApiGtestMain
+[ 97%] Built target AyonCppApiGtestMain
+[ 97%] Building CXX object test/CMakeFiles/AyonCppApiGBenchMain.dir/GBenchMain.cpp.o
+[ 98%] Building CXX object test/CMakeFiles/AyonCppApiGBenchMain.dir/AyonCppApiTestsMain.cpp.o
+[100%] Linking CXX executable AyonCppApiGBenchMain
+[100%] Built target AyonCppApiGBenchMain
+
+CMake output:
+-- Install configuration: "Release"
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/backward.hpp
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/cmake/backward/BackwardConfig.cmake
+-- Up-to-date: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/gmock-actions.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/gmock-cardinalities.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/gmock-function-mocker.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/gmock-matchers.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/gmock-more-actions.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/gmock-more-matchers.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/gmock-nice-strict.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/gmock-spec-builders.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/gmock.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/internal
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/internal/custom
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/internal/custom/README.md
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/internal/custom/gmock-generated-actions.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/internal/custom/gmock-matchers.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/internal/custom/gmock-port.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/internal/gmock-internal-utils.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/internal/gmock-port.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gmock/internal/gmock-pp.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/libgmock.a
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/libgmock_main.a
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/pkgconfig/gmock.pc
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/pkgconfig/gmock_main.pc
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/cmake/GTest/GTestTargets.cmake
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/cmake/GTest/GTestTargets-release.cmake
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/cmake/GTest/GTestConfigVersion.cmake
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/cmake/GTest/GTestConfig.cmake
+-- Up-to-date: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/gtest-assertion-result.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/gtest-death-test.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/gtest-matchers.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/gtest-message.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/gtest-param-test.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/gtest-printers.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/gtest-spi.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/gtest-test-part.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/gtest-typed-test.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/gtest.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/gtest_pred_impl.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/gtest_prod.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal/custom
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal/custom/gtest.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal/custom/README.md
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal/custom/gtest-port.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal/custom/gtest-printers.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal/gtest-death-test-internal.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal/gtest-filepath.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal/gtest-internal.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal/gtest-param-util.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal/gtest-port-arch.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal/gtest-port.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal/gtest-string.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/gtest/internal/gtest-type-util.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/libgtest.a
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/libgtest_main.a
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/pkgconfig/gtest.pc
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/pkgconfig/gtest_main.pc
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/libbenchmark.a
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/libbenchmark_main.a
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/benchmark
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/benchmark/benchmark.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/benchmark/export.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/cmake/benchmark/benchmarkConfig.cmake
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/cmake/benchmark/benchmarkConfigVersion.cmake
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/pkgconfig/benchmark.pc
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/cmake/benchmark/benchmarkTargets.cmake
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/lib64/cmake/benchmark/benchmarkTargets-release.cmake
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/AssemblyTests.md
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/_config.yml
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/dependencies.md
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/index.md
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/perf_counters.md
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/platform_specific_build_instructions.md
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/python_bindings.md
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/random_interleaving.md
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/reducing_variance.md
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/releasing.md
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/tools.md
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/user_guide.md
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/assets
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/assets/images
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/assets/images/icon.png
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/assets/images/icon.xcf
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/assets/images/icon_black.png
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/share/doc/benchmark/assets/images/icon_black.xcf
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/AyonCppApiGtestMain
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/AyonCppApiGBenchMain
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/libAyonCppApi.a
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/AyonCppApi.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/appDataFoulder.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/AyonLogger.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/devMacros.h
+-- Installing: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin/include/Instrumentor.h
+
+ 
+ 

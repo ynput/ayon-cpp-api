@@ -14,10 +14,6 @@
 	path = ext/backward-cpp
   url = https://github.com/bombela/backward-cpp.git
   tag = v1.6
-[submodule "AyonCiCdTools"]
-	path = AyonCiCdTools
-  url = git@github.com:ynput/AyonCiCd-Automator.git
-  commit = 6f0b571babd56ec03e00d83982b108e3da5a7d94
 [submodule "ext/benchmark"]
 	path = ext/benchmark
   url = https://github.com/google/benchmark.git
@@ -26,3 +22,6 @@
 	path = ext/googletest
   url = https://github.com/google/googletest.git
   tag = v1.14.0
+[submodule "AyonCiCdTools"]
+	path = AyonCiCdTools
+	url = git@github.com:ynput/AyonCiCd-Automator.git

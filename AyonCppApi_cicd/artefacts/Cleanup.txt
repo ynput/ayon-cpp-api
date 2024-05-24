@@ -1,0 +1,4 @@
+build foulder path: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/build
+build foulder path: /home/lyonh/ynput/DevEnv/projects/AyonCppApi/ayon-cpp-api/bin
+ 
+ 

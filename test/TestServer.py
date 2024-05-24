@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 import uvicorn
 import json
+from multiprocessing import Process
 
 app = FastAPI()
 
@@ -58,10 +59,18 @@ async def SiteRoots(projectName: str):
         return{"work": "/home/workh/Documents/AyonAos"} 
 
 
-
 def start():
-    from multiprocessing import Process
-    proc = Process(target=uvicorn.run,args=(app,),kwargs={"host": "0.0.0.0","port": 8003,"log_level": "error"},daemon=True)
+    proc = Process(target=uvicorn.run,args=(app,),kwargs={"host": "0.0.0.0","port": 8003,"log_level": "error"})
+
     proc.start()
     print("Server is starting in the background...")
     return proc
+
+
+if __name__ == "__main__":
+    test = start()
+    del test 
+    import requests
+    response = requests.get("http://localhost:8003/")
+    print("Test Respone", response.text)
+
