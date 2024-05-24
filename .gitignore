@@ -17,4 +17,5 @@ Docs/html/
 Docs/xml/
 BuildArtefacts/
 AyonCppApi_CiCd/
-__pycache__/
+AyonCppAPi_cicd/
+__pycache__
