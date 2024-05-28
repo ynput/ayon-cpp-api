@@ -32,6 +32,10 @@
 #include <cstdlib>
 #include <filesystem>
 
+#include "backward.hpp"
+backward::StackTrace st;
+
+#include "perfPrinter.h"
 AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
     PerfTimer("AyonApi::AyonApi");
 
@@ -45,20 +49,29 @@ AyonApi::AyonApi(): num_threads(std::thread::hardware_concurrency() / 2) {
             " Environment Could not be initialised are you shure your running this libary in an AYON environment");
     }
 
+    Log->info(Log->key("AyonApi"), "Init AyonServer httplib::Client");
     AyonServer = std::make_unique<httplib::Client>(serverUrl);
     AyonServer->set_bearer_token_auth(authKey);
 
+    Log->info(Log->key("AyonApi"), "Constructor Getting Site Roots");
     getSiteRoots();
 };
-AyonApi::~AyonApi(){};
+AyonApi::~AyonApi() {
+    Log->info(Log->key("AyonApi"), "AyonApi::~AyonApi()");
+};
 
 bool
 AyonApi::loadEnvVars() {
     PerfTimer("AyonApi::loadEnvVars");
     Log->info(Log->key("AyonApi"), "AyonApi::loadEnvVars()");
 
+    // TODO convert the if tree into a for loop
+    // std::vector<std::string> envVars{"AYON_API_KEY", "AYON_SERVER_URL", "AYON_PROJECT_NAME"};
+    // for (std::vector<std::string>::iterator it = envVars.begin(); it != envVars.end(); it++) {
+    //}
     authKey = std::getenv("AYON_API_KEY");
     serverUrl = std::getenv("AYON_SERVER_URL");
+    const char* ayonProjectNameEnvVar = std::getenv("AYON_PROJECT_NAME");
 
     if (authKey == nullptr) {
         Log->warn("AYON_API_KEY Env varbile could not be found.");
@@ -68,6 +81,11 @@ AyonApi::loadEnvVars() {
         Log->warn("AYON_SERVER_URL Env varbile could not be found");
         return false;
     }
+    if (ayonProjectNameEnvVar == nullptr) {
+        Log->warn("AYON_PROJECT_NAME Env varbile could not be found");
+        return false;
+    }
+    ayonProjectName = std::string(ayonProjectNameEnvVar);
 
     Log->info("Loaded AYON_API_KEY and AYON_SERVER_URL");
 
@@ -91,8 +109,8 @@ AyonApi::loadEnvVars() {
     Log->info("Found SideId");
 
     Log->info(Log->key("AyonApiDebugEnvVars"),
-              "Loaded Environment Variables: AYON_API_KEY={}, AYON_SERVER_URL={}, AYON_SITE_ID={}", authKey, serverUrl,
-              siteId);
+              "Loaded Environment Variables(funcEnd): AYON_API_KEY={}, AYON_SERVER_URL={}, AYON_SITE_ID={}", authKey,
+              serverUrl, siteId);
 
     return true;
 };
@@ -102,10 +120,17 @@ AyonApi::getSiteRoots() {
     Log->info(Log->key("AyonApi"), "AyonApi::getSiteRoots()");
     if (siteRoots.size() < 1) {
         httplib::Headers headers = {{"X-ayon-site-id", siteId}};
-        nlohmann::json response = GET(std::make_shared<std::string>("/api/projects/Usd_Base/siteRoots"),
+        nlohmann::json response = GET(std::make_shared<std::string>("/api/projects/" + ayonProjectName + "/siteRoots"),
                                       std::make_shared<httplib::Headers>(headers), 200);
         siteRoots = response;
     }
+    if (Log->isKeyActive(Log->key("AyonApi"))) {
+        Log->info(Log->key("AyonApi"), "found site Roots: ");
+        for (auto &e: siteRoots) {
+            Log->info("{}, {}", e.first, e.second);
+        }
+    }
+
     return &siteRoots;
 };
 
@@ -127,6 +152,7 @@ AyonApi::rootReplace(const std::string &rootLessPath) {
             try {
                 std::string replacement = siteRoots.at(breakedString);
                 rootedPath = std::regex_replace(rootLessPath, rootFindPattern, replacement);
+                Log->info(Log->key("AyonApi"), "AyonApi::rootReplace({}) rooted", rootedPath);
                 return rootedPath;
             }
             catch (std::out_of_range &e) {

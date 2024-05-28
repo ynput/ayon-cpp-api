@@ -1,9 +1,12 @@
+#ifndef AYONLOGGER_H
+#define AYONLOGGER_H
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <memory>
 #include <optional>
 #include <set>
+#include <sstream>
 #include <string>
 #include "spdlog/common.h"
 #include "spdlog/sinks/basic_file_sink.h"
@@ -48,6 +51,14 @@ class AyonLogger {
             }
             return false;
         }
+
+        bool
+        isKeyActive(const std::set<std::string>::iterator &logginIterator) {
+            if (logginIterator != EnabledLoggingKeys.end()) {
+                return true;
+            }
+            return false;
+        };
 
         template<typename... Args>
         void
@@ -222,8 +233,6 @@ class AyonLogger {
                     EnabledLoggingKeys.insert(token);
                 }
             }
-            else {
-            }
         }
 
         template<typename... Args>
@@ -244,3 +253,4 @@ class AyonLogger {
         std::string fileLoggerFilePath;
         std::set<std::string> EnabledLoggingKeys;
 };
+#endif

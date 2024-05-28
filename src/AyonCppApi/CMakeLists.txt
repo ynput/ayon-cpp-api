@@ -11,7 +11,7 @@ target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../e
 target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/json/include)
 target_link_libraries(AyonCppApi PRIVATE nlohmann_json::nlohmann_json)
 
-target_link_libraries(AyonCppApi PRIVATE PUBLIC Backward::Interface)
+target_link_libraries(AyonCppApi PRIVATE Backward::Interface)
 
 if(WIN32)
   target_link_libraries(AyonCppApi PRIVATE 
@@ -19,11 +19,10 @@ if(WIN32)
     ${OPENSSL_ROOT_DIR}/lib/libssl_static.lib
   )
 else()
-  #target_link_libraries(AyonCppApi PRIVATE 
-  #  ${OPENSSL_ROOT_DIR}/lib/libcrypto.a
-  #  ${OPENSSL_ROOT_DIR}/lib/libssl.a
-  #)
-  target_link_libraries(AyonCppApi PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+  target_link_libraries(AyonCppApi PRIVATE
+    ${OPENSSL_ROOT_DIR}/lib/libssl.a
+    ${OPENSSL_ROOT_DIR}/lib/libcrypto.a
+  )
 endif()
 
 
