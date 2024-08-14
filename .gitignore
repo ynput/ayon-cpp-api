@@ -13,8 +13,7 @@ build/
 *pluginInfo.json
 .cache
 bin/
-Docs/html/
-Docs/xml/
+Docs/docs/
 BuildArtefacts/
 AyonCppApi_CiCd/
 AyonCppApi_cicd/
