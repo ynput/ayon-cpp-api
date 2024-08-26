@@ -46,8 +46,31 @@ target_link_libraries(Your-Project AyonCppApi)
 
 ## Developing for this tool set
 
+### General
+
 When developing for this tool we try to follow the idea of Red Green development
 by first building a test that fails and then implementing the system that solves
-the test case.\n We try to have the maximum test coverage so if you find an edge
-case it might be worth implementing a test case just for that even if you know
-that the edge case is already solved.
+the test case.
+
+We try to keep everything we work on in GH issues and create branches from that.
+There are 3 Issue Options.
+
+- Bug Report
+- Feature Request
+- Proposal
+
+Feel free to use what every fits the scale of work you want to do but if you
+work on a bigger feature that holds quite a bit of complexity a Proposal would
+be important so that we can debate if the technical approach to the idea can be
+implemented this way, it also allows us to go back to older proposals and see
+what and why we decided for specific solutions.
+
+### Testing
+
+We try to have the maximum test coverage so if you find an edge case it might be
+worth implementing a test case just for that even if you know that the edge case
+is already solved.
+
+Currently all tests live in the GTestMain.cpp file this is about to change in
+the near future and we will build tests similar to how we do it in the
+[AyonDevTools](https://github.com/ynput/ayon-cpp-dev-tools)
