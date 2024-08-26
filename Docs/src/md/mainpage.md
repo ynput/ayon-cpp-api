@@ -1,13 +1,16 @@
 # Welcome to the AYON Cpp Api Project
 
-This is our CppApi to communicate with the AYON server. its currently mainly
-build to help with path resolution but can be expanded with other features at
-any time.
+The AYON Cpp Api allows communication with the Ayon server.\n The Cpp api is
+mainly focused on communication with the server Resolve endpoint.
+
+If you want easy full access to all the server functions the
+[Ayon Python Api](https://github.com/ynput/ayon-python-api) might be a better
+choice.
 
 ## Quick Links
 
 - [Getting Started Guide](md_md_Getting_Started.html)
-- [API Reference](globals.html)
+- [API Reference](annotated.html)
 
 ### Versions
 

@@ -1,7 +1,7 @@
 import shutil
 import os
 import sys
-from AyonCiCdTools.AyonCiCd import Cmake, Project, docGen, GBench, GTest
+from ayon_automator.AyonCiCd import Cmake, Project, docGen, GBench, GTest
 
 
 # define a Project that you want to CiCd
@@ -13,6 +13,20 @@ AyonCppApiPrj.add_pip_package("fastapi==0.109.1")
 AyonCppApiPrj.add_pip_package("uvicorn[standard]==0.25.0")
 AyonCppApiPrj.add_pip_package("requests")
 
+AyonCppApiPrj.setVar("BuildTest", "OFF")
+AyonCppApiPrj.setVar("JTRACE", "0")
+AyonCppApiPrj.setVar("ReleaseType", "Release")
+
+AyonCppApiPrj.setup_prj()
+
+
+SetTestVars = Project.Stage("SetTestVars")
+SetTestVars.add_funcs(
+    Project.Func("", AyonCppApiPrj.setVar, "BuildTest", "ON"),
+    Project.Func("", AyonCppApiPrj.setVar, "JTRACE", "1"),
+    Project.Func("", AyonCppApiPrj.setVar, "ReleaseType", "Release"),
+)
+AyonCppApiPrj.add_stage(SetTestVars)
 
 # define stages for this project
 CleanUpStage = Project.Stage("Cleanup")
@@ -20,17 +34,17 @@ CleanUpStage = Project.Stage("Cleanup")
 binFoulder = os.path.join(os.getcwd(), "bin")
 buildFoulder = os.path.join(os.getcwd(), "build")
 CleanUpStage.add_funcs(
-    lambda: print("build foulder path:", buildFoulder),
-    lambda: (
-        shutil.rmtree(buildFoulder, ignore_errors=True)
-        if os.path.exists(buildFoulder)
-        else print("no build foulder")
+    Project.Func(
+        f"Remove Build Foulder: {buildFoulder}",
+        shutil.rmtree,
+        buildFoulder,
+        ignore_errors=True,
     ),
-    lambda: print("build foulder path:", binFoulder),
-    lambda: (
-        shutil.rmtree(binFoulder, ignore_errors=True)
-        if os.path.exists(binFoulder)
-        else print("no bin foulder")
+    Project.Func(
+        f"Remove Bin Foulder: {binFoulder}",
+        shutil.rmtree,
+        binFoulder,
+        ignore_errors=True,
     ),
 )
 # add the stage to the project
@@ -39,38 +53,47 @@ AyonCppApiPrj.add_stage(CleanUpStage)
 
 BuildStage = Project.Stage("Build")
 BuildStage.add_funcs(
-    lambda: Cmake.cmake_command(
+    Project.Func(
+        "Run Cmake Config Commmand",
+        Cmake.cmake_command,
         AyonCppApiPrj,
         "-S",
         ".",
         "-B",
         "build",
-        f"-DBUILD_TEST={AyonCppApiPrj._project_internal_varialbes['BuildTest']}",
-        f"-DJTRACE={AyonCppApiPrj._project_internal_varialbes['JTRACE']}",
-        f"-DCMAKE_BUILD_TYPE={AyonCppApiPrj._project_internal_varialbes['ReleaseType']}",
+        lambda: f"-DBUILD_TEST={AyonCppApiPrj.getVar('BuildTest')}",
+        lambda: f"-DJTRACE={AyonCppApiPrj.getVar('JTRACE')}",
+        lambda: f"-DCMAKE_BUILD_TYPE={AyonCppApiPrj.getVar('ReleaseType')}",
     ),
-    lambda: Cmake.cmake_command(
+    Project.Func(
+        "Run Cmake Build Command",
+        Cmake.cmake_command,
         AyonCppApiPrj,
         "--build",
         "build",
         "--config",
-        f"{AyonCppApiPrj._project_internal_varialbes['ReleaseType']}",
+        lambda: f"{AyonCppApiPrj.getVar('ReleaseType')}",
     ),
-    lambda: Cmake.cmake_command(AyonCppApiPrj, "--install", "build"),
+    Project.Func(
+        "Run Cmake Install Command",
+        Cmake.cmake_command,
+        AyonCppApiPrj,
+        "--install",
+        "build",
+    ),
 )
-# BuildStage.addArtefactFoulder("bin")
+BuildStage.addArtefactFoulder("bin")
 AyonCppApiPrj.add_stage(BuildStage)
 
 
 DoxyGenStage = Project.Stage("DocumentationGen")
 DoxyGenStage.add_funcs(
-    lambda: (
-        shutil.rmtree("Docs/html")
-        if os.path.exists("Docs/html")
-        else print("Docs dir clean")
-    ),
-    lambda: docGen.doxygen_run(
-        os.path.join(os.getcwd(), "Docs/src/Doxyfile"), AyonCppApiPrj
+    Project.Func("Remove Htlm Docs", shutil.rmtree, "Docs/html", ignore_errors=True),
+    Project.Func(
+        "Generate Html Docs",
+        docGen.doxygen_run,
+        os.path.join(os.getcwd(), "Docs/src/Doxyfile"),
+        AyonCppApiPrj,
     ),
 )
 DoxyGenStage.addArtefactFoulder("Docs/html")
@@ -143,46 +166,88 @@ def stopTestServer():
     ServerPocVar.terminate()
 
 
+SetupTestServer = Project.Stage("SetupTestServer")
+SetupTestServer.add_funcs(
+    Project.Func("Start Test Server", startTestServer),
+    Project.Func("Wait For Test Server to be Avaialbe", CheckTestServer),
+)
+AyonCppApiPrj.add_stage(SetupTestServer)
+
+StopTestServer = Project.Stage("StopTestServer")
+StopTestServer.add_funcs(
+    Project.Func("Stop Test Server", stopTestServer),
+)
+AyonCppApiPrj.add_stage(StopTestServer)
+
 TestStage = Project.Stage("Test")
 TestStage.add_funcs(
-    lambda: startTestServer(),
-    lambda: CheckTestServer(),
-    lambda: startTestApp(),
-    lambda: runSerialBench(),
-    lambda: runBatchBench(),
-    lambda: runAllBench(),
-    lambda: stopTestServer(),
+    Project.Func("Run GTest", startTestApp),
 )
-TestStage.addArtefactFoulder("bin/profBatch.json")
-TestStage.addArtefactFoulder("bin/profSerial.json")
 AyonCppApiPrj.add_stage(TestStage)
 
-SetBaseVars = Project.Stage("SetBaseVars")
-SetBaseVars.add_funcs(
-    lambda: AyonCppApiPrj.setVar("BuildTest", "OFF"),
-    lambda: AyonCppApiPrj.setVar("JTRACE", "0"),
-    lambda: AyonCppApiPrj.setVar("ReleaseType", "Release"),
-)
 
-SetTestVars = Project.Stage("SetTestVars")
-SetTestVars.add_funcs(
-    lambda: AyonCppApiPrj.setVar("BuildTest", "ON"),
-    lambda: AyonCppApiPrj.setVar("JTRACE", "1"),
-    lambda: AyonCppApiPrj.setVar("ReleaseType", "Release"),
+BenchStage = Project.Stage("Test")
+BenchStage.add_funcs(
+    Project.Func("Start Test Server", startTestServer),
+    Project.Func("Wait For Test Server to be Avaialbe", CheckTestServer),
+    Project.Func("Run GTest", startTestApp),
+    Project.Func("Run GBench Serial Bench", runSerialBench),
+    Project.Func("Run GBench Batch Bench", runBatchBench),
+    Project.Func("Run GBench All Benchmark's", runAllBench),
+    Project.Func("Stop Test Server", stopTestServer),
 )
+BenchStage.addArtefactFoulder("bin/profBatch.json")
+BenchStage.addArtefactFoulder("bin/profSerial.json")
+AyonCppApiPrj.add_stage(BenchStage)
 
 
 AyonCppApiPrj.creat_stage_group(
-    "CleanBuild", SetBaseVars, CleanUpStage, BuildStage
+    "CleanBuild", CleanUpStage, BuildStage
 )  # SetBaseVars needs to replace SetTestVars
 AyonCppApiPrj.creat_stage_group(
-    "CleanBuildAndDocs", SetBaseVars, CleanUpStage, BuildStage, DoxyGenStage
+    "CleanBuildAndDocs", CleanUpStage, BuildStage, DoxyGenStage
 )
-AyonCppApiPrj.creat_stage_group("BuildAndTest", SetTestVars, BuildStage, TestStage)
 AyonCppApiPrj.creat_stage_group(
-    "CleanBuildAndTest", CleanUpStage, SetTestVars, BuildStage, TestStage
+    "BuildAndTest", SetTestVars, BuildStage, SetupTestServer, TestStage, StopTestServer
+)
+AyonCppApiPrj.creat_stage_group(
+    "CleanBuildAndTest",
+    CleanUpStage,
+    SetTestVars,
+    BuildStage,
+    SetupTestServer,
+    TestStage,
+    StopTestServer,
 )
 
-# make the CiCd class available to the Cli so we can interact with it
+AyonCppApiPrj.creat_stage_group(
+    "BuildAndBnech",
+    SetTestVars,
+    BuildStage,
+    SetupTestServer,
+    BenchStage,
+    StopTestServer,
+)
+AyonCppApiPrj.creat_stage_group(
+    "CleanBuildAndBnech",
+    CleanUpStage,
+    SetTestVars,
+    BuildStage,
+    SetupTestServer,
+    BenchStage,
+    StopTestServer,
+)
+AyonCppApiPrj.creat_stage_group(
+    "CleanBuildAndBnechPlusTest",
+    CleanUpStage,
+    SetTestVars,
+    BuildStage,
+    SetupTestServer,
+    TestStage,
+    BenchStage,
+    StopTestServer,
+)
+
+
 with AyonCppApiPrj as PRJ:
     PRJ.make_project_cli_available()
