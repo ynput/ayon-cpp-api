@@ -1,12 +1,3 @@
----
-name: Proposal (Technical)
-about: 'Propose a new implementation, tool, system or feature. '
-title: ''
-labels: ''
-assignees: ''
-
----
-
 name: Proposal (Technical)
 description: 'Propose a new implementation, tool, system or feature. '
 title: "[Pruposal]_Title"
