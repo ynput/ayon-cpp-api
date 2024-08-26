@@ -14,7 +14,3 @@
 	path = ext/backward-cpp
   url = https://github.com/bombela/backward-cpp.git
   tag = v1.6
-[submodule "AyonCiCdTools"]
-	path = AyonCiCdTools
-  url = https://github.com/ynput/ayon-automator.git
-  tag = v0.1.0
