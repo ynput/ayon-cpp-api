@@ -36,10 +36,16 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/spdlog" EXCLUDE_FROM_ALL)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/spdlog/include")
 
 project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
-if(BUILD_TEST)
+
+if(AYON_CPP_API_ENALBE_GTEST)
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/googletest")
+endif()
+if(AYON_CPP_API_ENALBE_GBENCH)
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/benchmark")
-  add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")       # Don't add / Build test app 
+endif()
+
+if(AYON_CPP_API_ENALBE_GTEST OR AYON_CPP_API_ENALBE_GBENCH)
+  add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")  
 endif()
 
 

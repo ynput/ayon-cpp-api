@@ -13,7 +13,8 @@ AyonCppApiPrj.add_pip_package("fastapi==0.109.1")
 AyonCppApiPrj.add_pip_package("uvicorn[standard]==0.25.0")
 AyonCppApiPrj.add_pip_package("requests")
 
-AyonCppApiPrj.setVar("BuildTest", "OFF")
+AyonCppApiPrj.setVar("AYON_CPP_API_ENALBE_GBENCH", "OFF")
+AyonCppApiPrj.setVar("AYON_CPP_API_ENALBE_GTEST", "OFF")
 AyonCppApiPrj.setVar("JTRACE", "0")
 AyonCppApiPrj.setVar("ReleaseType", "Release")
 
@@ -22,7 +23,8 @@ AyonCppApiPrj.setup_prj()
 
 SetTestVars = Project.Stage("SetTestVars")
 SetTestVars.add_funcs(
-    Project.Func("", AyonCppApiPrj.setVar, "BuildTest", "ON"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GBENCH", "ON"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GTEST", "ON"),
     Project.Func("", AyonCppApiPrj.setVar, "JTRACE", "1"),
     Project.Func("", AyonCppApiPrj.setVar, "ReleaseType", "Release"),
 )
@@ -61,7 +63,8 @@ BuildStage.add_funcs(
         ".",
         "-B",
         "build",
-        lambda: f"-DBUILD_TEST={AyonCppApiPrj.getVar('BuildTest')}",
+        lambda: f"-DAYON_CPP_API_ENALBE_GBENCH={AyonCppApiPrj.getVar('AYON_CPP_API_ENALBE_GBENCH')}",
+        lambda: f"-DAYON_CPP_API_ENALBE_GTEST={AyonCppApiPrj.getVar('AYON_CPP_API_ENALBE_GTEST')}",
         lambda: f"-DJTRACE={AyonCppApiPrj.getVar('JTRACE')}",
         lambda: f"-DCMAKE_BUILD_TYPE={AyonCppApiPrj.getVar('ReleaseType')}",
     ),
@@ -163,7 +166,7 @@ def CheckTestServer():
 
 
 def stopTestServer():
-    ServerPocVar.terminate()
+    ServerPocVar.kill()
 
 
 SetupTestServer = Project.Stage("SetupTestServer")
@@ -181,29 +184,24 @@ AyonCppApiPrj.add_stage(StopTestServer)
 
 TestStage = Project.Stage("Test")
 TestStage.add_funcs(
+    Project.Func("Start Testing", print),
     Project.Func("Run GTest", startTestApp),
 )
 AyonCppApiPrj.add_stage(TestStage)
 
 
-BenchStage = Project.Stage("Test")
+BenchStage = Project.Stage("Bench")
 BenchStage.add_funcs(
-    Project.Func("Start Test Server", startTestServer),
-    Project.Func("Wait For Test Server to be Avaialbe", CheckTestServer),
-    Project.Func("Run GTest", startTestApp),
     Project.Func("Run GBench Serial Bench", runSerialBench),
     Project.Func("Run GBench Batch Bench", runBatchBench),
     Project.Func("Run GBench All Benchmark's", runAllBench),
-    Project.Func("Stop Test Server", stopTestServer),
 )
 BenchStage.addArtefactFoulder("bin/profBatch.json")
 BenchStage.addArtefactFoulder("bin/profSerial.json")
 AyonCppApiPrj.add_stage(BenchStage)
 
 
-AyonCppApiPrj.creat_stage_group(
-    "CleanBuild", CleanUpStage, BuildStage
-)  # SetBaseVars needs to replace SetTestVars
+AyonCppApiPrj.creat_stage_group("CleanBuild", CleanUpStage, BuildStage)
 AyonCppApiPrj.creat_stage_group(
     "CleanBuildAndDocs", CleanUpStage, BuildStage, DoxyGenStage
 )

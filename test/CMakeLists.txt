@@ -1,5 +1,5 @@
 
-if(BUILD_TEST)
+if(AYON_CPP_API_ENALBE_GTEST)
   add_executable(AyonCppApiGtestMain GTestMain.cpp AyonCppApiTestsMain.cpp) 
 
     target_link_libraries(AyonCppApiGtestMain PRIVATE AyonCppApi)
@@ -11,7 +11,9 @@ if(BUILD_TEST)
       DESTINATION ${CMAKE_INSTALL_PREFIX}
     )
 
+endif()
 
+if(AYON_CPP_API_ENALBE_GBENCH)
   add_executable(AyonCppApiGBenchMain GBenchMain.cpp AyonCppApiTestsMain.cpp) 
 
     target_link_libraries(AyonCppApiGBenchMain PRIVATE AyonCppApi)
