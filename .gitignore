@@ -13,5 +13,8 @@ build/
 *pluginInfo.json
 .cache
 bin/
-docs/html/
-
+Docs/docs/
+BuildArtefacts/
+AyonCppApi_CiCd/
+AyonCppApi_cicd/
+__pycache__
