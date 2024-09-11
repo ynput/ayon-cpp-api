@@ -8,7 +8,7 @@ An API Wrapper for [AYON server](https://ayon.ynput.io/) written in cpp
 > these commands
 > `git clone --recurse-submodules git@github.com:ynput/ayon-cpp-api.git` to
 > clone the repo with all its submodules.   
-> `git submodule update --init --recursive` to can then be used to initialize [Submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) when you change the branch or update other [Submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) related parts
+> `git submodule update --init --recursive` to initialize the [Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) when you change the branch
 
 > [!NOTE]\
 > we use tags in our [.gitmodules](https://git-scm.com/docs/gitmodules) in order to give a better overview towards the used [Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) used in this repo. 
@@ -19,10 +19,6 @@ An API Wrapper for [AYON server](https://ayon.ynput.io/) written in cpp
 > git submodule update --remote
 > ```
 
-> [!IMPORTANT]\
-> we allways run tests for both linux and windows on the compiled libarys but the developemnt setup is build on linux with the intention to be as cross platform as posible. but it can allways happend that something is not working on windows so if you have a wish or a bug report it. 
-
-
 ## Requirements:
 
 - C++ Compiler
@@ -32,14 +28,22 @@ An API Wrapper for [AYON server](https://ayon.ynput.io/) written in cpp
 
 ## Tested Platforms:
 - Alma Linux9
-- win 10
+- win 11
 
-## Build Setps
+## Include via Cmake
+```cmake 
+add_subdirectory("ayon-cpp-api")
+include_directories("ayon-cpp-api")
+target_link_libraries(Your-App AyonCppApi)
+```
 
-the build setup recently moved from a .sh/.bat file into python in order to
+
+## Build Steps
+
+The build setup recently moved from a .sh/.bat file into python in order to
 allow for easy Usage. The python setup also includes optional tests.
 
-The python setup exposes functions to the CLI and it can be run with every
+The python setup exposes functions to the CLI, and it can be run with every
 python executable. But you will need pip for the Automatic package Installation.
 
 Set up the build Env
@@ -58,7 +62,7 @@ Run one off the following build Setups
 
 ## Usage / Config
 
-## Using environment variables to Controle the API
+## Using environment variables to Control the API
 
 The `AyonLogger` can be controlled with these environment variables:
 
@@ -79,11 +83,9 @@ supplied by your Ayon Launch Env)
 | `AYON_SITE_ID`      | `the side Id that Ayon launcher asinged to your machine` |
 | `AYON_PROJECT_NAME` | `the Project name you want to work agains`               |
 
-## Useage (Dev)
+## Usage (Dev)
 
-Here will be The documentation on how to Develop for the AyonCppApi
-
-## How dose it work
-
-Here will be a High Lvl overview on how the AyonCppAPi functions
+you can find even more Docs in the connected DoxyGen Site. 
+You can Generate yourself an instance via the auto_docs.py in the Docs/src fouler (This will use Python to host a simple http server on port 8009 for displaying)
+or Check out the newest Release on the [Docs Page](https://ynput.github.io/ayon-cpp-api/) 
 
