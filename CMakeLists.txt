@@ -10,8 +10,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_compile_definitions(JTRACE=${JTRACE})
-# We need to define this variable in order for httplib to support https clients 
-add_compile_definitions(CPPHTTPLIB_OPENSSL_SUPPORT)
 
 option(BUILD_TEST "Build the test application" OFF)
 
