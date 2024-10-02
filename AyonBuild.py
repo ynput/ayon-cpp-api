@@ -103,20 +103,13 @@ AyonCppApiPrj.add_stage(DoxyGenStage)
 
 
 def startTestApp():
-    env = os.environ.copy()
 
     GTest.run_google_test(
         "bin/AyonCppApiGtestMain",
         f"{AyonCppApiPrj._build_artefacts_out_path}/GTest/Test.xml",
         AyonCppApiPrj,
-        env,
+        None,
     )
-
-
-def setupBenchEnvVars():
-    env = os.environ.copy()
-
-    return env
 
 
 def runSerialBench():
@@ -124,7 +117,7 @@ def runSerialBench():
         "bin/AyonCppApiGBenchMain",
         f"{AyonCppApiPrj._build_artefacts_out_path}/GBench/SerialResolve.json",
         None,
-        setupBenchEnvVars(),
+        None,
         "--benchmark_filter=AyonCppApiSerialResolve",
     )
 
@@ -134,7 +127,7 @@ def runBatchBench():
         "bin/AyonCppApiGBenchMain",
         f"{AyonCppApiPrj._build_artefacts_out_path}/GBench/BatchResolve.json",
         None,
-        setupBenchEnvVars(),
+        None,
         "--benchmark_filter=AyonCppApiBatchResolve",
     )
 
@@ -144,7 +137,7 @@ def runAllBench():
         "bin/AyonCppApiGBenchMain",
         f"{AyonCppApiPrj._build_artefacts_out_path}/GBench/AllResolve.json",
         None,
-        setupBenchEnvVars(),
+        None,
     )
 
 
