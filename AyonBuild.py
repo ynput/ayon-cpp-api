@@ -104,10 +104,6 @@ AyonCppApiPrj.add_stage(DoxyGenStage)
 
 def startTestApp():
     env = os.environ.copy()
-    # env["AYON_API_KEY"] = "SuperSaveTestKey"
-    # env["AYON_SERVER_URL"] = "http://localhost:8003"
-    # env["AYON_SITE_ID"] = "TestId"
-    # env["AYON_PROJECT_NAME"] = "TestPrjName"
 
     GTest.run_google_test(
         "bin/AyonCppApiGtestMain",
@@ -119,12 +115,7 @@ def startTestApp():
 
 def setupBenchEnvVars():
     env = os.environ.copy()
-    # env["AYON_API_KEY"] = "SuperSaveTestKey"
-    # env["AYON_SERVER_URL"] = "http://localhost:8003"
-    # env["AYON_SITE_ID"] = "TestId"
-    # env["AYON_PROJECT_NAME"] = "TestPrjName"
-    # env["AYONLOGGERLOGLVL"] = "CRITICAL"
-    # env["AYONLOGGERFILELOGGING"] = "OFF"
+
     return env
 
 
