@@ -1,17 +1,15 @@
 #ifndef AYONCPPAPI_H
 #define AYONCPPAPI_H
-#include "AyonCppApiCrossPlatformMacros.h"
 #include <sys/types.h>
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <mutex>
-#include <regex>
-#include <shared_mutex>
+#include <optional>
+
 #include <string>
 #include <utility>
 #include <vector>
-#include "AyonLogger.h"
+#include "lib/ynput/lib/logging/AyonLogger.hpp"
 #include "appDataFoulder.h"
 #include "httplib.h"
 #include "nlohmann/json_fwd.hpp"
@@ -27,7 +25,12 @@ class AyonApi {
         /**
          * @brief constructor
          */
-        AyonApi();
+        AyonApi(const std::string &logFilePos,
+                const std::string &authKey,
+                const std::string &serverUrl,
+                const std::string &ayonProjectName,
+                const std::string &siteId,
+                std::optional<int> concurrency = std::nullopt);
         /**
          * @brief destructor
          */
@@ -164,67 +167,62 @@ class AyonApi {
         std::string convertUriVecToString(const std::vector<std::string> &uriVec);
 
         // ----- Env Varibles
+        std::unique_ptr<httplib::Client> m_AyonServer;
 
-        std::unique_ptr<httplib::Client> AyonServer;
+        std::unordered_map<std::string, std::string> m_siteRoots;
 
-        std::unordered_map<std::string, std::string> siteRoots;
-
-        const char* authKey;
-        const char* serverUrl;
-        std::string ayonProjectName;
-
-        std::string ayonAppData = getAppDataDir() + "/AYON";
+        const std::string m_authKey;
+        const std::string m_serverUrl;
+        std::string m_ayonProjectName;
 
         // ---- Server Vars
-        std::string siteId;
-        std::string userName;
+        std::string m_siteId;
+        std::string m_userName;
 
         // --- Runtime Dep Vars
 
         // Async Grp Generation Varibles
-        u_int8_t minGrpSizeForAsyncRequests = 10;
-        u_int16_t regroupSizeForAsyncRequests = 200;
-        u_int16_t maxGroupSizeForAsyncRequests = 300;
-        u_int16_t minVecSizeForGroupSplitAsyncRequests = 50;
-        u_int8_t maxCallRetrys = 8;
-        u_int16_t retryWaight = 800;
+        uint8_t m_minGrpSizeForAsyncRequests = 10;
+        uint16_t m_regroupSizeForAsyncRequests = 200;
+        uint16_t m_maxGroupSizeForAsyncRequests = 300;
+        uint16_t m_minVecSizeForGroupSplitAsyncRequests = 50;
+        uint8_t m_maxCallRetrys = 8;
+        uint16_t m_retryWaight = 800;
 
         /**
          * @brief maximum number off threads that the cpu can handle at the same time. Will be set via constructor
          */
-        const int num_threads;   // set by constructor
-        std::shared_ptr<AyonLogger> Log;
-        std::string uriResolverEndpoint = "/api/resolve";
-        std::string uriResolverEndpointPathOnlyVar = "?pathOnly=true";
-        bool pathOnlyReselution = true;
+        const int m_num_threads;   // set by constructor
+        std::shared_ptr<AyonLogger> m_Log;
+        std::string m_uriResolverEndpoint = "/api/resolve";
+        std::string m_uriResolverEndpointPathOnlyVar = "?pathOnly=true";
+        bool m_pathOnlyReselution = true;
 
-        std::mutex ConcurentRequestAfterffoMutex;
-        uint8_t maxConcurentRequestAfterffo = 8;
+        std::mutex m_ConcurentRequestAfterffoMutex;
+        uint8_t m_maxConcurentRequestAfterffo = 8;
 
-        uint16_t GenerativeCorePostMaxLoopIterations = 200;
+        uint16_t m_GenerativeCorePostMaxLoopIterations = 200;
 
-        u_int16_t connectionTimeOutMax = 200;
-        u_int8_t readTimeOutMax = 160;
-        // bool enableThreadWaithing = false;
-        // bool enableBigBlockThreadWaithing = true;
+        uint16_t m_connectionTimeOutMax = 200;
+        uint8_t m_readTimeOutMax = 160;
+
         /**
          * @brief decides if the cpp api removes duplicates from batch request vector default is true
          */
-        bool batchResolveOptimizeVector = true;
+        bool m_batchResolveOptimizeVector = true;
 
-        uint16_t ServerBusyCode = 503;
-        uint16_t RequestDelayWhenServerBusy = 10000;
-        // std::mutex allowRequest;
+        uint16_t m_ServerBusyCode = 503;
+        uint16_t m_RequestDelayWhenServerBusy = 10000;
 
         /**
          * @brief this bool will be set to true if a 503 is encountered
          */
-        bool serverBusy = false;
+        bool m_serverBusy = false;
 
         /**
          * @brief needed for serial resolve operations. to lock acces to AyonServer shared pointer
          */
-        std::mutex AyonServerMutex;
+        std::mutex m_AyonServerMutex;
 };
 
 #endif   // !AYONCPPAPI_H

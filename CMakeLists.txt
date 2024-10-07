@@ -30,8 +30,13 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/cpp-httplib" EXCLUDE_FROM_ALL)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/cpp-httplib")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/json" EXCLUDE_FROM_ALL)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/json/include")
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/spdlog" EXCLUDE_FROM_ALL)
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/spdlog/include")
+# add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/spdlog" EXCLUDE_FROM_ALL)
+# include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/spdlog/include")
+
+set(AYON_CPPTOOLS_BUILD_LOGGER 1)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools/src/")
+
 
 project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
 

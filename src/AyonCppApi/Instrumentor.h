@@ -1,7 +1,6 @@
 #ifndef AYONCPPAPIINSTRUMENTOR_H
 #define AYONCPPAPIINSTRUMENTOR_H
 
-#include "AyonCppApiCrossPlatformMacros.h"
 #include <string>
 #include <chrono>
 #include <algorithm>

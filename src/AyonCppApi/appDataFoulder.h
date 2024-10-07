@@ -4,7 +4,6 @@
 #include <string>
 #include <cstdlib>
 #include <filesystem>
-#include "AyonCppApiCrossPlatformMacros.h"
 
 #ifdef _WIN32
     #include <windows.h>
