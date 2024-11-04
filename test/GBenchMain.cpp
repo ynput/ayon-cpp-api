@@ -7,9 +7,21 @@
 
 nlohmann::json JsonFile;
 
+AyonApi
+getApiInstance() {
+    std::string AYON_API_KEY("SuperSaveTestKey");
+    std::string AYON_SERVER_URL("http://localhost:8003");
+    std::string AYON_SITE_ID("TestId");
+    std::string AYON_PROJECT_NAME("TestPrjName");
+    std::string AYONLOGGERLOGLVL("CRITICAL");
+    std::string AYONLOGGERFILELOGGING("OFF");
+
+    return AyonApi("./test_logs", AYON_API_KEY, AYON_SERVER_URL, AYON_PROJECT_NAME, AYON_SITE_ID);
+}
+
 void
 AyonCppApiSerialResolve(benchmark::State &state) {
-    AyonApi Api = AyonApi();
+    AyonApi Api = getApiInstance();
     nlohmann::json JsonFileStage = JsonFile["Resolve"];
     bool RunOnlyOneResolveIteration = true;
     bool printResult = false;
@@ -21,7 +33,7 @@ AyonCppApiSerialResolve(benchmark::State &state) {
 
 void
 AyonCppApiBatchResolve(benchmark::State &state) {
-    AyonApi Api = AyonApi();
+    AyonApi Api = getApiInstance();
     nlohmann::json JsonFileStage = JsonFile["Resolve"];
     bool printResult = false;
 

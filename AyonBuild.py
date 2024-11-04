@@ -4,10 +4,8 @@ import sys
 from ayon_automator.AyonCiCd import Cmake, Project, docGen, GBench, GTest
 
 
-# define a Project that you want to CiCd
 AyonCppApiPrj = Project.Project("AyonCppApi")
 
-# add packages to the project
 AyonCppApiPrj.add_pip_package("pytest")
 AyonCppApiPrj.add_pip_package("fastapi==0.109.1")
 AyonCppApiPrj.add_pip_package("uvicorn[standard]==0.25.0")
@@ -30,9 +28,7 @@ SetTestVars.add_funcs(
 )
 AyonCppApiPrj.add_stage(SetTestVars)
 
-# define stages for this project
 CleanUpStage = Project.Stage("Cleanup")
-# define what happens in this stage
 binFoulder = os.path.join(os.getcwd(), "bin")
 buildFoulder = os.path.join(os.getcwd(), "build")
 CleanUpStage.add_funcs(
@@ -49,7 +45,6 @@ CleanUpStage.add_funcs(
         ignore_errors=True,
     ),
 )
-# add the stage to the project
 AyonCppApiPrj.add_stage(CleanUpStage)
 
 
@@ -59,6 +54,7 @@ BuildStage.add_funcs(
         "Run Cmake Config Commmand",
         Cmake.cmake_command,
         AyonCppApiPrj,
+        None,
         "-S",
         ".",
         "-B",
@@ -72,15 +68,18 @@ BuildStage.add_funcs(
         "Run Cmake Build Command",
         Cmake.cmake_command,
         AyonCppApiPrj,
+        None,
         "--build",
         "build",
         "--config",
         lambda: f"{AyonCppApiPrj.getVar('ReleaseType')}",
+        f"-j{os.cpu_count()}",
     ),
     Project.Func(
         "Run Cmake Install Command",
         Cmake.cmake_command,
         AyonCppApiPrj,
+        None,
         "--install",
         "build",
     ),
@@ -104,49 +103,41 @@ AyonCppApiPrj.add_stage(DoxyGenStage)
 
 
 def startTestApp():
-    os.environ["AYON_API_KEY"] = "SuperSaveTestKey"
-    os.environ["AYON_SERVER_URL"] = "http://localhost:8003"
-    os.environ["AYON_SITE_ID"] = "TestId"
-    os.environ["AYON_PROJECT_NAME"] = "TestPrjName"
+
     GTest.run_google_test(
         "bin/AyonCppApiGtestMain",
         f"{AyonCppApiPrj._build_artefacts_out_path}/GTest/Test.xml",
         AyonCppApiPrj,
+        None,
     )
 
 
-def setupBenchEnvVars():
-    os.environ["AYON_API_KEY"] = "SuperSaveTestKey"
-    os.environ["AYON_SERVER_URL"] = "http://localhost:8003"
-    os.environ["AYON_SITE_ID"] = "TestId"
-    os.environ["AYON_PROJECT_NAME"] = "TestPrjName"
-    os.environ["AYONLOGGERLOGLVL"] = "CRITICAL"
-    os.environ["AYONLOGGERFILELOGGING"] = "OFF"
-
-
 def runSerialBench():
-    setupBenchEnvVars()
     GBench.run_google_benchmark(
         "bin/AyonCppApiGBenchMain",
         f"{AyonCppApiPrj._build_artefacts_out_path}/GBench/SerialResolve.json",
+        None,
+        None,
         "--benchmark_filter=AyonCppApiSerialResolve",
     )
 
 
 def runBatchBench():
-    setupBenchEnvVars()
     GBench.run_google_benchmark(
         "bin/AyonCppApiGBenchMain",
         f"{AyonCppApiPrj._build_artefacts_out_path}/GBench/BatchResolve.json",
+        None,
+        None,
         "--benchmark_filter=AyonCppApiBatchResolve",
     )
 
 
 def runAllBench():
-    setupBenchEnvVars()
     GBench.run_google_benchmark(
         "bin/AyonCppApiGBenchMain",
         f"{AyonCppApiPrj._build_artefacts_out_path}/GBench/AllResolve.json",
+        None,
+        None,
     )
 
 
@@ -201,12 +192,24 @@ BenchStage.addArtefactFoulder("bin/profSerial.json")
 AyonCppApiPrj.add_stage(BenchStage)
 
 
-AyonCppApiPrj.creat_stage_group("CleanBuild", CleanUpStage, BuildStage)
 AyonCppApiPrj.creat_stage_group(
-    "CleanBuildAndDocs", CleanUpStage, BuildStage, DoxyGenStage
+    "CleanBuild",
+    CleanUpStage,
+    BuildStage,
 )
 AyonCppApiPrj.creat_stage_group(
-    "BuildAndTest", SetTestVars, BuildStage, SetupTestServer, TestStage, StopTestServer
+    "CleanBuildAndDocs",
+    CleanUpStage,
+    BuildStage,
+    DoxyGenStage,
+)
+AyonCppApiPrj.creat_stage_group(
+    "BuildAndTest",
+    SetTestVars,
+    BuildStage,
+    SetupTestServer,
+    TestStage,
+    StopTestServer,
 )
 AyonCppApiPrj.creat_stage_group(
     "CleanBuildAndTest",
