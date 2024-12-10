@@ -9,9 +9,12 @@ target_precompile_headers(AyonCppApi PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../e
 
 target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/json)
 target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/json/include)
-target_link_libraries(AyonCppApi PRIVATE nlohmann_json::nlohmann_json)
 
+
+target_link_libraries(AyonCppApi PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(AyonCppApi PRIVATE Backward::Interface)
+
+target_compile_definitions(AyonCppApi INTERFACE CPPHTTPLIB_OPENSSL_SUPPORT) 
 
 if(WIN32)
   target_link_libraries(AyonCppApi PRIVATE 
@@ -24,7 +27,7 @@ else()
     ${OPENSSL_ROOT_DIR}/lib/libcrypto.a
   )
 endif()
-
+target_include_directories(AyonCppApi PUBLIC ${OPENSSL_ROOT_DIR}/include)
 
 target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/spdlog)
 
@@ -40,6 +43,6 @@ install (
 )
 
 install (
-  FILES AyonCppApi.h appDataFoulder.h AyonLogger.h devMacros.h Instrumentor.h
+  FILES AyonCppApi.h appDataFoulder.h devMacros.h Instrumentor.h
   DESTINATION include
 ) 

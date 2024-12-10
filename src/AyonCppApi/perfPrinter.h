@@ -1,4 +1,3 @@
-#include "AyonCppApiCrossPlatformMacros.h"
 #include <chrono>
 #include <iostream>
 #include <string>
