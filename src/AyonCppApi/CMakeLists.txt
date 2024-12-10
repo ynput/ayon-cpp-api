@@ -14,7 +14,7 @@ target_include_directories(AyonCppApi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../e
 target_link_libraries(AyonCppApi PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(AyonCppApi PRIVATE Backward::Interface)
 
-target_compile_definitions(AyonCppApi INTERFACE CPPHTTPLIB_OPENSSL_SUPPORT) 
+target_compile_definitions(AyonCppApi PUBLIC CPPHTTPLIB_OPENSSL_SUPPORT) 
 
 if(WIN32)
   target_link_libraries(AyonCppApi PRIVATE 
