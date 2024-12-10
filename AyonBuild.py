@@ -59,6 +59,7 @@ BuildStage.add_funcs(
         "Run Cmake Config Commmand",
         Cmake.cmake_command,
         AyonCppApiPrj,
+        None,
         "-S",
         ".",
         "-B",
@@ -72,6 +73,7 @@ BuildStage.add_funcs(
         "Run Cmake Build Command",
         Cmake.cmake_command,
         AyonCppApiPrj,
+        None,
         "--build",
         "build",
         "--config",
@@ -81,11 +83,12 @@ BuildStage.add_funcs(
         "Run Cmake Install Command",
         Cmake.cmake_command,
         AyonCppApiPrj,
+        None,
         "--install",
         "build",
     ),
 )
-BuildStage.addArtefactFoulder("bin")
+BuildStage.addArtefactFolder("bin")
 AyonCppApiPrj.add_stage(BuildStage)
 
 
@@ -99,7 +102,7 @@ DoxyGenStage.add_funcs(
         AyonCppApiPrj,
     ),
 )
-DoxyGenStage.addArtefactFoulder("Docs/html")
+DoxyGenStage.addArtefactFolder("Docs/html")
 AyonCppApiPrj.add_stage(DoxyGenStage)
 
 
@@ -112,6 +115,7 @@ def startTestApp():
         "bin/AyonCppApiGtestMain",
         f"{AyonCppApiPrj._build_artefacts_out_path}/GTest/Test.xml",
         AyonCppApiPrj,
+        None,
     )
 
 
@@ -196,8 +200,8 @@ BenchStage.add_funcs(
     Project.Func("Run GBench Batch Bench", runBatchBench),
     Project.Func("Run GBench All Benchmark's", runAllBench),
 )
-BenchStage.addArtefactFoulder("bin/profBatch.json")
-BenchStage.addArtefactFoulder("bin/profSerial.json")
+BenchStage.addArtefactFolder("bin/profBatch.json")
+BenchStage.addArtefactFolder("bin/profSerial.json")
 AyonCppApiPrj.add_stage(BenchStage)
 
 
