@@ -16,6 +16,7 @@ bin/
 Docs/docs/
 test_logs/
 BuildArtefacts/
+test_logs/
 AyonCppApi_CiCd/
 AyonCppApi_cicd/
 __pycache__

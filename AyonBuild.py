@@ -84,7 +84,7 @@ BuildStage.add_funcs(
         "build",
     ),
 )
-BuildStage.addArtefactFoulder("bin")
+BuildStage.addArtefactFolder("bin")
 AyonCppApiPrj.add_stage(BuildStage)
 
 
@@ -98,7 +98,7 @@ DoxyGenStage.add_funcs(
         AyonCppApiPrj,
     ),
 )
-DoxyGenStage.addArtefactFoulder("Docs/html")
+DoxyGenStage.addArtefactFolder("Docs/html")
 AyonCppApiPrj.add_stage(DoxyGenStage)
 
 
@@ -187,8 +187,8 @@ BenchStage.add_funcs(
     Project.Func("Run GBench Batch Bench", runBatchBench),
     Project.Func("Run GBench All Benchmark's", runAllBench),
 )
-BenchStage.addArtefactFoulder("bin/profBatch.json")
-BenchStage.addArtefactFoulder("bin/profSerial.json")
+BenchStage.addArtefactFolder("bin/profBatch.json")
+BenchStage.addArtefactFolder("bin/profSerial.json")
 AyonCppApiPrj.add_stage(BenchStage)
 
 
