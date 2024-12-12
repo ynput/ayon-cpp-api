@@ -25,7 +25,7 @@ class AyonApi {
         /**
          * @brief constructor
          */
-        AyonApi(const std::string &logFilePos,
+        AyonApi(const std::optional<std::string> &logFilePos,
                 const std::string &authKey,
                 const std::string &serverUrl,
                 const std::string &ayonProjectName,

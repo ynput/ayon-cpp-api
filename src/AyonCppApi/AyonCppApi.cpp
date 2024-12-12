@@ -33,9 +33,11 @@
 #include "perfPrinter.h"
 
 // TODO implement the better Crash hanlder
+// TODO this implementation dose not check for empty or invalid values. (if sideID is empty we get an http::500 while
+// the error is not at the server)
 backward::StackTrace st;
 
-AyonApi::AyonApi(const std::string &logFilePos,
+AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
                  const std::string &authKey,
                  const std::string &serverUrl,
                  const std::string &ayonProjectName,
@@ -49,18 +51,29 @@ AyonApi::AyonApi(const std::string &logFilePos,
     PerfTimer("AyonApi::AyonApi");
 
     // ----------- Init m_Logger
-    std::filesystem::path logFileName = "logFile.json";
-    std::filesystem::path basePath = logFilePos;
-    std::filesystem::path logFilePath = std::filesystem::absolute(basePath) / logFileName;
 
-    if (std::filesystem::exists(logFilePath)) {
-        logFilePath = std::filesystem::canonical(logFilePath);
-    }
-    else {
-        std::filesystem::create_directories(logFilePath.parent_path());
-    }
+    std::filesystem::path logPath;
+    if (logFilePos.has_value()) {
+        std::filesystem::path inPath(logFilePos.value());
 
-    m_Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(logFilePath.string()));
+        if (inPath.is_relative()) {
+            logPath = std::filesystem::weakly_canonical(inPath);
+        }
+        if (!inPath.has_parent_path()) {
+            // if the input path is just an filename we will just throw it into tmp
+            logPath = std::filesystem::temp_directory_path() / inPath;
+        }
+        // we allways want the data to be a json, so we just enforce it.
+        logPath.replace_extension(".json");
+
+        if (std::filesystem::exists(logPath)) {
+            logPath = std::filesystem::canonical(logPath);
+        }
+        else {
+            std::filesystem::create_directories(logPath.parent_path());
+        }
+    }
+    m_Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(logPath.string()));
     m_Log->LogLevlWarn();
 
     m_Log->info(m_Log->key("AyonApi"), "Init AyonServer httplib::Client");
