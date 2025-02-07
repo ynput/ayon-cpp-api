@@ -9,8 +9,7 @@
 
 nlohmann::json JsonFile;
 
-AyonApi
-getApiInstance() {
+AyonApi getApiInstance() {
     std::string AYON_API_KEY("SuperSaveTestKey");
     std::string AYON_SERVER_URL("http://localhost:8003");
     std::string AYON_SITE_ID("TestId");
@@ -21,14 +20,13 @@ getApiInstance() {
     return AyonApi("./test_logs", AYON_API_KEY, AYON_SERVER_URL, AYON_PROJECT_NAME, AYON_SITE_ID);
 }
 
-TEST(AyonCppApi, AyonCppApiCreaion) {
+TEST(AyonCppApi, AyonCppApiCreation) {
     AyonApi Test = getApiInstance();
 }
 
 TEST(AyonCppApi, AyonCppApiSerialResolveRootReplace) {
     Instrumentor::Get().BeginSession("Profile", "bin/profSerial.json");
     AyonApi Api = getApiInstance();
-    nlohmann::json JsonFileStage = JsonFile["Resolve"];
     bool RunOnlyOneResolveIteration = false;
     bool printResult = true;
 
@@ -40,10 +38,9 @@ TEST(AyonCppApi, AyonCppApiSerialResolveRootReplace) {
     std::cout << std::endl;
 }
 
-TEST(AyonCppApi, AyonCppApiBathResolveRootReplace) {
+TEST(AyonCppApi, AyonCppApiBatchResolveRootReplace) {
     Instrumentor::Get().BeginSession("Profile", "bin/profBatch.json");
     AyonApi Api = getApiInstance();
-    nlohmann::json JsonFileStage = JsonFile["Resolve"];
     bool RunOnlyOneResolveIteration = false;
     bool printResult = true;
 
@@ -55,8 +52,7 @@ TEST(AyonCppApi, AyonCppApiBathResolveRootReplace) {
     std::cout << std::endl;
 }
 
-int
-main(int argc, char** argv) {
+int main(int argc, char** argv) {
     std::ifstream file("test/testData.json");
     if (!file.is_open()) {
         std::cerr << "Failed to open file!" << std::endl;
