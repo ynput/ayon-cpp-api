@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 #include "lib/ynput/lib/logging/AyonLogger.hpp"
-#include "appDataFoulder.h"
+#include "appDataFolder.h"
 #include "httplib.h"
 #include "nlohmann/json_fwd.hpp"
 
