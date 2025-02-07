@@ -160,9 +160,10 @@ AyonApi::GET(const std::shared_ptr<std::string> endPoint,
                 std::this_thread::sleep_for(std::chrono::milliseconds(
                     responseStatus == m_ServerBusyCode ? m_RequestDelayWhenServerBusy : m_retryWait));
             }
-        }   // TODO error reason not printed
+
+        }
         catch (const httplib::Error &e) {
-            m_Log->warn("Request Failed because: {}"); // maybe just e - httplib::Error is just enum class
+            m_Log->warn("Request Failed because: {}", httplib::to_string(e));
             break;
         }
         m_Log->warn("The connection failed. Retry now.");
@@ -461,9 +462,9 @@ AyonApi::serialCorePost(const std::string &endPoint,
                 std::this_thread::sleep_for(std::chrono::milliseconds(
                     responseStatus == m_ServerBusyCode ? m_RequestDelayWhenServerBusy : m_retryWait));
             }
-        }   // TODO error reason not printed
+        }
         catch (const httplib::Error &e) {
-            m_Log->warn("Request Failed because: {}");
+            m_Log->warn("Request Failed because: {}", httplib::to_string(e));
             break;
         }
         m_Log->warn("The connection failed. Retry now.");
@@ -552,9 +553,9 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
                 std::this_thread::sleep_for(std::chrono::milliseconds(m_retryWait));
                 continue;
             }
-        }   // TODO error reason not printed
+        }
         catch (const httplib::Error &e) {
-            m_Log->warn("AyonApi::GenerativeCorePost Request Failed because: {}");
+            m_Log->warn("AyonApi::GenerativeCorePost Request Failed because: {}", httplib::to_string(e)););
             break;
         }
     }
