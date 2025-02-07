@@ -10,13 +10,13 @@
 #include <future>
 
 struct ProfileResult {
-        std::string Name;
-        long long Start, End;
-        uint32_t ThreadID;
+    std::string Name;
+    long long Start, End;
+    uint32_t ThreadID;
 };
 
 struct InstrumentationSession {
-        std::string Name;
+    std::string Name;
 };
 
 class Instrumentor {
@@ -30,16 +30,14 @@ class Instrumentor {
         Instrumentor(): m_CurrentSession(nullptr), m_ProfileCount(0) {
         }
 
-        void
-        BeginSession(const std::string &name, const std::string &filepath = "results.json") {
+        void BeginSession(const std::string &name, const std::string &filepath = "results.json") {
             std::lock_guard<std::mutex> lock(m_Mutex);   // Lock mutex for critical section
             m_OutputStream.open(filepath);
             WriteHeader();
             m_CurrentSession = new InstrumentationSession{name};
         }
 
-        void
-        EndSession() {
+        void EndSession() {
             WriteFooter();
             m_OutputStream.close();
             delete m_CurrentSession;
@@ -47,14 +45,12 @@ class Instrumentor {
             m_ProfileCount = 0;
         }
 
-        void
-        WriteProfileAsync(const ProfileResult &result) {
-            std::future<void> async = std::async(std::launch::async, [this, result]() { WriteProfile(result); });
-            async.get();
+        void WriteProfileAsync(const ProfileResult &result) {
+            std::future<void> asyncResult = std::async(std::launch::async, [this, result]() { WriteProfile(result); });
+            asyncResult.get();
         }
 
-        void
-        WriteProfile(const ProfileResult &result) {
+        void WriteProfile(const ProfileResult &result) {
             std::lock_guard<std::mutex> lock(m_Mutex);   // Lock mutex for critical section
             if (m_ProfileCount++ > 0)
                 m_OutputStream << ",";
@@ -75,20 +71,17 @@ class Instrumentor {
             m_OutputStream.flush();
         }
 
-        void
-        WriteHeader() {
+        void WriteHeader() {
             m_OutputStream << "{\"otherData\": {},\"traceEvents\":[";
             m_OutputStream.flush();
         }
 
-        void
-        WriteFooter() {
+        void WriteFooter() {
             m_OutputStream << "]}";
             m_OutputStream.flush();
         }
 
-        static Instrumentor &
-        Get() {
+        static Instrumentor & Get() {
             static Instrumentor instance;
             return instance;
         }
@@ -105,13 +98,12 @@ class InstrumentationTimer {
                 Stop();
         }
 
-        void
-        Stop() {
+        void Stop() {
             auto endTimepoint = std::chrono::high_resolution_clock::now();
 
-            long long start
+            long long start 
                 = std::chrono::time_point_cast<std::chrono::microseconds>(m_StartTimepoint).time_since_epoch().count();
-            long long end
+            long long end 
                 = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch().count();
 
             uint32_t threadID = std::hash<std::thread::id>{}(std::this_thread::get_id());
