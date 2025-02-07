@@ -32,7 +32,7 @@
 #include "backward.hpp"
 #include "perfPrinter.h"
 
-// TODO implement the better Crash hanlder
+// TODO implement the better Crash handler
 backward::StackTrace st;
 
 AyonApi::AyonApi(const std::string &logFilePos,
@@ -99,24 +99,24 @@ AyonApi::rootReplace(const std::string &rootLessPath) {
     m_Log->info(m_Log->key("AyonApi"), "AyonApi::rootReplace({})", rootLessPath);
     std::string rootedPath;
 
-    std::smatch matchea;
+    std::smatch matchesA;
     std::regex rootFindPattern("\\{root\\[.*?\\]\\}");
-    if (std::regex_search(rootLessPath, matchea, rootFindPattern)) {
-        std::string siteRootOverwriteName = matchea.str(0);
+    if (std::regex_search(rootLessPath, matchesA, rootFindPattern)) {
+        std::string siteRootOverwriteName = matchesA.str(0);
 
-        std::smatch matcheb;
-        std::regex rootBraketPattern("\\[(.*?)\\]");
-        if (std::regex_search(rootLessPath, matcheb, rootBraketPattern)) {
-            std::string breakedString = matcheb.str(0);
-            breakedString = breakedString.substr(1, breakedString.length() - 2);
+        std::smatch matchesB;
+        std::regex rootBracketPattern("\\[(.*?)\\]");
+        if (std::regex_search(rootLessPath, matchesB, rootBracketPattern)) {
+            std::string bracketedString = matchesB.str(0);
+            bracketedString = bracketedString.substr(1, bracketedString.length() - 2);
             try {
-                std::string replacement = m_siteRoots.at(breakedString);
+                std::string replacement = m_siteRoots.at(bracketedString);
                 rootedPath = std::regex_replace(rootLessPath, rootFindPattern, replacement);
                 m_Log->info(m_Log->key("AyonApi"), "AyonApi::rootReplace({}) rooted", rootedPath);
                 return rootedPath;
             }
             catch (std::out_of_range &e) {
-                m_Log->warn("AyonApi::rootedPath error acured {}, list off available root replace str: ");
+                m_Log->warn("AyonApi::rootedPath error occurred {}, list of available root replace str: ");
                 for (auto &g: m_siteRoots) {
                     m_Log->warn("Key: {}, replacement: {}", g.first, g.second);
                 }
@@ -131,41 +131,41 @@ AyonApi::rootReplace(const std::string &rootLessPath) {
 nlohmann::json
 AyonApi::GET(const std::shared_ptr<std::string> endPoint,
              const std::shared_ptr<httplib::Headers> headers,
-             uint8_t sucsessStatus) {
+             uint8_t successStatus) {
     PerfTimer("AyonApi::GET");
     m_Log->info(m_Log->key("AyonApi"), "AyonApi::GET({})", *endPoint);
 
     httplib::Result response;
-    int responeStatus;
-    uint8_t retryes = 0;
-    while (retryes <= m_maxCallRetrys) {
+    int responseStatus;
+    uint8_t retries = 0;
+    while (retries <= m_maxCallRetries) {
         try {
             response = m_AyonServer->Get(*endPoint, *headers);
-            responeStatus = response->status;
-            retryes++;
+            responseStatus = response->status;
+            retries++;
 
-            if (responeStatus == sucsessStatus) {
+            if (responseStatus == successStatus) {
                 return nlohmann::json::parse(response->body);
             }
             else {
-                m_Log->info("AyonApi::serialCorePost wrong status code: {} expected: {}", responeStatus, sucsessStatus);
-                if (responeStatus == 401) {
+                m_Log->info("AyonApi::serialCorePost wrong status code: {} expected: {}", responseStatus, successStatus);
+                if (responseStatus == 401) {
                     m_Log->warn("not logged in 401 ");
                     return nlohmann::json();
                 }
-                if (responeStatus == 500) {
+                if (responseStatus == 500) {
                     m_Log->warn("internal server error ");
                     return nlohmann::json();
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(
-                    responeStatus == m_ServerBusyCode ? m_RequestDelayWhenServerBusy : m_retryWaight));
+                    responseStatus == m_ServerBusyCode ? m_RequestDelayWhenServerBusy : m_retryWait));
             }
         }   // TODO error reason not printed
         catch (const httplib::Error &e) {
-            m_Log->warn("Request Failed because: {}");
+            m_Log->warn("Request Failed because: {}"); // maybe just e - httplib::Error is just enum class
             break;
         }
-        m_Log->warn("The connection failed Rety now.");
+        m_Log->warn("The connection failed. Retry now.");
     }
     return nlohmann::json();
 };
@@ -174,70 +174,70 @@ nlohmann::json
 AyonApi::SPOST(const std::shared_ptr<std::string> endPoint,
                const std::shared_ptr<httplib::Headers> headers,
                nlohmann::json jsonPayload,
-               const std::shared_ptr<uint8_t> sucsessStatus) {
+               const std::shared_ptr<uint8_t> successStatus) {
     PerfTimer("AyonApi::SPOST");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::SPOST endPoint: {}, jsonPayload: {}, sucsessStatus: {}", *endPoint,
-                jsonPayload.dump(), *sucsessStatus);
+    m_Log->info(m_Log->key("AyonApi"), "AyonApi::SPOST endPoint: {}, jsonPayload: {}, successStatus: {}", *endPoint,
+                jsonPayload.dump(), *successStatus);
 
-    nlohmann::json jsonRespne;
+    nlohmann::json jsonResponse;
 
     if (jsonPayload.empty()) {
         m_Log->info("JSON payload is empty. No request created");
-        return jsonRespne;
+        return jsonResponse;
     }
 
-    if (endPoint == nullptr || headers == nullptr || sucsessStatus == nullptr) {
-        m_Log->error("One or more of the provided pointers are null: endPoint, headers, sucsessStatus.");
+    if (endPoint == nullptr || headers == nullptr || successStatus == nullptr) {
+        m_Log->error("One or more of the provided pointers are null: endPoint, headers, successStatus.");
 
-        return jsonRespne;
+        return jsonResponse;
     }
 
     m_AyonServerMutex.lock();
 
     std::string payload = jsonPayload.dump();
-    std::string rawResponse = serialCorePost(*endPoint, *headers, payload, *sucsessStatus);
+    std::string rawResponse = serialCorePost(*endPoint, *headers, payload, *successStatus);
 
     if (!rawResponse.empty()) {
-        jsonRespne = nlohmann::json::parse(rawResponse)[0];   // TODO figure out why this is isnt the same as CPOST and
-                                                              // find a better way to make shure its not a array
+        jsonResponse = nlohmann::json::parse(rawResponse)[0];   // TODO figure out why this is isnt the same as CPOST and
+                                                              // find a better way to make sure its not an array
     }
     else {
-        m_Log->warn("SPOST cant phrase JSON // response empty");
+        m_Log->warn("SPOST can't parse JSON // response empty");
     }
     m_AyonServerMutex.unlock();
-    return jsonRespne;
+    return jsonResponse;
 };
 
 nlohmann::json
 AyonApi::CPOST(const std::shared_ptr<std::string> endPoint,
                const std::shared_ptr<httplib::Headers> headers,
                nlohmann::json jsonPayload,
-               const std::shared_ptr<uint8_t> sucsessStatus) {
+               const std::shared_ptr<uint8_t> successStatus) {
     PerfTimer("AyonApi::CPOST");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::CPOST endPoint: {}, jsonPayload: {}, sucsessStatus: {}", *endPoint,
-                jsonPayload.dump(), *sucsessStatus);
-    nlohmann::json jsonRespne;
+    m_Log->info(m_Log->key("AyonApi"), "AyonApi::CPOST endPoint: {}, jsonPayload: {}, successStatus: {}", *endPoint,
+                jsonPayload.dump(), *successStatus);
+    nlohmann::json jsonResponse;
 
     if (jsonPayload.empty()) {
         m_Log->info("JSON payload is empty. No request created");
-        return jsonRespne;
+        return jsonResponse;
     }
 
-    if (endPoint == nullptr || headers == nullptr || sucsessStatus == nullptr) {
-        m_Log->error("One or more of the provided pointers are null: endPoint, headers, sucsessStatus");
+    if (endPoint == nullptr || headers == nullptr || successStatus == nullptr) {
+        m_Log->error("One or more of the provided pointers are null: endPoint, headers, successStatus");
 
-        return jsonRespne;
+        return jsonResponse;
     }
 
     std::string payload = jsonPayload.dump();
-    std::string rawResponse = GenerativeCorePost(*endPoint, *headers, payload, *sucsessStatus);
+    std::string rawResponse = GenerativeCorePost(*endPoint, *headers, payload, *successStatus);
     if (!rawResponse.empty()) {
-        jsonRespne = nlohmann::json::parse(rawResponse);
+        jsonResponse = nlohmann::json::parse(rawResponse);
     }
     else {
-        m_Log->warn("CPOST cant phrase JSON // response empty");
+        m_Log->warn("CPOST can't parse JSON // response empty");
     }
-    return jsonRespne;
+    return jsonResponse;
 };
 // TODO change the pointer work in here because the pointers consume more data that coping would
 std::pair<std::string, std::string>
@@ -252,11 +252,11 @@ AyonApi::resolvePath(const std::string &uriPath) {
     std::pair<std::string, std::string> resolvedAsset;
     nlohmann::json jsonPayload = {{"resolveRoots", false}, {"uris", nlohmann::json::array({uriPath})}};
     httplib::Headers headers = {{"X-ayon-site-id", m_siteId}};
-    uint8_t sucsessStatus = 200;
+    uint8_t successStatus = 200;
 
     nlohmann::json response
         = SPOST(std::make_shared<std::string>(m_uriResolverEndpoint + m_uriResolverEndpointPathOnlyVar),
-                std::make_shared<httplib::Headers>(headers), jsonPayload, std::make_shared<uint8_t>(sucsessStatus));
+                std::make_shared<httplib::Headers>(headers), jsonPayload, std::make_shared<uint8_t>(successStatus));
 
     resolvedAsset = getAssetIdent(response);
     return resolvedAsset;
@@ -277,7 +277,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
 
     if (m_batchResolveOptimizeVector) {
         {
-            PerfTimer("AyonApi::batchResolvePath::sanatizeVector");
+            PerfTimer("AyonApi::batchResolvePath::sanitizeVector");
             std::set<std::string> s;
             unsigned size = uriPaths.size();
 
@@ -294,7 +294,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
         = std::make_shared<httplib::Headers>(httplib::Headers{{"X-ayon-site-id", m_siteId}});
 
     std::shared_ptr<std::string> batchResolveEndpoint;
-    if (m_pathOnlyReselution) {
+    if (m_pathOnlyResolution) {
         batchResolveEndpoint
             = std::make_shared<std::string>(std::string_view(m_uriResolverEndpoint + m_uriResolverEndpointPathOnlyVar));
     }
@@ -309,20 +309,20 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
     int groupSize;
     int groupAmount;
 
-    // set defaults for the grouping incase the vector is to small
+    // set defaults for the grouping in case the vector is too small
     groupSize = uriPathsVecSize;
     groupAmount = 1;
     grpReason = "The vector is too small.";
 
-    // check what scaling the groups schould have
+    // check what scaling the groups should have
     if (uriPathsVecSize > m_minVecSizeForGroupSplitAsyncRequests) {
-        // vector size is large eonught to build groups
+        // vector size is large enough to build groups
         // double result = static_cast<double>(uriPathsVecSize) / num_threads;
         groupSize = std::ceil(static_cast<double>(uriPathsVecSize) / m_num_threads);
         if (groupSize > m_minGrpSizeForAsyncRequests) {
-            // the group size is lagre enought to build groups from them
+            // the group size is large enough to build groups from them
             if (groupSize < m_maxGroupSizeForAsyncRequests) {
-                // now its bigger than 5 and smaller than 500
+                // now it's bigger than 5 and smaller than 500
                 // now we can just generate a group per thread and set the group amount
                 groupSize = std::ceil(static_cast<double>(uriPathsVecSize) / m_num_threads);
                 groupAmount = std::floor(static_cast<double>(uriPathsVecSize) / groupSize);
@@ -331,7 +331,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
                 grpReason = "5> <500 build group amount by size";
             }
             else {
-                // the groups are to beig
+                // the groups are too big
                 // we have to generate more groups than we have threads
                 groupSize = m_regroupSizeForAsyncRequests;
                 groupAmount = std::floor(static_cast<double>(uriPathsVecSize) / m_regroupSizeForAsyncRequests);
@@ -339,7 +339,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
             }
         }
         else {
-            // the groups are to small so we build groups by size
+            // the groups are too small so we build groups by size
 
             groupSize = std::min((int)m_regroupSizeForAsyncRequests, uriPathsVecSize);
             groupAmount = std::floor(static_cast<double>(uriPathsVecSize) / groupSize);
@@ -347,7 +347,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
         }
     }
     m_Log->info(
-        "AyonApi::batchResolvePath Build groups with grpSize: {} grpAmount: {} grouingReason: {} vectorSize: {}",
+        "AyonApi::batchResolvePath Build groups with grpSize: {} grpAmount: {} groupingReason: {} vectorSize: {}",
         groupSize, groupAmount, grpReason, uriPathsVecSize);
 
     int groupStartPos = 0;
@@ -357,7 +357,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
         std::string perTimerLoopName = "AyonApi::batchResolvePath Thread Loop: " + std::to_string(thread);
         PerfTimer(perTimerLoopName.c_str());
 
-        // check if we are to close to the end and extend the group to catch all the data and end the loop
+        // check if we are too close to the end and extend the group to catch all the data and end the loop
 
         if (uriPathsVecSize - groupEndPos < groupSize + (groupSize / 2)) {
             m_Log->info("the group with the threadId: {} It is too close to the end. This group will be extended. ",
@@ -390,24 +390,24 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
 };
 // TODO make it so that hero version is chosen if available
 std::pair<std::string, std::string>
-AyonApi::getAssetIdent(const nlohmann::json &uriResolverRespone) {
+AyonApi::getAssetIdent(const nlohmann::json &uriResolverResponse) {
     PerfTimer("AyonApi::getAssetIdent");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::getAssetIdent({})", uriResolverRespone.dump());
+    m_Log->info(m_Log->key("AyonApi"), "AyonApi::getAssetIdent({})", uriResolverResponse.dump());
 
     std::pair<std::string, std::string> AssetIdent;
-    if (uriResolverRespone.empty()) {
+    if (uriResolverResponse.empty()) {
         return AssetIdent;
     }
     try {
-        AssetIdent.first = uriResolverRespone.at("uri");
-        if (uriResolverRespone.at("entities").size() > 1) {
-            m_Log->warn("Uri reselution returned more than one path (%s)", uriResolverRespone.at("entities").dump());
+        AssetIdent.first = uriResolverResponse.at("uri");
+        if (uriResolverResponse.at("entities").size() > 1) {
+            m_Log->warn("Uri resolution returned more than one path (%s)", uriResolverResponse.at("entities").dump());
         }
         AssetIdent.second = rootReplace(
-            uriResolverRespone.at("entities").at(uriResolverRespone.at("entities").size() - 1).at("filePath"));
+            uriResolverResponse.at("entities").at(uriResolverResponse.at("entities").size() - 1).at("filePath"));
     }
     catch (const nlohmann::json::exception &e) {
-        m_Log->warn("asset identification cant be generated {}", uriResolverRespone.dump());
+        m_Log->warn("asset identification can't be generated {}", uriResolverResponse.dump());
     }
     return AssetIdent;
 };
@@ -431,42 +431,42 @@ std::string
 AyonApi::serialCorePost(const std::string &endPoint,
                         httplib::Headers headers,
                         std::string &Payload,
-                        const int &sucsessStatus) {
+                        const int &successStatus) {
     PerfTimer("AyonApi::serialCorePost");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::serialCorePost() endPoint: {}, Payload: {}, sucsessStatus: {}",
-                endPoint, Payload, sucsessStatus);
+    m_Log->info(m_Log->key("AyonApi"), "AyonApi::serialCorePost() endPoint: {}, Payload: {}, successStatus: {}",
+                endPoint, Payload, successStatus);
 
     httplib::Result response;
-    int responeStatus;
-    uint8_t retryes = 0;
-    while (retryes <= m_maxCallRetrys) {
+    int responseStatus;
+    uint8_t retries = 0;
+    while (retries <= m_maxCallRetries) {
         try {
             response = m_AyonServer->Post(endPoint, headers, Payload, "application/json");
-            responeStatus = response->status;
-            retryes++;
+            responseStatus = response->status;
+            retries++;
 
-            if (responeStatus == sucsessStatus) {
+            if (responseStatus == successStatus) {
                 return response->body;
             }
             else {
-                m_Log->info("AyonApi::serialCorePost wrong status code: {} expected: {}", responeStatus, sucsessStatus);
-                if (responeStatus == 401) {
+                m_Log->info("AyonApi::serialCorePost wrong status code: {} expected: {}", responseStatus, successStatus);
+                if (responseStatus == 401) {
                     m_Log->warn("not logged in 401 ");
                     return "";
                 }
-                if (responeStatus == 500) {
+                if (responseStatus == 500) {
                     m_Log->warn("internal server error ");
                     return "";
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(
-                    responeStatus == m_ServerBusyCode ? m_RequestDelayWhenServerBusy : m_retryWaight));
+                    responseStatus == m_ServerBusyCode ? m_RequestDelayWhenServerBusy : m_retryWait));
             }
         }   // TODO error reason not printed
         catch (const httplib::Error &e) {
             m_Log->warn("Request Failed because: {}");
             break;
         }
-        m_Log->warn("The connection failed Rety now.");
+        m_Log->warn("The connection failed. Retry now.");
     }
     return "";
 };
@@ -475,41 +475,41 @@ std::string
 AyonApi::GenerativeCorePost(const std::string &endPoint,
                             httplib::Headers headers,
                             std::string &Payload,
-                            const int &sucsessStatus) {
+                            const int &successStatus) {
     PerfTimer("AyonApi::GenerativeCorePost");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::GenerativeCorePost() endPoint: {}, Payload: {}, sucsessStatus: {}",
-                endPoint, Payload, sucsessStatus);
+    m_Log->info(m_Log->key("AyonApi"), "AyonApi::GenerativeCorePost() endPoint: {}, Payload: {}, successStatus: {}",
+                endPoint, Payload, successStatus);
 
     httplib::Client AyonServerClient(m_serverUrl);
     AyonServerClient.set_bearer_token_auth(m_authKey);
-    AyonServerClient.set_connection_timeout(m_connectionTimeOutMax);
-    AyonServerClient.set_read_timeout(m_readTimeOutMax);
+    AyonServerClient.set_connection_timeout(m_connectionTimeoutMax);
+    AyonServerClient.set_read_timeout(m_readTimeoutMax);
 
     httplib::Result response;
-    int responeStatus;
-    uint8_t retryes = 0;
-    bool ffoLocking = false;
-    uint16_t loopIertaion = 0;
-    while (retryes <= m_maxCallRetrys || m_GenerativeCorePostMaxLoopIterations > loopIertaion) {
-        loopIertaion++;
+    int responseStatus;
+    uint8_t retries = 0;
+    bool ffoLock = false;
+    uint16_t loopIteration = 0;
+    while (retries <= m_maxCallRetries || m_GenerativeCorePostMaxLoopIterations > loopIteration) {
+        loopIteration++;
         m_Log->info("AyonApi::GenerativeCorePost while loop thread {} iteration {}",
-                    std::hash<std::thread::id>{}(std::this_thread::get_id()), loopIertaion);
+                    std::hash<std::thread::id>{}(std::this_thread::get_id()), loopIteration);
 
-        if (ffoLocking) {
-            m_ConcurentRequestAfterffoMutex.lock();
-            m_Log->info("AyonApi::GenerativeCorePost ffoLocking enabled");
-            if (m_maxConcurentRequestAfterffo >= 1) {
-                m_maxConcurentRequestAfterffo--;
+        if (ffoLock) {
+            m_ConcurrentRequestAfterffoMutex.lock();
+            m_Log->info("AyonApi::GenerativeCorePost ffoLock enabled");
+            if (m_maxConcurrentRequestAfterffo >= 1) {
+                m_maxConcurrentRequestAfterffo--;
 
                 m_Log->info("AyonApi::GenerativeCorePost thread pool open available: {}",
-                            m_maxConcurentRequestAfterffo);
+                            m_maxConcurrentRequestAfterffo);
 
-                m_ConcurentRequestAfterffoMutex.unlock();
+                m_ConcurrentRequestAfterffoMutex.unlock();
             }
             else {
                 m_Log->info("AyonApi::GenerativeCorePost Thread pool closed");
 
-                m_ConcurentRequestAfterffoMutex.unlock();
+                m_ConcurrentRequestAfterffoMutex.unlock();
                 std::this_thread::sleep_for(std::chrono::milliseconds(800));
                 continue;
             }
@@ -519,37 +519,37 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
 
         try {
             response = AyonServerClient.Post(endPoint, headers, Payload, "application/json");
-            responeStatus = response->status;
-            retryes++;
-            if (ffoLocking) {
-                m_ConcurentRequestAfterffoMutex.lock();
-                m_maxConcurentRequestAfterffo++;
-                m_ConcurentRequestAfterffoMutex.unlock();
+            responseStatus = response->status;
+            retries++;
+            if (ffoLock) {
+                m_ConcurrentRequestAfterffoMutex.lock();
+                m_maxConcurrentRequestAfterffo++;
+                m_ConcurrentRequestAfterffoMutex.unlock();
             }
-            if (responeStatus == sucsessStatus) {
+            if (responseStatus == successStatus) {
                 m_Log->info("AyonApi::GenerativeCorePost The request worked, unlocking and returning. ");
 
                 return response->body;
             }
             else {
-                if (responeStatus == m_ServerBusyCode) {
+                if (responseStatus == m_ServerBusyCode) {
                     m_Log->warn("AyonApi::GenerativeCorePost The server responded with 503");
 
-                    retryes = 0;
-                    ffoLocking = true;
+                    retries = 0;
+                    ffoLock = true;
                     continue;
                 }
-                if (responeStatus == 401) {
+                if (responseStatus == 401) {
                     m_Log->warn("not logged in 401 ");
                     return "";
                 }
-                if (responeStatus == 500) {
+                if (responseStatus == 500) {
                     m_Log->warn("internal server error ");
                     return "";
                 }
-                m_Log->info("AyonApi::GenerativeCorePost wrong status code: {} expected: {} retrying", responeStatus,
-                            sucsessStatus);
-                std::this_thread::sleep_for(std::chrono::milliseconds(m_retryWaight));
+                m_Log->info("AyonApi::GenerativeCorePost wrong status code: {} expected: {} retrying", responseStatus,
+                            successStatus);
+                std::this_thread::sleep_for(std::chrono::milliseconds(m_retryWait));
                 continue;
             }
         }   // TODO error reason not printed
@@ -560,7 +560,7 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
     }
 
     m_Log->warn(
-        "AyonApi::GenerativeCorePost Too many resolve retries without the correct response code  for: {}, on: {}",
+        "AyonApi::GenerativeCorePost Too many resolve retries without the correct response code for: {}, on: {}",
         Payload, endPoint);
     return "";
 };
@@ -573,7 +573,7 @@ AyonApi::convertUriVecToString(const std::vector<std::string> &uriVec) {
 
     std::string payload = R"({{"resolveRoots": true,"uris": [)";
 
-    for (int i = 0; i <= int(uriVec.size()); i++) {
+    for (size_t i = 0; i <= uriVec.size(); i++) {
         payload += uriVec[i];
     }
 
