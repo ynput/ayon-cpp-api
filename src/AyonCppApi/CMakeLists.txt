@@ -43,6 +43,6 @@ install (
 )
 
 install (
-  FILES AyonCppApi.h appDataFoulder.h devMacros.h Instrumentor.h
+  FILES AyonCppApi.h appDataFolder.h devMacros.h Instrumentor.h
   DESTINATION include
 ) 
