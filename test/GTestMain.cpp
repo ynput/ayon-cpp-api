@@ -55,6 +55,22 @@ TEST(AyonCppApi, AyonCppApiBathResolveRootReplace) {
     std::cout << std::endl;
 }
 
+AyonApi
+getApiInstanceSSL() {
+    std::string AYON_API_KEY("6268b8b004ce8c7a7645afc548234937a69b6c6095b1c32ca6fa9f8351f8f4f8");
+    std::string AYON_SERVER_URL("https://ayon.dev");
+    std::string AYON_SITE_ID("test-id");
+    std::string AYON_PROJECT_NAME("test_API_project");
+    std::string AYONLOGGERLOGLVL("CRITICAL");
+    std::string AYONLOGGERFILELOGGING("OFF");
+
+    return AyonApi("./test_logs", AYON_API_KEY, AYON_SERVER_URL, AYON_PROJECT_NAME, AYON_SITE_ID);
+}
+
+TEST(AyonCppApi, AyonCppApiCreationSSL) {
+    AyonApi Test = getApiInstanceSSL();
+}
+
 int
 main(int argc, char** argv) {
     std::ifstream file("test/testData.json");
