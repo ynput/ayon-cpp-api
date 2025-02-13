@@ -9,6 +9,10 @@
 #include <string>
 #include <utility>
 #include <vector>
+# ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+# include <openssl/bio.h>
+# include <openssl/pem.h>
+# endif
 #include "lib/ynput/lib/logging/AyonLogger.hpp"
 #include "appDataFoulder.h"
 #include "httplib.h"
@@ -166,6 +170,19 @@ class AyonApi {
          */
         std::string convertUriVecToString(const std::vector<std::string> &uriVec);
 
+        /**
+         * @brief checks if the m_AyonServer is running on ssl based on m_serverUrl
+         */
+        bool isSSL() const;
+
+
+        # ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+        # include <openssl/bio.h>
+        # include <openssl/pem.h>
+
+        static X509_STORE* createCaCertStore();
+        # endif
+
         // ----- Env Varibles
         std::unique_ptr<httplib::Client> m_AyonServer;
 
@@ -178,6 +195,9 @@ class AyonApi {
         // ---- Server Vars
         std::string m_siteId;
         std::string m_userName;
+
+        // --- HTTP Headers
+        httplib::Headers m_headers;
 
         // --- Runtime Dep Vars
 
