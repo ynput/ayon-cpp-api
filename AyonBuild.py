@@ -19,6 +19,15 @@ AyonCppApiPrj.setVar("ReleaseType", "Release")
 AyonCppApiPrj.setup_prj()
 
 
+SetDefaultVars = Project.Stage("SetDefaultVars")
+SetDefaultVars.add_funcs(
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GBENCH", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GTEST", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "JTRACE", "0"),
+    Project.Func("", AyonCppApiPrj.setVar, "ReleaseType", "Release"),
+)
+AyonCppApiPrj.add_stage(SetDefaultVars)
+
 SetTestVars = Project.Stage("SetTestVars")
 SetTestVars.add_funcs(
     Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GBENCH", "ON"),
@@ -195,11 +204,13 @@ AyonCppApiPrj.add_stage(BenchStage)
 AyonCppApiPrj.creat_stage_group(
     "CleanBuild",
     CleanUpStage,
+    SetDefaultVars,
     BuildStage,
 )
 AyonCppApiPrj.creat_stage_group(
     "CleanBuildAndDocs",
     CleanUpStage,
+    SetDefaultVars,
     BuildStage,
     DoxyGenStage,
 )
