@@ -555,7 +555,7 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
             }
         }
         catch (const httplib::Error &e) {
-            m_Log->warn("AyonApi::GenerativeCorePost Request Failed because: {}", httplib::to_string(e)););
+            m_Log->warn("AyonApi::GenerativeCorePost Request Failed because: {}", httplib::to_string(e));
             break;
         }
     }
