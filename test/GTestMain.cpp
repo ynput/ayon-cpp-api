@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include <AyonCppApi.h>
-#include <unistd.h>
 #include <iostream>
 #include <string>
 #include "Instrumentor.h"
@@ -9,23 +8,33 @@
 
 nlohmann::json JsonFile;
 
-AyonApi
-getApiInstance() {
-    std::string AYON_API_KEY("SuperSaveTestKey");
-    std::string AYON_SERVER_URL("http://localhost:8003");
-    std::string AYON_SITE_ID("TestId");
-    std::string AYON_PROJECT_NAME("TestPrjName");
-    std::string AYONLOGGERLOGLVL("CRITICAL");
-    std::string AYONLOGGERFILELOGGING("OFF");
+AyonApi getApiInstance() {
+    std::string AYON_API_KEY;
+    std::string AYON_SERVER_URL;
+    std::string AYON_SITE_ID;
+    std::string AYON_PROJECT_NAME;
+    std::string AYONLOGGERLOGLVL;
+    std::string AYONLOGGERFILELOGGING;
+    #ifdef _WIN32
+    std::string envFilePath("test\\.env_http");
+    #else
+    std::string envFilePath("test/.env_http");
+    #endif
+    if (!AyonCppApiTest::load_EnvVariables(envFilePath, AYON_API_KEY, AYON_SERVER_URL, AYON_SITE_ID, AYON_PROJECT_NAME, AYONLOGGERLOGLVL, AYONLOGGERFILELOGGING)) {
+        std::cerr << "Failed to load environment variables!" << std::endl;
+    }
 
     return AyonApi("./test_logs", AYON_API_KEY, AYON_SERVER_URL, AYON_PROJECT_NAME, AYON_SITE_ID);
 }
 
-TEST(AyonCppApi, AyonCppApiCreaion) {
+TEST(AyonCppApi, AyonCppApiCreation) {
+    std::cout << "Running AyonCppApiCreation test..." << std::endl;
     AyonApi Test = getApiInstance();
+    std::cout << "AyonCppApiCreation test completed." << std::endl;
 }
 
 TEST(AyonCppApi, AyonCppApiSerialResolveRootReplace) {
+    std::cout << "Running AyonCppApiSerialResolveRootReplace test..." << std::endl;
     Instrumentor::Get().BeginSession("Profile", "bin/profSerial.json");
     AyonApi Api = getApiInstance();
     nlohmann::json JsonFileStage = JsonFile["Resolve"];
@@ -37,10 +46,11 @@ TEST(AyonCppApi, AyonCppApiSerialResolveRootReplace) {
     }
 
     Instrumentor::Get().EndSession();
-    std::cout << std::endl;
+    std::cout << "AyonCppApiSerialResolveRootReplace test completed." << std::endl;
 }
 
-TEST(AyonCppApi, AyonCppApiBathResolveRootReplace) {
+TEST(AyonCppApi, AyonCppApiBatchResolveRootReplace) {
+    std::cout << "Running AyonCppApiBatchResolveRootReplace test..." << std::endl;
     Instrumentor::Get().BeginSession("Profile", "bin/profBatch.json");
     AyonApi Api = getApiInstance();
     nlohmann::json JsonFileStage = JsonFile["Resolve"];
@@ -52,27 +62,36 @@ TEST(AyonCppApi, AyonCppApiBathResolveRootReplace) {
     }
 
     Instrumentor::Get().EndSession();
-    std::cout << std::endl;
+    std::cout << "AyonCppApiBatchResolveRootReplace test completed." << std::endl;
 }
 
-AyonApi
-getApiInstanceSSL() {
-    std::string AYON_API_KEY("6268b8b004ce8c7a7645afc548234937a69b6c6095b1c32ca6fa9f8351f8f4f8");
-    std::string AYON_SERVER_URL("https://ayon.dev");
-    std::string AYON_SITE_ID("test-id");
-    std::string AYON_PROJECT_NAME("test_API_project");
-    std::string AYONLOGGERLOGLVL("CRITICAL");
-    std::string AYONLOGGERFILELOGGING("OFF");
+AyonApi getApiInstanceSSL() {
+    std::string AYON_API_KEY;
+    std::string AYON_SERVER_URL;
+    std::string AYON_SITE_ID;
+    std::string AYON_PROJECT_NAME;
+    std::string AYONLOGGERLOGLVL;
+    std::string AYONLOGGERFILELOGGING;
+    #ifdef _WIN32
+    std::string envFilePath("test\\.env_https");
+    #else
+    std::string envFilePath("test/.env_https");
+    #endif
+    if (!AyonCppApiTest::load_EnvVariables(envFilePath, AYON_API_KEY, AYON_SERVER_URL, AYON_SITE_ID, AYON_PROJECT_NAME, AYONLOGGERLOGLVL, AYONLOGGERFILELOGGING)) {
+        std::cerr << "Failed to load environment variables!" << std::endl;
+    }
 
     return AyonApi("./test_logs", AYON_API_KEY, AYON_SERVER_URL, AYON_PROJECT_NAME, AYON_SITE_ID);
 }
 
 TEST(AyonCppApi, AyonCppApiCreationSSL) {
+    std::cout << "Running AyonCppApiCreationSSL test..." << std::endl;
     AyonApi Test = getApiInstanceSSL();
+    std::cout << "AyonCppApiCreationSSL test completed." << std::endl;
 }
 
-int
-main(int argc, char** argv) {
+int main(int argc, char** argv) {
+    std::cout << "Running tests..." << std::endl;
     std::ifstream file("test/testData.json");
     if (!file.is_open()) {
         std::cerr << "Failed to open file!" << std::endl;
