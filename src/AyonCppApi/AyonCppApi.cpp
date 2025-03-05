@@ -210,8 +210,21 @@ std::string parseOutput(std::string& output) {
 std::string getOpenSSLDirByCLI() {
     std::array<char, 128> buffer;
     std::string result;
-    auto pipeDeleter = [](FILE* pipe) { pclose(pipe); };
-    std::unique_ptr<FILE, decltype(pipeDeleter)> pipe(popen("openssl version -d", "r"), pipeDeleter);
+    auto pipeDeleter = [](FILE* pipe) { 
+    #ifdef _WIN32
+        _pclose(pipe);
+    #else
+        pclose(pipe); 
+    #endif
+    };
+    std::unique_ptr<FILE, decltype(pipeDeleter)> pipe(
+    #ifdef _WIN32
+        _popen("openssl version -d", "r"),
+    #else
+        popen("openssl version -d", "r"),
+    #endif
+        pipeDeleter
+    );
     if (!pipe) {
         throw std::runtime_error("popen() failed!");
     }
@@ -266,86 +279,58 @@ AyonApi::AyonApi(const std::string &logFilePos,
     if (isSSL()) {
         m_headers = {
             {"X-Api-Key", m_authKey},
-            {"X-ayon-platform", "linux"},
+            // {"X-ayon-platform", "linux"},
         };
 
         try {
-            const char* defaultCertFile = X509_get_default_cert_file();
-            std::cout << "X509_get_default_cert_file: " << defaultCertFile << std::endl;
-            if (std::filesystem::exists(defaultCertFile)) {
-                std::cout << "X509_get_default_cert_dir set" << std::endl;
-                m_AyonServer->set_ca_cert_path(defaultCertFile);
+            std::string opensslDir = getOpenSSLDir();
+            #ifdef _WIN32
+            std::string certFile = opensslDir + "\\cert.pem";
+            #else
+            std::string certFile = opensslDir + "/cert.pem";
+            #endif
+            
+            if (std::filesystem::exists(opensslDir)) {
+                m_AyonServer->set_ca_cert_path("", opensslDir.c_str()); 
             } else {
-                const char* defaultCertDir = X509_get_default_cert_dir();
-                std::cout << "X509_get_default_cert_dir: " << defaultCertDir << std::endl;
-                if (std::filesystem::exists(defaultCertDir)) {
-                    std::cout << "X509_get_default_cert_dir set" << std::endl;
-                    m_AyonServer->set_ca_cert_path("", defaultCertDir);
+                const char* envCertFile = getenv("SSL_CERT_FILE");
+                if (envCertFile) {
+                    m_AyonServer->set_ca_cert_path(envCertFile);
                 } else {
-                    std::string opensslDir = getOpenSSLDir();
-                    std::string certFile = opensslDir + "/cert.pem";
-                    std::cout << "getOpenSSLDir + /certs.pem: " << certFile << std::endl;
-                    if (std::filesystem::exists(certFile)) {
-                        std::cout << "getOpensslFile set" << std::endl;
-                        m_AyonServer->set_ca_cert_path(certFile.c_str());
-                    } else {
-                        std::string certDir = opensslDir + "/certs";
-                        if (std::filesystem::exists(certDir)) {
-                            std::cout << "getOpensslDir set" << std::endl;
-                            m_AyonServer->set_ca_cert_path("", certDir.c_str()); 
-                        } else {
-                            m_Log->error("Failed to get OpenSSL certificate file: {}", certDir);
-                        }
-                    }
+                    m_Log->warn("Using OpenSSL default verify paths.");
+                    m_AyonServer->set_ca_cert_path(nullptr);
                 }
             }
         } catch (const std::exception &e) {
             m_Log->error("Failed to get OpenSSL directory: {}", e.what());
+            m_AyonServer->set_ca_cert_path(nullptr); 
         }
 
-        // const char* sslVersion = OpenSSL_version(OPENSSL_DIR);
-
-        // std::cout << "X509_get_default_cert_dir: " << defaultCertDir << " | /usr/local/ssl/certs"<< std::endl;
-
-        // m_AyonServer->set_ca_cert_path("/usr/local/ssl/cert.pem");
-        // m_AyonServer->set_ca_cert_path("", "/usr/local/ssl/certs");
-        // m_AyonServer->set_ca_cert_path("", defaultCertDir);
-        std::string opensslCliDir = getOpenSSLDirByCLI();
-        std::string x509DefaultCertDir = X509_get_default_cert_dir();
-        std::string opensslDefaultDir = getOpenSSLDir();
-
-        std::cout << "OpenSSL CLI directory: " << opensslCliDir << " - " << (access(opensslCliDir.c_str(), F_OK) != -1 ? "exists" : "not exists") << std::endl;
-        std::cout << "X509_get_default_cert_dir: " << x509DefaultCertDir << " - " << (access(x509DefaultCertDir.c_str(), F_OK) != -1 ? "exists" : "not exists") << std::endl;
-        std::cout << "OpenSSL default directory: " << opensslDefaultDir << " - " << (access(opensslDefaultDir.c_str(), F_OK) != -1 ? "exists" : "not exists") << std::endl;
-
-        std::cout << "OpenSSL version: " << OpenSSL_version(OPENSSL_VERSION) << std::endl;
-
-        m_AyonServer->enable_server_certificate_verification(false);
-        m_Log->info("Server certificate verification enabled.");
+        m_AyonServer->enable_server_certificate_verification(true);
     } else {
         m_AyonServer->set_bearer_token_auth(m_authKey);
         m_headers = {};
     }
 
     auto res = m_AyonServer->Get("/api/info", m_headers);
-    std::cout << "====== /api/info ======" << std::endl;
-    if (res) {
-        std::cout << "Response: " << res->status << std::endl;
-        // std::cout << "Response body: " << res->body << std::endl;
-    } else {
-        std::cout << "Response is null." << std::endl;
-        std::cout << "Response error: " << res.error() << std::endl;
-    }
+    // std::cout << "====== /api/info ======" << std::endl;
+    // if (res) {
+    //     std::cout << "Response: " << res->status << std::endl;
+    //     // std::cout << "Response body: " << res->body << std::endl;
+    // } else {
+    //     std::cout << "Response is null." << std::endl;
+    //     std::cout << "Response error: " << res.error() << std::endl;
+    // }
 
-    res = m_AyonServer->Get("/api/projects/" + m_ayonProjectName + "/siteRoots?platform=linux", m_headers);
-    std::cout << "====== /api/projects/" << m_ayonProjectName << "/siteRoots?platform=linux ======" << std::endl;
-    if (res) {
-        std::cout << "Response: " << res->status << std::endl;
-        std::cout << "Response body: " << res->body << std::endl;
-    } else {
-        std::cout << "Response is null." << std::endl;
-        std::cout << "Response error: " << res.error() << std::endl;
-    }
+    // res = m_AyonServer->Get("/api/projects/" + m_ayonProjectName + "/siteRoots?platform=windows", m_headers);
+    // std::cout << "====== /api/projects/" << m_ayonProjectName << "/siteRoots?platform=windows ======" << std::endl;
+    // if (res) {
+    //     std::cout << "Response: " << res->status << std::endl;
+    //     std::cout << "Response body: " << res->body << std::endl;
+    // } else {
+    //     std::cout << "Response is null." << std::endl;
+    //     std::cout << "Response error: " << res.error() << std::endl;
+    // }
 
     m_Log->info(m_Log->key("AyonApi"), "Constructor Getting Site Roots");
     getSiteRoots();
