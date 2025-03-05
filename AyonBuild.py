@@ -28,6 +28,15 @@ SetTestVars.add_funcs(
 )
 AyonCppApiPrj.add_stage(SetTestVars)
 
+SetDefaultVars = Project.Stage("SetDefaultVars")
+SetDefaultVars.add_funcs(
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GBENCH", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GTEST", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "JTRACE", "0"),
+    Project.Func("", AyonCppApiPrj.setVar, "ReleaseType", "Release"),
+)
+AyonCppApiPrj.add_stage(SetDefaultVars)
+
 CleanUpStage = Project.Stage("Cleanup")
 binFoulder = os.path.join(os.getcwd(), "bin")
 buildFoulder = os.path.join(os.getcwd(), "build")
@@ -157,7 +166,9 @@ def CheckTestServer():
 
 
 def stopTestServer():
-    ServerPocVar.kill()
+    # ServerPocVar.terminate()
+    ServerPocVar.join(timeout=2)
+    # ServerPocVar.kill()
 
 
 SetupTestServer = Project.Stage("SetupTestServer")
@@ -195,11 +206,13 @@ AyonCppApiPrj.add_stage(BenchStage)
 AyonCppApiPrj.creat_stage_group(
     "CleanBuild",
     CleanUpStage,
+    SetDefaultVars,
     BuildStage,
 )
 AyonCppApiPrj.creat_stage_group(
     "CleanBuildAndDocs",
     CleanUpStage,
+    SetDefaultVars,
     BuildStage,
     DoxyGenStage,
 )
