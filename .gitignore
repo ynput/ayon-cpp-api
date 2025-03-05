@@ -20,3 +20,4 @@ test_logs/
 AyonCppApi_CiCd/
 AyonCppApi_cicd/
 __pycache__
+.env*
