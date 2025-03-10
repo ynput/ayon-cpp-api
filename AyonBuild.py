@@ -160,14 +160,15 @@ def startTestServer():
 
 def CheckTestServer():
     import requests
-
     response = requests.get("http://localhost:8003/")
     print("Test Respone", response.text)
 
 
 def stopTestServer():
-    # ServerPocVar.join(timeout=2)
-    ServerPocVar.kill()
+    if sys.platform == "win32":
+        ServerPocVar.join(timeout=2)
+    else:
+        ServerPocVar.kill()
 
 
 SetupTestServer = Project.Stage("SetupTestServer")
@@ -234,7 +235,7 @@ AyonCppApiPrj.creat_stage_group(
 )
 
 AyonCppApiPrj.creat_stage_group(
-    "BuildAndBnech",
+    "BuildAndBench",
     SetTestVars,
     BuildStage,
     SetupTestServer,
@@ -242,7 +243,7 @@ AyonCppApiPrj.creat_stage_group(
     StopTestServer,
 )
 AyonCppApiPrj.creat_stage_group(
-    "CleanBuildAndBnech",
+    "CleanBuildAndBench",
     CleanUpStage,
     SetTestVars,
     BuildStage,
@@ -251,7 +252,7 @@ AyonCppApiPrj.creat_stage_group(
     StopTestServer,
 )
 AyonCppApiPrj.creat_stage_group(
-    "CleanBuildAndBnechPlusTest",
+    "CleanBuildAndBenchPlusTest",
     CleanUpStage,
     SetTestVars,
     BuildStage,
