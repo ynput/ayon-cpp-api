@@ -166,9 +166,8 @@ def CheckTestServer():
 
 
 def stopTestServer():
-    # ServerPocVar.terminate()
-    ServerPocVar.join(timeout=2)
-    # ServerPocVar.kill()
+    # ServerPocVar.join(timeout=2)
+    ServerPocVar.kill()
 
 
 SetupTestServer = Project.Stage("SetupTestServer")
