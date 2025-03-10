@@ -30,172 +30,11 @@
 #include <cstdlib>
 #include <filesystem>
 #include "backward.hpp"
-// #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-// #include <openssl/bio.h>
-// #include <openssl/pem.h>
-// #include <openssl/x509.h>
-// #include <openssl/x509_vfy.h>
-// #endif
 #include "perfPrinter.h"
 
 // TODO implement the better Crash hanlder
 backward::StackTrace st;
 
-// AyonApi::AyonApi(const std::string &logFilePos,
-//                  const std::string &authKey,
-//                  const std::string &serverUrl,
-//                  const std::string &ayonProjectName,
-//                  const std::string &siteId,
-//                  std::optional<int> concurrency):
-//     m_num_threads(concurrency.value_or(std::max(int(std::thread::hardware_concurrency() / 2), 1))),
-//     m_authKey(authKey),
-//     m_serverUrl(serverUrl),
-//     m_ayonProjectName(ayonProjectName),
-//     m_siteId(siteId) {
-//     PerfTimer("AyonApi::AyonApi");
-
-//     // ----------- Init m_Logger
-//     std::filesystem::path logFileName = "logFile.json";
-//     std::filesystem::path basePath = logFilePos;
-//     std::filesystem::path logFilePath = std::filesystem::absolute(basePath) / logFileName;
-
-//     if (std::filesystem::exists(logFilePath)) {
-//         logFilePath = std::filesystem::canonical(logFilePath);
-//     }
-//     else {
-//         std::filesystem::create_directories(logFilePath.parent_path());
-//     }
-
-//     m_Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(logFilePath.string()));
-//     m_Log->LogLevlWarn();
-
-//     m_Log->info(m_Log->key("AyonApi"), "Init AyonServer httplib::Client");
-//     m_AyonServer = std::make_unique<httplib::Client>(m_serverUrl);
-
-//     if (isSSL()) {
-//         m_headers = {
-//             {"X-Api-Key", m_authKey},
-//             {"X-ayon-platform", "linux"},
-//         };
-
-//         X509_STORE* store = X509_STORE_new();
-//         if (store) {
-//             std::cout << "X509_STORE created." << std::endl;
-
-//             // This function loads the default system locations for CA certificates.
-//             if (X509_STORE_set_default_paths(store) != 1) {
-//                 std::cout << "X509_STORE_set_default_paths failed." << std::endl;
-//             }
-//             // m_AyonServer->set_ca_cert_store(store);
-//         } else {
-//             std::cout << "Failed to create X509_STORE." << std::endl;
-//         }
-
-//         m_AyonServer->enable_server_certificate_verification(true);
-
-// // #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-// //         const char* cerFilePath = std::getenv("SSL_CERT_FILE");
-// //         std::cout << "SSL_CERT_FILE: " << (cerFilePath ? cerFilePath : "not set") << std::endl;
-
-// //         if (!cerFilePath) {
-// //             m_Log->warn("SSL_CERT_FILE not set. Using OpenSSL default verify paths.");
-
-// //             X509_STORE* store = X509_STORE_new();
-// //             if (store) {
-// //                 std::cout << "X509_STORE created." << std::endl;
-
-// //                 // This function loads the default system locations for CA certificates.
-// //                 if (X509_STORE_set_default_paths(store) != 1) {
-// //                     std::cout << "X509_STORE_set_default_paths failed." << std::endl;
-// //                 }
-// //                 m_AyonServer->set_ca_cert_store(store);
-// //             } else {
-// //                 std::cout << "Failed to create X509_STORE." << std::endl;
-// //             }
-// //         } else {
-// //             m_AyonServer->set_ca_cert_path(cerFilePath);
-// //         }
-
-// //         m_AyonServer->enable_server_certificate_verification(true);
-
-//         // m_headers = {
-//         //     {"X-Api-Key", m_authKey},
-//         //     {"X-ayon-platform", "linux"},
-//         // };
-// // #else
-// //         m_Log->error("OpenSSL support not enabled.");
-// // #endif
-//     } else {
-//         m_AyonServer->set_bearer_token_auth(m_authKey);
-//         m_headers = {};
-//     }
-
-//     auto res = m_AyonServer->Get("/api/info", m_headers);
-
-//     auto test_response = m_AyonServer->Get(
-//         "/api/projects/" + m_ayonProjectName + "/siteRoots?platform=linux",
-//         m_headers
-//     );
-
-//     if (test_response) {
-//         std::cout << "Response: " << test_response->status << std::endl;
-//         std::cout << "Response body: " << test_response->body << std::endl;
-//     } else {
-//         std::cout << "Response is null." << std::endl;
-//         std::cout << "Response error: " << test_response.error() << std::endl;
-//     }
-
-// //     if (isSSL()) {
-// //         const char* cerFilePath = std::getenv("SSL_CERT_FILE");
-// //         std::cout << "SSL_CERT_FILE: " << (cerFilePath ? cerFilePath : "not set") << std::endl;
-
-// //         if (!cerFilePath) {
-// //             m_Log->warn("SSL_CERT_FILE not set.");
-
-// //             // Define default paths for Windows and Linux
-// //             // WRONG APPROACH
-// //             std::string defaultCertPath;
-// // #ifdef _WIN32
-// //             defaultCertPath = "C:\\Program Files\\Common Files\\SSL\\certs";
-// // #else
-// //             defaultCertPath = "/etc/ssl/certs";
-// //             // defaultCertPath = "/invalid/path/to/certs";
-// // #endif
-
-// //             // Check if the default path exists
-// //             if (std::filesystem::exists(defaultCertPath)) {
-// //                 std::cout << "Default certificate path FOUND." << std::endl;
-// //                 m_AyonServer->set_ca_cert_path("", defaultCertPath.c_str());
-// //             } else {
-// //                 m_Log->warn("Default certificate path not found. Using embedded certificate.");
-
-// //                 std::string pathToTempCert = "/home/tadeas/ynput/ayon-cpp-api-buildtest/test/certificate.crt";
-
-// //                 if (std::filesystem::exists(pathToTempCert)) {
-// //                     m_AyonServer->set_ca_cert_path(pathToTempCert.c_str());
-// //                 } else {
-// //                     m_Log->error("Failed to create CA cert store from embedded certificate.");
-// //                 }
-// //             }
-// //         } else {
-// //             m_AyonServer->set_ca_cert_path(cerFilePath);
-// //         }
-
-// //         m_AyonServer->enable_server_certificate_verification(true);
-
-// //         m_headers = {
-// //             {"X-Api-Key", m_authKey}
-// //         };
-
-// //     } else {
-// //         m_AyonServer->set_bearer_token_auth(m_authKey);
-// //         m_headers = {};
-// //         // m_headers = {{"X-ayon-site-id", m_siteId}};
-// //     }
-
-//     m_Log->info(m_Log->key("AyonApi"), "Constructor Getting Site Roots");
-//     getSiteRoots();
-// };
 std::string parseOutput(std::string& output) {
     // Parse the output to extract the directory path
     std::string::size_type start = output.find('"');
@@ -283,22 +122,36 @@ AyonApi::AyonApi(const std::string &logFilePos,
         };
 
         try {
-            std::string opensslDir = getOpenSSLDir();
+            std::string opensslDirCLI = getOpenSSLDirByCLI();
+
             #ifdef _WIN32
-            std::string certFile = opensslDir + "\\cert.pem";
+            std::string certFileCLI = opensslDirCLI + "\\cert.pem";
             #else
-            std::string certFile = opensslDir + "/cert.pem";
+            std::string certFileCLI = opensslDirCLI + "/cert.pem";
             #endif
-            
-            if (std::filesystem::exists(opensslDir)) {
-                m_AyonServer->set_ca_cert_path("", opensslDir.c_str()); 
+
+            if (std::filesystem::exists(certFileCLI)) {
+                m_Log->warn("Using CLI var.");
+                m_AyonServer->set_ca_cert_path(certFileCLI.c_str()); 
             } else {
-                const char* envCertFile = getenv("SSL_CERT_FILE");
-                if (envCertFile) {
-                    m_AyonServer->set_ca_cert_path(envCertFile);
+                std::string opensslDir = getOpenSSLDir();
+                #ifdef _WIN32
+                std::string certFile = opensslDir + "\\cert.pem";
+                #else
+                std::string certFile = opensslDir + "/cert.pem";
+                #endif
+
+                if (std::filesystem::exists(certFile)) {
+                    m_AyonServer->set_ca_cert_path(certFile.c_str()); 
                 } else {
-                    m_Log->warn("Using OpenSSL default verify paths.");
-                    m_AyonServer->set_ca_cert_path(nullptr);
+                    const char* envCertFile = getenv("SSL_CERT_FILE");
+                    if (envCertFile) {
+                        m_Log->warn("Using env var: SSL_CERT_PATH.");
+                        m_AyonServer->set_ca_cert_path(envCertFile);
+                    } else {
+                        m_Log->warn("Using OpenSSL default verify paths.");
+                        m_AyonServer->set_ca_cert_path(nullptr);
+                    }
                 }
             }
         } catch (const std::exception &e) {
@@ -313,14 +166,14 @@ AyonApi::AyonApi(const std::string &logFilePos,
     }
 
     auto res = m_AyonServer->Get("/api/info", m_headers);
-    // std::cout << "====== /api/info ======" << std::endl;
-    // if (res) {
-    //     std::cout << "Response: " << res->status << std::endl;
-    //     // std::cout << "Response body: " << res->body << std::endl;
-    // } else {
-    //     std::cout << "Response is null." << std::endl;
-    //     std::cout << "Response error: " << res.error() << std::endl;
-    // }
+    std::cout << "====== /api/info ======" << std::endl;
+    if (res) {
+        std::cout << "Response: " << res->status << std::endl;
+        // std::cout << "Response body: " << res->body << std::endl;
+    } else {
+        std::cout << "Response is null." << std::endl;
+        std::cout << "Response error: " << res.error() << std::endl;
+    }
 
     // res = m_AyonServer->Get("/api/projects/" + m_ayonProjectName + "/siteRoots?platform=windows", m_headers);
     // std::cout << "====== /api/projects/" << m_ayonProjectName << "/siteRoots?platform=windows ======" << std::endl;
@@ -870,37 +723,3 @@ bool
 AyonApi::isSSL() const {
     return m_serverUrl.rfind("https://", 0) == 0;
 }
-
-# ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-X509_STORE*
-AyonApi::createCaCertStore() {
-    X509_STORE *store = X509_STORE_new();
-
-    // Embed the CA certificates as a string
-    const char *default_ca_bundle_content = R"(
------BEGIN CERTIFICATE-----
-MIIDdzCCAl+gAwIBAgIEbG9Z...
------END CERTIFICATE-----
------BEGIN CERTIFICATE-----
-MIIDdzCCAl+gAwIBAgIEbG9Z...
------END CERTIFICATE-----
-)";
-
-    // Load the CA certificates from the string
-    BIO *bio = BIO_new_mem_buf(default_ca_bundle_content, -1);
-    if (!bio) {
-        X509_STORE_free(store);
-        return nullptr;
-    }
-
-    X509 *cert = nullptr;
-    while ((cert = PEM_read_bio_X509(bio, nullptr, 0, nullptr)) != nullptr) {
-        X509_STORE_add_cert(store, cert);
-        X509_free(cert);
-    }
-
-    BIO_free(bio);
-
-    return store;
-}
-# endif
