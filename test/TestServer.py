@@ -183,11 +183,32 @@ async def SiteRoots(projectName: str):
 
 
 def start():
-    proc = Process(target=uvicorn.run,args=(app,),kwargs={"host": "0.0.0.0","port": 8003,"log_level": "error"})
+    import sys
+    if sys.platform == "win32":
+        import threading
+        # Windows prefers threading
+        def run_server():
+            uvicorn.run(app, host="0.0.0.0", port=8003, log_level="error")
 
-    proc.start()
-    print("Server is starting in the background...")
-    return proc
+        server_thread = threading.Thread(target=run_server, daemon=True)
+        server_thread.start()
+        print("Server is starting in the background...")
+        return server_thread
+    else:
+        # Linux can handle multiprocessing
+        # import subprocess
+        from multiprocessing import Process
+        proc = Process(target=uvicorn.run,args=(app,),kwargs={"host": "0.0.0.0","port": 8003,"log_level": "error"})
+        proc.start()
+        print("Server is starting in the background...")
+        return proc
+
+# def start():
+#     proc = Process(target=uvicorn.run,args=(app,),kwargs={"host": "0.0.0.0","port": 8003,"log_level": "error"})
+
+#     proc.start()
+#     print("Server is starting in the background...")
+#     return proc
 
 
 if __name__ == "__main__":
