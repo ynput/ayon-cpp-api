@@ -9,10 +9,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-# ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-# include <openssl/bio.h>
-# include <openssl/pem.h>
-# endif
 #include "lib/ynput/lib/logging/AyonLogger.hpp"
 #include "appDataFoulder.h"
 #include "httplib.h"
@@ -110,14 +106,6 @@ class AyonApi {
         std::pair<std::string, std::string> getAssetIdent(const nlohmann::json &uriResolverRespone);
 
         /**
-         * @brief this function loads all needed varible into the class \n
-         * this will allso be called by the constructor
-         *
-         * @return
-         */
-        bool loadEnvVars();
-
-        /**
          * @brief get function for shared AyonLogger pointer used by this class instance
          */
         std::shared_ptr<AyonLogger> logPointer();
@@ -172,22 +160,18 @@ class AyonApi {
 
         /**
          * @brief checks if the m_AyonServer is running on ssl based on m_serverUrl
+         * dumb implementation but it should work - function from httplib is not working
+         * 
+         * @return true if m_serverUrl starts with https://
          */
         bool isSSL() const;
 
-
-        # ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-        # include <openssl/bio.h>
-        # include <openssl/pem.h>
-
-        static X509_STORE* createCaCertStore();
-        # endif
-
-        // ----- Env Varibles
+        
         std::unique_ptr<httplib::Client> m_AyonServer;
 
         std::unordered_map<std::string, std::string> m_siteRoots;
-
+        
+        // ----- Env Varibles
         const std::string m_authKey;
         const std::string m_serverUrl;
         std::string m_ayonProjectName;

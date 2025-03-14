@@ -172,24 +172,9 @@ AyonApi::AyonApi(const std::string &logFilePos,
     }
 
     auto res = m_AyonServer->Get("/api/info", m_headers);
-    std::cout << "====== /api/info ======" << std::endl;
-    if (res) {
-        std::cout << "Response: " << res->status << std::endl;
-        // std::cout << "Response body: " << res->body << std::endl;
-    } else {
-        std::cout << "Response is null." << std::endl;
-        std::cout << "Response error: " << res.error() << std::endl;
+    if (!res) {
+        m_Log->error("Failed to connect to the Ayon server.");
     }
-
-    // res = m_AyonServer->Get("/api/projects/" + m_ayonProjectName + "/siteRoots?platform=windows", m_headers);
-    // std::cout << "====== /api/projects/" << m_ayonProjectName << "/siteRoots?platform=windows ======" << std::endl;
-    // if (res) {
-    //     std::cout << "Response: " << res->status << std::endl;
-    //     std::cout << "Response body: " << res->body << std::endl;
-    // } else {
-    //     std::cout << "Response is null." << std::endl;
-    //     std::cout << "Response error: " << res.error() << std::endl;
-    // }
 
     m_Log->info(m_Log->key("AyonApi"), "Constructor Getting Site Roots");
     getSiteRoots();
