@@ -35,6 +35,10 @@
 // TODO implement the better Crash hanlder
 backward::StackTrace st;
 
+
+// ------------------------------------------------
+// helper functions for getting the ca cert path
+// ------------------------------------------------
 std::string parseOutput(std::string& output) {
     // Parse the output to extract the directory path
     std::string::size_type start = output.find('"');
@@ -84,6 +88,8 @@ std::string getOpenSSLDir() {
     return parseOutput(SSLeay_version(SSLEAY_DIR));
 #endif
 }
+// ------------------------------------------------
+
 
 AyonApi::AyonApi(const std::string &logFilePos,
                  const std::string &authKey,
@@ -131,8 +137,8 @@ AyonApi::AyonApi(const std::string &logFilePos,
             #endif
 
             if (std::filesystem::exists(certFileCLI)) {
-                m_Log->warn("Using CLI var.");
-                m_AyonServer->set_ca_cert_path(certFileCLI.c_str()); 
+                m_Log->info("Using CLI var.");
+                m_AyonServer->set_ca_cert_path(certFileCLI.c_str());
             } else {
                 std::string opensslDir = getOpenSSLDir();
                 #ifdef _WIN32
@@ -146,10 +152,10 @@ AyonApi::AyonApi(const std::string &logFilePos,
                 } else {
                     const char* envCertFile = getenv("SSL_CERT_FILE");
                     if (envCertFile) {
-                        m_Log->warn("Using env var: SSL_CERT_PATH.");
+                        m_Log->info("Using env var: SSL_CERT_PATH.");
                         m_AyonServer->set_ca_cert_path(envCertFile);
                     } else {
-                        m_Log->warn("Using OpenSSL default verify paths.");
+                        m_Log->warn("Getting OpenSSL directory didn't succeed. Using OpenSSL default verify paths.");
                         m_AyonServer->set_ca_cert_path(nullptr);
                     }
                 }
