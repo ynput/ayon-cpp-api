@@ -36,7 +36,7 @@ TEST(AyonCppApi, AyonCppApiSerialResolveRootReplace) {
     AyonApi Api = getApiInstance();
     nlohmann::json JsonFileStage = JsonFile["Resolve"];
     bool RunOnlyOneResolveIteration = false;
-    bool printResult = true;
+    bool printResult = false;
 
     if (!AyonCppApiTest::test_SimpleResolve(JsonFile, RunOnlyOneResolveIteration, printResult, Api)) {
         FAIL();
@@ -50,7 +50,7 @@ TEST(AyonCppApi, AyonCppApiBatchResolveRootReplace) {
     AyonApi Api = getApiInstance();
     nlohmann::json JsonFileStage = JsonFile["Resolve"];
     bool RunOnlyOneResolveIteration = false;
-    bool printResult = true;
+    bool printResult = false;
 
     if (!AyonCppApiTest::test_BatchResolve(JsonFile, printResult, Api)) {
         FAIL();
