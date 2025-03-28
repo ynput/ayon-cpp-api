@@ -13,15 +13,15 @@ AyonApi getApiInstance() {
     std::string AYON_SERVER_URL;
     std::string AYON_SITE_ID;
     std::string AYON_PROJECT_NAME;
-    std::string AYONLOGGERLOGLVL;
-    std::string AYONLOGGERFILELOGGING;
+
     #ifdef _WIN32
     std::string envFilePath("test\\.env_http");
     #else
     std::string envFilePath("test/.env_http");
     #endif
-    if (!AyonCppApiTest::load_EnvVariables(envFilePath, AYON_API_KEY, AYON_SERVER_URL, AYON_SITE_ID, AYON_PROJECT_NAME, AYONLOGGERLOGLVL, AYONLOGGERFILELOGGING)) {
+    if (!AyonCppApiTest::load_EnvVariables(envFilePath, AYON_API_KEY, AYON_SERVER_URL, AYON_SITE_ID, AYON_PROJECT_NAME)) {
         std::cerr << "Failed to load environment variables!" << std::endl;
+        throw std::runtime_error("Failed to load environment variables!");
     }
 
     return AyonApi("./test_logs", AYON_API_KEY, AYON_SERVER_URL, AYON_PROJECT_NAME, AYON_SITE_ID);
@@ -59,24 +59,24 @@ TEST(AyonCppApi, AyonCppApiBatchResolveRootReplace) {
     Instrumentor::Get().EndSession();
 }
 
-AyonApi getApiInstanceSSL() {
-    std::string AYON_API_KEY;
-    std::string AYON_SERVER_URL;
-    std::string AYON_SITE_ID;
-    std::string AYON_PROJECT_NAME;
-    std::string AYONLOGGERLOGLVL;
-    std::string AYONLOGGERFILELOGGING;
-    #ifdef _WIN32
-    std::string envFilePath("test\\.env_https");
-    #else
-    std::string envFilePath("test/.env_https");
-    #endif
-    if (!AyonCppApiTest::load_EnvVariables(envFilePath, AYON_API_KEY, AYON_SERVER_URL, AYON_SITE_ID, AYON_PROJECT_NAME, AYONLOGGERLOGLVL, AYONLOGGERFILELOGGING)) {
-        std::cerr << "Failed to load environment variables!" << std::endl;
-    }
+// AyonApi getApiInstanceSSL() {
+//     std::string AYON_API_KEY;
+//     std::string AYON_SERVER_URL;
+//     std::string AYON_SITE_ID;
+//     std::string AYON_PROJECT_NAME;
 
-    return AyonApi("./test_logs", AYON_API_KEY, AYON_SERVER_URL, AYON_PROJECT_NAME, AYON_SITE_ID);
-}
+//     #ifdef _WIN32
+//     std::string envFilePath("test\\.env_https");
+//     #else
+//     std::string envFilePath("test/.env_https");
+//     #endif
+//     if (!AyonCppApiTest::load_EnvVariables(envFilePath, AYON_API_KEY, AYON_SERVER_URL, AYON_SITE_ID, AYON_PROJECT_NAME)) {
+//         std::cerr << "Failed to load environment variables!" << std::endl;
+//         throw std::runtime_error("Failed to load environment variables!");
+//     }
+
+//     return AyonApi("./test_logs", AYON_API_KEY, AYON_SERVER_URL, AYON_PROJECT_NAME, AYON_SITE_ID);
+// }
 
 TEST(AyonCppApi, AyonCppApiCreationSSL) {
     AyonApi Test = getApiInstanceSSL();
