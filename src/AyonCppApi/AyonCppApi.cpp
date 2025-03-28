@@ -32,6 +32,11 @@
 #include "backward.hpp"
 #include "perfPrinter.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#include <wincrypt.h>
+#endif
+
 // TODO implement the better Crash handler
 backward::StackTrace st;
 
@@ -166,8 +171,9 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
                         m_Log->info("Using env var: SSL_CERT_PATH.");
                         m_AyonServer->set_ca_cert_path(envCertFile);
                     } else {
-                        m_Log->warn("Getting OpenSSL directory didn't succeed. Using OpenSSL default verify paths.");
-                        m_AyonServer->set_ca_cert_path(nullptr);
+                        m_Log->warn("Failed to determine the OpenSSL directory. Falling back to the default certificate file path.");                        
+                        std::string certPath = (std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "certs" / "cacert.pem").string();
+                        m_AyonServer->set_ca_cert_path(certPath);
                     }
                 }
             }
@@ -185,6 +191,10 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
     auto res = m_AyonServer->Get("/api/info", m_headers);
     if (!res) {
         m_Log->error("Failed to connect to the Ayon server.");
+    } else if (res->status != 200) {
+        m_Log->warn("Connected to the Ayon server : {}", res->status);
+    } else {
+        m_Log->info("Connected to the Ayon server : {}", res->status);
     }
 
     m_Log->info(m_Log->key("AyonApi"), "Constructor Getting Site Roots");
@@ -202,7 +212,7 @@ AyonApi::getSiteRoots() {
         nlohmann::json response
             = GET(std::make_shared<std::string>("/api/projects/" + m_ayonProjectName + "/siteRoots?platform=linux"),
                   std::make_shared<httplib::Headers>(m_headers), 200);
-
+        
         if (response.empty()) {
             m_Log->error("AyonApi::getSiteRoots response is empty");
             return &m_siteRoots;
