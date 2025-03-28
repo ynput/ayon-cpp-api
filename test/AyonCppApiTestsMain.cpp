@@ -12,9 +12,7 @@ AyonCppApiTest::load_EnvVariables(std::string &envFilePath,
                                   std::string &AYON_API_KEY,
                                   std::string &AYON_SERVER_URL,
                                   std::string &AYON_SITE_ID,
-                                  std::string &AYON_PROJECT_NAME,
-                                  std::string &AYONLOGGERLOGLVL,
-                                  std::string &AYONLOGGERFILELOGGING) {
+                                  std::string &AYON_PROJECT_NAME) {
     std::ifstream envFile(envFilePath);
     if (!envFile.is_open()) {
         std::cerr << "Failed to open .env file: " << envFilePath << std::endl;
@@ -34,10 +32,6 @@ AyonCppApiTest::load_EnvVariables(std::string &envFilePath,
                 AYON_SITE_ID = value;
             } else if (key == "AYON_PROJECT_NAME") {
                 AYON_PROJECT_NAME = value;
-            } else if (key == "AYONLOGGERLOGLVL") {
-                AYONLOGGERLOGLVL = value;
-            } else if (key == "AYONLOGGERFILELOGGING") {
-                AYONLOGGERFILELOGGING = value;
             }
         }
     }
