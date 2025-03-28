@@ -13,14 +13,13 @@ getApiInstance() {
     std::string AYON_SERVER_URL;
     std::string AYON_SITE_ID;
     std::string AYON_PROJECT_NAME;
-    std::string AYONLOGGERLOGLVL;
-    std::string AYONLOGGERFILELOGGING;
+
     #ifdef _WIN32
     std::string envFilePath("test\\.env_http");
     #else
     std::string envFilePath("test/.env_http");
     #endif
-    if (!AyonCppApiTest::load_EnvVariables(envFilePath, AYON_API_KEY, AYON_SERVER_URL, AYON_SITE_ID, AYON_PROJECT_NAME, AYONLOGGERLOGLVL, AYONLOGGERFILELOGGING)) {
+    if (!AyonCppApiTest::load_EnvVariables(envFilePath, AYON_API_KEY, AYON_SERVER_URL, AYON_SITE_ID, AYON_PROJECT_NAME)) {
         std::cerr << "Failed to load environment variables!" << std::endl;
     }
 
