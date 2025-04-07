@@ -54,4 +54,4 @@ endif()
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/AyonCppApi")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/AyonCppApi")
-
+target_include_directories(AyonCppApi PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools/src")
