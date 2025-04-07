@@ -76,7 +76,7 @@ std::string getOpenSSLDirByCLI() {
     if (!pipe) {
         throw std::runtime_error("popen() failed!");
     }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
         result += buffer.data();
     }
 
@@ -210,9 +210,14 @@ AyonApi::~AyonApi() {
 std::unordered_map<std::string, std::string>*
 AyonApi::getSiteRoots() {
     m_Log->info(m_Log->key("AyonApi"), "AyonApi::getSiteRoots()");
-    if (m_siteRoots.size() < 1) {
-        nlohmann::json response
-            = GET(std::make_shared<std::string>("/api/projects/" + m_ayonProjectName + "/siteRoots?platform=linux"),
+        if (m_siteRoots.size() < 1) {
+            std::string platform;
+            #ifdef _WIN32
+                platform = "windows";
+            #elif __linux__
+                platform = "linux";
+            #endif
+            nlohmann::json response = GET(std::make_shared<std::string>("/api/projects/" + m_ayonProjectName + "/siteRoots?platform=" + platform),
                   std::make_shared<httplib::Headers>(m_headers), 200);
         
         if (response.empty()) {
@@ -255,7 +260,7 @@ AyonApi::rootReplace(const std::string &rootLessPath) {
                 return rootedPath;
             }
             catch (std::out_of_range &e) {
-                m_Log->warn("AyonApi::rootedPath error acured {}, list off available root replace str: ");
+                m_Log->warn("AyonApi::rootedPath error acured {}, list off available root replace str: ", e.what());
                 for (auto &g: m_siteRoots) {
                     m_Log->warn("Key: {}, replacement: {}", g.first, g.second);
                 }
@@ -307,7 +312,7 @@ AyonApi::GET(const std::shared_ptr<std::string> endPoint,
             }
         }   // TODO error reason not printed
         catch (const httplib::Error &e) {
-            m_Log->warn("Request Failed because: {}");
+            m_Log->warn("Request Failed because: {}", httplib::to_string(e));
             break;
         }
         m_Log->warn("The connection failed Rety now.");
@@ -424,9 +429,9 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
         {
             PerfTimer("AyonApi::batchResolvePath::sanatizeVector");
             std::set<std::string> s;
-            unsigned size = uriPaths.size();
+            size_t size = uriPaths.size();
 
-            for (unsigned i = 0; i < size; ++i) s.insert(uriPaths[i]);
+            for (size_t i = 0; i < size; ++i) s.insert(uriPaths[i]);
             uriPaths.assign(s.begin(), s.end());
             m_Log->info("Make sure that the vector has no duplicates. vecSize before: {} after: {}", size,
                         uriPaths.size());
