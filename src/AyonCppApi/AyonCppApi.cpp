@@ -153,7 +153,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
             #endif
 
             if (std::filesystem::exists(certFileCLI)) {
-                m_Log->info("Using CLI var.");
+                m_Log->info("Using cert based on CLI var.");
                 m_AyonServer->set_ca_cert_path(certFileCLI.c_str());
             } else {
                 std::string opensslDir = getOpenSSLDir();
@@ -164,11 +164,12 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
                 #endif
 
                 if (std::filesystem::exists(certFile)) {
+                    m_Log->info("Using cert based on SSLEAY_DIR.");
                     m_AyonServer->set_ca_cert_path(certFile.c_str()); 
                 } else {
                     const char* envCertFile = getenv("SSL_CERT_FILE");
                     if (envCertFile) {
-                        m_Log->info("Using env var: SSL_CERT_PATH.");
+                        m_Log->info("Using cert based on env variable (SSL_CERT_PATH).");
                         m_AyonServer->set_ca_cert_path(envCertFile);
                     } else {
                         m_Log->info("Failed to determine the OpenSSL directory. Falling back to the default certificate file path.");                        
