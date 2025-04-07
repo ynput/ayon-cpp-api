@@ -171,8 +171,10 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
                         m_Log->info("Using env var: SSL_CERT_PATH.");
                         m_AyonServer->set_ca_cert_path(envCertFile);
                     } else {
-                        m_Log->warn("Failed to determine the OpenSSL directory. Falling back to the default certificate file path.");                        
-                        std::string certPath = (std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "certs" / "cacert.pem").string();
+                        m_Log->info("Failed to determine the OpenSSL directory. Falling back to the default certificate file path.");                        
+                        std::string certPath = (
+                            std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "certs" / "cacert.pem"
+                        ).string();
                         m_AyonServer->set_ca_cert_path(certPath);
                     }
                 }
