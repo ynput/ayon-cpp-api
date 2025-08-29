@@ -139,10 +139,6 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
     m_AyonServer = std::make_unique<httplib::Client>(m_serverUrl);
 
     if (isSSL()) {
-        m_headers = {
-            {"X-Api-Key", m_authKey},
-        };
-
         try {
             std::string opensslDirCLI = getOpenSSLDirByCLI();
 
@@ -186,18 +182,23 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
         }
 
         m_AyonServer->enable_server_certificate_verification(true);
-    } else {
-        m_AyonServer->set_bearer_token_auth(m_authKey);
-        m_headers = {};
     }
 
-    auto res = m_AyonServer->Get("/api/info", m_headers);
+    auto res = m_AyonServer->Get("/api/info");
     if (!res) {
         m_Log->error("Failed to connect to the Ayon server.");
-    } else if (res->status != 200) {
-        m_Log->warn("Connected to the Ayon server : {}", res->status);
     } else {
         m_Log->info("Connected to the Ayon server : {}", res->status);
+        // First try to use authentication token as service API key
+        // - if fails use it as user tokens
+        m_headers = {
+            {"X-Api-Key", m_authKey},
+        };
+        auto res = m_AyonServer->Get("/api/users/me", m_headers);
+        if (res->status != 200) {
+            m_headers = {};
+            m_AyonServer->set_bearer_token_auth(m_authKey);
+        }
     }
 
     m_Log->info(m_Log->key("AyonApi"), "Constructor Getting Site Roots");
