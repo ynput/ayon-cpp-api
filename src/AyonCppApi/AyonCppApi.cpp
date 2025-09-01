@@ -193,10 +193,13 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
         // - if fails use it as user tokens
         m_headers = {
             {"X-Api-Key", m_authKey},
+            {"X-ayon-site-id", m_siteId},
         };
         auto res = m_AyonServer->Get("/api/users/me", m_headers);
         if (res->status != 200) {
-            m_headers = {};
+            m_headers = {
+                {"X-ayon-site-id", m_siteId},
+            };
             m_AyonServer->set_bearer_token_auth(m_authKey);
         }
     }
@@ -403,7 +406,8 @@ AyonApi::resolvePath(const std::string &uriPath) {
     }
     std::pair<std::string, std::string> resolvedAsset;
     nlohmann::json jsonPayload = {{"resolveRoots", false}, {"uris", nlohmann::json::array({uriPath})}};
-    httplib::Headers headers = {{"X-ayon-site-id", m_siteId}};
+    httplib::Headers headers = m_headers;
+
     uint8_t sucsessStatus = 200;
 
     nlohmann::json response
@@ -443,7 +447,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
     std::vector<std::future<nlohmann::json>> futures;
 
     std::shared_ptr<httplib::Headers> headers
-        = std::make_shared<httplib::Headers>(httplib::Headers{{"X-ayon-site-id", m_siteId}});
+        = std::make_shared<httplib::Headers>(m_headers);
 
     std::shared_ptr<std::string> batchResolveEndpoint;
     if (m_pathOnlyReselution) {
