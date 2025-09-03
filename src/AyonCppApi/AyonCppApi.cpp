@@ -193,13 +193,10 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
         // - if fails use it as user tokens
         m_headers = {
             {"X-Api-Key", m_authKey},
-            {"X-ayon-site-id", m_siteId},
         };
         auto res = m_AyonServer->Get("/api/users/me", m_headers);
         if (res->status != 200) {
-            m_headers = {
-                {"X-ayon-site-id", m_siteId},
-            };
+            m_headers = {};
             m_AyonServer->set_bearer_token_auth(m_authKey);
         }
     }
@@ -407,6 +404,7 @@ AyonApi::resolvePath(const std::string &uriPath) {
     std::pair<std::string, std::string> resolvedAsset;
     nlohmann::json jsonPayload = {{"resolveRoots", false}, {"uris", nlohmann::json::array({uriPath})}};
     httplib::Headers headers = m_headers;
+    headers.insert({"X-ayon-site-id", m_siteId});
 
     uint8_t sucsessStatus = 200;
 
