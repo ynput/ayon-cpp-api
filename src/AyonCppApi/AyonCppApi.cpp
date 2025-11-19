@@ -188,7 +188,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
     if (!res) {
         m_Log->error("Failed to connect to the Ayon server.");
     } else {
-        m_Log->info("Connected to the Ayon server : {}", res->status);
+        // m_Log->info("Connected to the Ayon server : {}", res->status);
         // First try to use authentication token as service API key
         // - if fails use it as user tokens
         m_headers = {
