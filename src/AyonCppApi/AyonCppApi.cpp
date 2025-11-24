@@ -133,10 +133,11 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
         }
     }
     m_Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(logPath.string()));
-    m_Log->LogLevlWarn();
+    m_Log->LogLevelWarn();
 
     m_Log->info(m_Log->key("AyonApi"), "Init AyonServer httplib::Client");
     m_AyonServer = std::make_unique<httplib::Client>(m_serverUrl);
+    std::cout << "After creating httplib::Client - " << m_serverUrl << std::endl;
 
     if (isSSL()) {
         try {
@@ -184,10 +185,34 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
         m_AyonServer->enable_server_certificate_verification(true);
     }
 
-    auto res = m_AyonServer->Get("/api/info");
+    std::cout << "Before" << std::endl;
+    if (!m_AyonServer) {
+        std::cerr << "m_AyonServer is null. serverUrl='" << m_serverUrl << "'\n";
+        throw std::runtime_error("AyonApi: HTTP client not initialized");
+    }
+    std::cout << "After m_AyonServer check" << std::endl;
+    if (m_serverUrl.empty()) {
+        std::cerr << "m_serverUrl empty\n";
+    }
+    std::cout << "Before GET" << std::endl;
+    httplib::Result res;
+    try {
+        res = m_AyonServer->Get("/api/info");
+        std::cout << "After GET try" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception during GET /api/info: " << e.what() << "\n";
+        throw;
+    }
+    std::cout << "After GET" << std::endl;
+
     if (!res) {
+        std::cout << "Failed to connect to the Ayon server." << std::endl;
         m_Log->error("Failed to connect to the Ayon server.");
+        std::cout << "After log error" << std::endl;
     } else {
+        std::cout << "Ayon server info: " << res->body << std::endl;
+        std::cout << "Status code: " << res->status << std::endl;
+        std::cout << "After" << std::endl;
         // m_Log->info("Connected to the Ayon server : {}", res->status);
         // First try to use authentication token as service API key
         // - if fails use it as user tokens
@@ -561,6 +586,8 @@ AyonApi::getAssetIdent(const nlohmann::json &uriResolverRespone) {
             uriResolverRespone.at("entities").at(uriResolverRespone.at("entities").size() - 1).at("filePath"));
     }
     catch (const nlohmann::json::exception &e) {
+        std::cout << "AyonApi::getAssetIdent JSON exception: " << e.what() << std::endl;
+        std::cout << "uriResolverRespone: " << uriResolverRespone.dump() << std::endl;
         m_Log->warn("asset identification cant be generated {}", uriResolverRespone.dump());
     }
     return AssetIdent;
