@@ -121,7 +121,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
             // if the input path is just an filename we will just throw it into tmp
             logPath = std::filesystem::temp_directory_path() / inPath;
         }
-        // we allways want the data to be a json, so we just enforce it.
+        // we always want the data to be a json, so we just enforce it.
         logPath.replace_extension(".json");
 
 
