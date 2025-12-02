@@ -141,13 +141,9 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
 
     if (isSSL()) {
         try {
-            std::string opensslDirCLI = getOpenSSLDirByCLI();
-
-            #ifdef _WIN32
-            std::string certFileCLI = opensslDirCLI + "\\cert.pem";
-            #else
-            std::string certFileCLI = opensslDirCLI + "/cert.pem";
-            #endif
+            std::filesystem::path opensslDirCLI(getOpenSSLDirByCLI());
+            opensslDirCLI /= "cert.pem";
+            std::string certFileCLI = opensslDirCLI.string()
 
             if (std::filesystem::exists(certFileCLI)) {
                 m_Log->info("Using cert based on CLI var.");
