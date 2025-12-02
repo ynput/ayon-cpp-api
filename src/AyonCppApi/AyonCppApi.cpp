@@ -283,7 +283,7 @@ AyonApi::rootReplace(const std::string &rootLessPath) {
                 return rootedPath;
             }
             catch (std::out_of_range &e) {
-                m_Log->warn("AyonApi::rootedPath error acured {}, list off available root replace str: ", e.what());
+                m_Log->warn("AyonApi::rootedPath error occured {}, list of available root replace str: ", e.what());
                 for (auto &g: m_siteRoots) {
                     m_Log->warn("Key: {}, replacement: {}", g.first, g.second);
                 }
