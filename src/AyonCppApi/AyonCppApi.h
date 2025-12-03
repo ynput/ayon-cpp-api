@@ -166,6 +166,10 @@ class AyonApi {
          */
         bool isSSL() const;
 
+        /**
+         * @brief sets the ssl cert path for the m_AyonServer httplib client
+         */
+        void setSSL();
         
         std::unique_ptr<httplib::Client> m_AyonServer;
 

@@ -121,7 +121,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
             // if the input path is just an filename we will just throw it into tmp
             logPath = std::filesystem::temp_directory_path() / inPath;
         }
-        // we always want the data to be a json, so we just enforce it.
+        // we allways want the data to be a json, so we just enforce it.
         logPath.replace_extension(".json");
 
 
@@ -131,7 +131,10 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
         else {
             std::filesystem::create_directories(logPath.parent_path());
         }
+    } else {
+        throw std::runtime_error("AyonApi: No log file path provided");
     }
+
     m_Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(logPath.string()));
     m_Log->LogLevelWarn();
 
@@ -141,38 +144,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
 
     if (isSSL()) {
         try {
-            std::filesystem::path opensslDirCLI(getOpenSSLDirByCLI());
-            opensslDirCLI /= "cert.pem";
-            std::string certFileCLI = opensslDirCLI.string()
-
-            if (std::filesystem::exists(certFileCLI)) {
-                m_Log->info("Using cert based on CLI var.");
-                m_AyonServer->set_ca_cert_path(certFileCLI.c_str());
-            } else {
-                std::string opensslDir = getOpenSSLDir();
-                #ifdef _WIN32
-                std::string certFile = opensslDir + "\\cert.pem";
-                #else
-                std::string certFile = opensslDir + "/cert.pem";
-                #endif
-
-                if (std::filesystem::exists(certFile)) {
-                    m_Log->info("Using cert based on SSLEAY_DIR.");
-                    m_AyonServer->set_ca_cert_path(certFile.c_str()); 
-                } else {
-                    const char* envCertFile = getenv("SSL_CERT_FILE");
-                    if (envCertFile) {
-                        m_Log->info("Using cert based on env variable (SSL_CERT_PATH).");
-                        m_AyonServer->set_ca_cert_path(envCertFile);
-                    } else {
-                        m_Log->info("Failed to determine the OpenSSL directory. Falling back to the default certificate file path.");                        
-                        std::string certPath = (
-                            std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "certs" / "cacert.pem"
-                        ).string();
-                        m_AyonServer->set_ca_cert_path(certPath);
-                    }
-                }
-            }
+            setSSL();
         } catch (const std::exception &e) {
             m_Log->error("Failed to get OpenSSL directory: {}", e.what());
             m_AyonServer->set_ca_cert_path(nullptr); 
@@ -283,7 +255,7 @@ AyonApi::rootReplace(const std::string &rootLessPath) {
                 return rootedPath;
             }
             catch (std::out_of_range &e) {
-                m_Log->warn("AyonApi::rootedPath error occured {}, list of available root replace str: ", e.what());
+                m_Log->warn("AyonApi::rootedPath error acured {}, list off available root replace str: ", e.what());
                 for (auto &g: m_siteRoots) {
                     m_Log->warn("Key: {}, replacement: {}", g.first, g.second);
                 }
@@ -768,4 +740,44 @@ AyonApi::logPointer() {
 bool
 AyonApi::isSSL() const {
     return m_serverUrl.rfind("https://", 0) == 0;
+}
+
+void
+AyonApi::setSSL() {
+    // env varaiable
+    const char* envCertFile = getenv("SSL_CERT_FILE");
+    if (envCertFile) {
+        m_Log->info("Using cert based on env variable (SSL_CERT_PATH).");
+        m_AyonServer->set_ca_cert_path(envCertFile);
+        return;
+    }
+
+    // CLI
+    std::filesystem::path opensslDirCLI(getOpenSSLDirByCLI());
+    opensslDirCLI /= "cert.pem";
+    std::string certFileCLI = opensslDirCLI.string();
+
+    if (std::filesystem::exists(certFileCLI)) {
+        m_Log->info("Using cert based on CLI var.");
+        m_AyonServer->set_ca_cert_path(certFileCLI.c_str());
+        return;
+    } 
+
+    // SSLEAY_DIR / OPENSSLDIR
+    std::filesystem::path opensslDirCLI(getOpenSSLDir());
+    opensslDirCLI /= "cert.pem";
+    std::string certFileCLI = opensslDirCLI.string();
+
+    if (std::filesystem::exists(certFileCLI)) {
+        m_Log->info("Using cert based on SSLEAY_DIR.");
+        m_AyonServer->set_ca_cert_path(certFileCLI.c_str());
+        return;
+    }
+
+    // fallback
+    m_Log->info("Failed to determine the OpenSSL directory. Falling back to the default certificate file path.");                        
+    std::string certPath = (
+        std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "certs" / "cacert.pem"
+    ).string();
+    m_AyonServer->set_ca_cert_path(certPath);
 }
