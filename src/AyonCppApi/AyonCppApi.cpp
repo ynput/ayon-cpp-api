@@ -137,10 +137,9 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
 
     m_Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(logPath.string()));
     m_Log->LogLevelWarn();
-
     m_Log->info(m_Log->key("AyonApi"), "Init AyonServer httplib::Client");
     m_AyonServer = std::make_unique<httplib::Client>(m_serverUrl);
-    std::cout << "After creating httplib::Client - " << m_serverUrl << std::endl;
+    m_Log->info(m_Log->key("AyonApi"), "After creating httplib::Client - {}", m_serverUrl);
 
     if (isSSL()) {
         try {
@@ -152,43 +151,37 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
 
         m_AyonServer->enable_server_certificate_verification(true);
     }
-
-    std::cout << "Before" << std::endl;
+    m_Log->info(m_Log->key("AyonApi"), "Before");
     if (!m_AyonServer) {
-        std::cerr << "m_AyonServer is null. serverUrl='" << m_serverUrl << "'\n";
+        m_Log->error("m_AyonServer is null. serverUrl='{}'", m_serverUrl);
         throw std::runtime_error("AyonApi: HTTP client not initialized");
     }
-    std::cout << "After m_AyonServer check" << std::endl;
+    m_Log->info(m_Log->key("AyonApi"), "After m_AyonServer check");
     if (m_serverUrl.empty()) {
-        std::cerr << "m_serverUrl empty\n";
+        m_Log->warn("m_serverUrl empty");
     }
-    std::cout << "Before GET" << std::endl;
+    m_Log->info(m_Log->key("AyonApi"), "Before GET");
     httplib::Result res;
     try {
         res = m_AyonServer->Get("/api/info");
-        std::cout << "After GET try" << std::endl;
+        m_Log->info(m_Log->key("AyonApi"), "After GET try");
     } catch (const std::exception& e) {
-        std::cerr << "Exception during GET /api/info: " << e.what() << "\n";
+        m_Log->error("Exception during GET /api/info: {}", e.what());
         throw;
     }
-    std::cout << "After GET" << std::endl;
 
     if (!res) {
-        std::cout << "Failed to connect to the Ayon server." << std::endl;
         m_Log->error("Failed to connect to the Ayon server.");
-        std::cout << "After log error" << std::endl;
     } else {
-        std::cout << "Ayon server info: " << res->body << std::endl;
-        std::cout << "Status code: " << res->status << std::endl;
-        std::cout << "After" << std::endl;
-        // m_Log->info("Connected to the Ayon server : {}", res->status);
-        // First try to use authentication token as service API key
-        // - if fails use it as user tokens
+        m_Log->info(m_Log->key("AyonApi"), "Ayon server info: {}", res->body);
+        m_Log->info(m_Log->key("AyonApi"), "Status code: {}", res->status);
+        m_Log->info(m_Log->key("AyonApi"), "After");
+
         m_headers = {
             {"X-Api-Key", m_authKey},
         };
-        auto res = m_AyonServer->Get("/api/users/me", m_headers);
-        if (res->status != 200) {
+        auto resMe = m_AyonServer->Get("/api/users/me", m_headers);
+        if (resMe && resMe->status != 200) {
             m_headers = {};
             m_AyonServer->set_bearer_token_auth(m_authKey);
         }
@@ -774,10 +767,24 @@ AyonApi::setSSL() {
         return;
     }
 
-    // fallback
-    m_Log->info("Failed to determine the OpenSSL directory. Falling back to the default certificate file path.");                        
-    std::string certPath = (
+    m_Log->info("Failed to determine the OpenSSL directory or load system CAs. Falling back to bundled certificate path derived from __FILE__.");                        
+    
+    std::filesystem::path bundledPath = (
         std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "certs" / "cacert.pem"
-    ).string();
-    m_AyonServer->set_ca_cert_path(certPath);
+    );
+
+    std::string certPath = bundledPath.string();
+
+    if (std::filesystem::exists(certPath)) {
+        m_Log->info("Using bundled certificate (via __FILE__ path): {}", certPath);
+        m_AyonServer->set_ca_cert_path(certPath);
+        return; // Success, exit function
+    }
+
+
+
+    m_Log->error("Bundled cacert.pem file not found at compile-time path: {}", certPath);
+    
+    // Final ultimate failure point: set to nullptr or throw
+    m_AyonServer->set_ca_cert_path(nullptr);
 }
