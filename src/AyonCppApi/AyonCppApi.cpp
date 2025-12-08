@@ -41,6 +41,61 @@
 backward::StackTrace st;
 
 
+// ------------------------------------------------
+// helper functions for getting the ca cert path
+// ------------------------------------------------
+std::string parseOutput(std::string& output) {
+    // Parse the output to extract the directory path
+    std::string::size_type start = output.find('"');
+    std::string::size_type end = output.find('"', start + 1);
+    if (start != std::string::npos && end != std::string::npos) {
+        return output.substr(start + 1, end - start - 1);
+    } else {
+        throw std::runtime_error("Failed to parse OpenSSL directory from command output.");
+    }
+}
+
+std::string getOpenSSLDirByCLI() {
+    std::array<char, 128> buffer;
+    std::string result;
+    auto pipeDeleter = [](FILE* pipe) { 
+    #ifdef _WIN32
+        _pclose(pipe);
+    #else
+        pclose(pipe); 
+    #endif
+    };
+    std::unique_ptr<FILE, decltype(pipeDeleter)> pipe(
+    #ifdef _WIN32
+        _popen("openssl version -d", "r"),
+    #else
+        popen("openssl version -d", "r"),
+    #endif
+        pipeDeleter
+    );
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+
+    return parseOutput(result);
+}
+
+
+std::string getOpenSSLDir() {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L  // OpenSSL 1.1.0+
+    const char* sslVersion = OpenSSL_version(OPENSSL_DIR);
+    std::string sslVersionStr(sslVersion);
+    return parseOutput(sslVersionStr);
+#else  // OpenSSL 1.0.x
+    return parseOutput(SSLeay_version(SSLEAY_DIR));
+#endif
+}
+// ------------------------------------------------
+
+
 AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
                  const std::string &authKey,
                  const std::string &serverUrl,
@@ -87,18 +142,23 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
     m_Log->info(m_Log->key("AyonApi"), "After creating httplib::Client - {}", m_serverUrl);
 
     if (isSSL()) {
-        std::string ayonSSSLCertPath = std::getenv("AYON_SSL_CERT_PATH") ? std::getenv("AYON_SSL_CERT_PATH") : "";
-        
-        if (!ayonSSSLCertPath.empty()) {
-            m_Log->info(m_Log->key("AyonApi"), "Using AYON_SSL_CERT_PATH: {}", ayonSSSLCertPath);
-            m_AyonServer->set_ca_cert_path(ayonSSSLCertPath.c_str());
+        std::string ayonSSLPath = std::getenv("AYON_SSL_CERT_PATH") ? std::getenv("AYON_SSL_CERT_PATH") : "";
+        if (!ayonSSLPath.empty()) {
+            m_Log->info(m_Log->key("AyonApi"), "Using AYON_SSL_CERT_PATH: {}", ayonSSLPath);
+            m_AyonServer->set_ca_cert_path(ayonSSLPath.c_str());
         } else {
-            m_Log->error("AYON_SSL_CERT_PATH variable is not set.");
+            m_Log->warn(m_Log->key("AyonApi"), "No AYON_SSL_CERT_PATH set, trying to get OpenSSL dir");
+        
+            try {
+                setSSL();
+            } catch (const std::exception &e) {
+                m_Log->error("Failed to get OpenSSL directory: {}", e.what());
+                m_AyonServer->set_ca_cert_path(nullptr); 
+            }
         }
 
         m_AyonServer->enable_server_certificate_verification(true);
     }
-
     m_Log->info(m_Log->key("AyonApi"), "Before");
     if (!m_AyonServer) {
         m_Log->error("m_AyonServer is null. serverUrl='{}'", m_serverUrl);
@@ -681,4 +741,73 @@ AyonApi::logPointer() {
 bool
 AyonApi::isSSL() const {
     return m_serverUrl.rfind("https://", 0) == 0;
+}
+
+#include <dlfcn.h> // REQUIRED for dladdr, Dl_info
+
+void
+AyonApi::setSSL() {
+    // 1. ENVIRONMENT VARIABLE CHECK
+    const char* envCertFile = getenv("SSL_CERT_FILE");
+    if (envCertFile) {
+        m_Log->info("Using cert based on env variable (SSL_CERT_FILE).");
+        m_AyonServer->set_ca_cert_path(envCertFile);
+        return;
+    }
+
+    // 2. CLI CHECK (getOpenSSLDirByCLI)
+    // Note: If getOpenSSLDirByCLI() returns an empty path, the filesystem::exists() check will fail safely.
+    std::filesystem::path opensslDirCLI(getOpenSSLDirByCLI());
+    opensslDirCLI /= "cert.pem";
+    std::string certFileCLI = opensslDirCLI.string();
+
+    if (std::filesystem::exists(certFileCLI)) {
+        m_Log->info("Using cert based on CLI var.");
+        m_AyonServer->set_ca_cert_path(certFileCLI.c_str());
+        return;
+    } 
+
+    // 3. SSLEAY_DIR / OPENSSLDIR CHECK (getOpenSSLDir)
+    std::filesystem::path opensslDirSSLEAY(getOpenSSLDir());
+    opensslDirSSLEAY /= "cert.pem";
+    std::string certFileSSLEAY = opensslDirSSLEAY.string();
+
+    if (std::filesystem::exists(certFileSSLEAY)) {
+        m_Log->info("Using cert based on SSLEAY_DIR.");
+        m_AyonServer->set_ca_cert_path(certFileSSLEAY.c_str());
+        return;
+    }
+
+    // 4. FALLBACK TO BUNDLED CERTIFICATE (VIA SHARED OBJECT PATH)
+    m_Log->info("Failed to determine the OpenSSL directory or load system CAs. Falling back to bundled certificate path.");                        
+    
+    std::filesystem::path soPath;
+    Dl_info dl_info;
+
+    if (dladdr(reinterpret_cast<const void*>(&parseOutput), &dl_info) && dl_info.dli_fname) {
+        soPath = dl_info.dli_fname;
+    }
+
+    if (!soPath.empty()) {
+        std::filesystem::path resolverRoot = soPath.parent_path().parent_path();
+        
+        std::filesystem::path bundledPath = (
+            resolverRoot / "certs" / "cacert.pem"
+        );
+
+        std::string certPath = bundledPath.string();
+
+        if (std::filesystem::exists(certPath)) {
+            m_Log->info("Using bundled certificate (via SO path): {}", certPath);
+            m_AyonServer->set_ca_cert_path(certPath.c_str());
+            return;
+        }
+
+        m_Log->error("Bundled cacert.pem file not found at expected runtime path: {}", certPath);
+    } else {
+        m_Log->error("Failed to determine the path of the loaded shared library (dladdr failed).");
+    }
+
+    // 5. FINAL FAILURE POINT
+    throw std::runtime_error("Failed to set SSL certificate path. No valid certificate found.");
 }

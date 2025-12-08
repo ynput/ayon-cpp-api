@@ -14,6 +14,11 @@
 #include "httplib.h"
 #include "nlohmann/json_fwd.hpp"
 
+#ifdef __linux__
+// This header provides the dladdr function and Dl_info structure.
+#include <dlfcn.h> 
+#endif
+
 /**
  * @class AyonApi
  * @brief Central Ayon api class \n
