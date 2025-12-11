@@ -109,34 +109,61 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
       m_siteId(siteId) {
     PerfTimer("AyonApi::AyonApi");
 
+    std::cout << "before logFilePos.has_value()" << std::endl;
+    // TODO remove
+    // logFilePos = "/home/ynput/dev/ayon-usd-resolver/logFile.json";
+
     // ----------- Init m_Logger
     std::filesystem::path logPath;
     if (logFilePos.has_value()) {
-        std::filesystem::path inPath(logFilePos.value());
+        try {
+            std::filesystem::path inPath(logFilePos.value());
+            // std::cout << "Original path: " << inPath << std::endl;
 
-        if (inPath.is_relative()) {
-            logPath = std::filesystem::weakly_canonical(inPath);
-        }
-        if (!inPath.has_parent_path()) {
-            // if the input path is just an filename we will just throw it into tmp
-            logPath = std::filesystem::temp_directory_path() / inPath;
-        }
-        // we allways want the data to be a json, so we just enforce it.
-        logPath.replace_extension(".json");
+            std::cout << "is_relative" << std::endl;
+            if (inPath.is_relative()) {
+                logPath = std::filesystem::weakly_canonical(inPath);
+            } else {
+                logPath = inPath;
+            }
 
+            std::cout << "has_parent_path" << std::endl;
+            if (!inPath.has_parent_path()) {
+                // if the input path is just a filename we will just throw it into tmp
+                logPath = std::filesystem::temp_directory_path() / inPath;
+            }
+            
+            // std::cout << "replace_extension" << std::endl;
+            // we always want the data to be a json, so we just enforce it.
+            // logPath.replace_extension(".json");
 
-        if (std::filesystem::exists(logPath)) {
-            logPath = std::filesystem::canonical(logPath);
+            std::cout << "std::filesystem::exists - " << logPath << std::endl;
+            if (std::filesystem::exists(logPath)) {
+                std::cout << "std::filesystem::canonical" << std::endl;
+                logPath = std::filesystem::canonical(logPath);
+            } else {
+                std::cout << "std::filesystem::create_directories" << std::endl;
+                // Check if parent path exists before trying to create it to avoid empty path errors
+                if (logPath.has_parent_path()) {
+                    std::filesystem::create_directories(logPath.parent_path());
+                }
+            }
+        } 
+        catch (const std::filesystem::filesystem_error& e) {
+            std::cerr << "Filesystem error: " << e.what() << std::endl;
+            std::cerr << "Path 1: " << e.path1() << std::endl;
+            std::cerr << "Path 2: " << e.path2() << std::endl;
+        } 
+        catch (const std::exception& e) {
+            std::cerr << "General error processing path: " << e.what() << std::endl;
         }
-        else {
-            std::filesystem::create_directories(logPath.parent_path());
-        }
-    } else {
-        throw std::runtime_error("AyonApi: No log file path provided");
     }
 
+    std::cout << "before AyonLogger init - logPath: " << logPath << std::endl;
     m_Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(logPath.string()));
-    m_Log->LogLevelWarn();
+    std::cout << "after AyonLogger init" << std::endl;
+    m_Log->LogLevelInfo();
+    // m_Log->LogLevelWarn();
     m_Log->info(m_Log->key("AyonApi"), "Init AyonServer httplib::Client");
     m_AyonServer = std::make_unique<httplib::Client>(m_serverUrl);
     m_Log->info(m_Log->key("AyonApi"), "After creating httplib::Client - {}", m_serverUrl);
@@ -747,6 +774,8 @@ AyonApi::isSSL() const {
 
 void
 AyonApi::setSSL() {
+    // throw std::runtime_error("TEST!! should not be in the final build.");
+
     // 1. ENVIRONMENT VARIABLE CHECK
     const char* envCertFile = getenv("SSL_CERT_FILE");
     if (envCertFile) {
