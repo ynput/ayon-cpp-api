@@ -1,4 +1,3 @@
-
 #include "AyonCppApi.h"
 #include <sys/types.h>
 #include "httplib.h"
@@ -40,12 +39,10 @@
 // TODO implement the better Crash handler
 backward::StackTrace st;
 
-
 // ------------------------------------------------
 // helper functions for getting the ca cert path
 // ------------------------------------------------
 std::string parseOutput(std::string& output) {
-    // Parse the output to extract the directory path
     std::string::size_type start = output.find('"');
     std::string::size_type end = output.find('"', start + 1);
     if (start != std::string::npos && end != std::string::npos) {
@@ -79,22 +76,19 @@ std::string getOpenSSLDirByCLI() {
     while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
         result += buffer.data();
     }
-
     return parseOutput(result);
 }
 
-
 std::string getOpenSSLDir() {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L  // OpenSSL 1.1.0+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
     const char* sslVersion = OpenSSL_version(OPENSSL_DIR);
     std::string sslVersionStr(sslVersion);
     return parseOutput(sslVersionStr);
-#else  // OpenSSL 1.0.x
+#else
     return parseOutput(SSLeay_version(SSLEAY_DIR));
 #endif
 }
 // ------------------------------------------------
-
 
 AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
                  const std::string &authKey,
@@ -109,62 +103,52 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
       m_siteId(siteId) {
     PerfTimer("AyonApi::AyonApi");
 
-    std::cout << "before logFilePos.has_value()" << std::endl;
-    // TODO remove
-    // logFilePos = "/home/ynput/dev/ayon-usd-resolver/logFile.json";
-
-    // ----------- Init m_Logger
+    // ----------- Resolve Log Path
     std::filesystem::path logPath;
     if (logFilePos.has_value()) {
         try {
             std::filesystem::path inPath(logFilePos.value());
-            // std::cout << "Original path: " << inPath << std::endl;
+            std::cout << "Input log path: " << inPath << std::endl;
 
-            std::cout << "is_relative" << std::endl;
             if (inPath.is_relative()) {
                 logPath = std::filesystem::weakly_canonical(inPath);
             } else {
                 logPath = inPath;
             }
 
-            std::cout << "has_parent_path" << std::endl;
             if (!inPath.has_parent_path()) {
-                // if the input path is just a filename we will just throw it into tmp
                 logPath = std::filesystem::temp_directory_path() / inPath;
             }
             
-            // std::cout << "replace_extension" << std::endl;
-            // we always want the data to be a json, so we just enforce it.
-            // logPath.replace_extension(".json");
-
-            std::cout << "std::filesystem::exists - " << logPath << std::endl;
+            // Validate / Create directories
             if (std::filesystem::exists(logPath)) {
-                std::cout << "std::filesystem::canonical" << std::endl;
                 logPath = std::filesystem::canonical(logPath);
             } else {
-                std::cout << "std::filesystem::create_directories" << std::endl;
-                // Check if parent path exists before trying to create it to avoid empty path errors
                 if (logPath.has_parent_path()) {
                     std::filesystem::create_directories(logPath.parent_path());
                 }
             }
         } 
-        catch (const std::filesystem::filesystem_error& e) {
-            std::cerr << "Filesystem error: " << e.what() << std::endl;
-            std::cerr << "Path 1: " << e.path1() << std::endl;
-            std::cerr << "Path 2: " << e.path2() << std::endl;
-        } 
         catch (const std::exception& e) {
-            std::cerr << "General error processing path: " << e.what() << std::endl;
+            std::cerr << "[AyonApi] Path error: " << e.what() << std::endl;
         }
     }
 
-    std::cout << "before AyonLogger init - logPath: " << logPath << std::endl;
-    m_Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(logPath.string()));
-    std::cout << "after AyonLogger init" << std::endl;
+    // ----------- Init m_Logger (Singleton Logic)
+    std::cout << "[AyonApi] Retrieving AyonLogger Singleton..." << std::endl;
+    
+    AyonLogger& loggerRef = AyonLogger::getInstance();
+    
+    if (!logPath.empty()) {
+        loggerRef.initFileLogger(logPath.string());
+    }
+
+    m_Log = std::shared_ptr<AyonLogger>(&loggerRef, [](AyonLogger*){});
+    
+    m_Log->registerLoggingKey("AyonApi");
     m_Log->LogLevelInfo();
-    // m_Log->LogLevelWarn();
     m_Log->info(m_Log->key("AyonApi"), "Init AyonServer httplib::Client");
+    
     m_AyonServer = std::make_unique<httplib::Client>(m_serverUrl);
     m_Log->info(m_Log->key("AyonApi"), "After creating httplib::Client - {}", m_serverUrl);
 
@@ -175,7 +159,6 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
             m_AyonServer->set_ca_cert_path(ayonSSLPath.c_str());
         } else {
             m_Log->warn(m_Log->key("AyonApi"), "No AYON_SSL_CERT_PATH set, trying to get OpenSSL dir");
-        
             try {
                 setSSL();
             } catch (const std::exception &e) {
@@ -183,23 +166,17 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
                 m_AyonServer->set_ca_cert_path(nullptr); 
             }
         }
-
         m_AyonServer->enable_server_certificate_verification(true);
     }
-    m_Log->info(m_Log->key("AyonApi"), "Before");
+
     if (!m_AyonServer) {
         m_Log->error("m_AyonServer is null. serverUrl='{}'", m_serverUrl);
         throw std::runtime_error("AyonApi: HTTP client not initialized");
     }
-    m_Log->info(m_Log->key("AyonApi"), "After m_AyonServer check");
-    if (m_serverUrl.empty()) {
-        m_Log->warn("m_serverUrl empty");
-    }
-    m_Log->info(m_Log->key("AyonApi"), "Before GET");
+
     httplib::Result res;
     try {
         res = m_AyonServer->Get("/api/info");
-        m_Log->info(m_Log->key("AyonApi"), "After GET try");
     } catch (const std::exception& e) {
         m_Log->error("Exception during GET /api/info: {}", e.what());
         throw;
@@ -210,7 +187,6 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
     } else {
         m_Log->info(m_Log->key("AyonApi"), "Ayon server info: {}", res->body);
         m_Log->info(m_Log->key("AyonApi"), "Status code: {}", res->status);
-        m_Log->info(m_Log->key("AyonApi"), "After");
 
         m_headers = {
             {"X-Api-Key", m_authKey},
@@ -774,40 +750,35 @@ AyonApi::isSSL() const {
 
 void
 AyonApi::setSSL() {
-    // throw std::runtime_error("TEST!! should not be in the final build.");
-
-    // 1. ENVIRONMENT VARIABLE CHECK
     const char* envCertFile = getenv("SSL_CERT_FILE");
     if (envCertFile) {
-        m_Log->info("Using cert based on env variable (SSL_CERT_FILE).");
-        m_AyonServer->set_ca_cert_path(envCertFile);
-        return;
+        if (std::filesystem::exists(envCertFile)) {
+            m_Log->info("Using cert based on env variable (SSL_CERT_FILE): {}", envCertFile);
+            m_AyonServer->set_ca_cert_path(envCertFile);
+            return;
+        }
     }
 
-    // 2. CLI CHECK (getOpenSSLDirByCLI)
-    // Note: If getOpenSSLDirByCLI() returns an empty path, the filesystem::exists() check will fail safely.
     std::filesystem::path opensslDirCLI(getOpenSSLDirByCLI());
     opensslDirCLI /= "cert.pem";
     std::string certFileCLI = opensslDirCLI.string();
 
     if (std::filesystem::exists(certFileCLI)) {
-        m_Log->info("Using cert based on CLI var.");
+        m_Log->info("Using cert based on CLI var: {}", certFileCLI);
         m_AyonServer->set_ca_cert_path(certFileCLI.c_str());
         return;
     } 
 
-    // 3. SSLEAY_DIR / OPENSSLDIR CHECK (getOpenSSLDir)
     std::filesystem::path opensslDirSSLEAY(getOpenSSLDir());
     opensslDirSSLEAY /= "cert.pem";
     std::string certFileSSLEAY = opensslDirSSLEAY.string();
 
     if (std::filesystem::exists(certFileSSLEAY)) {
-        m_Log->info("Using cert based on SSLEAY_DIR.");
+        m_Log->info("Using cert based on SSLEAY_DIR: {}", certFileSSLEAY);
         m_AyonServer->set_ca_cert_path(certFileSSLEAY.c_str());
         return;
     }
 
-    // 4. FALLBACK TO BUNDLED CERTIFICATE (VIA SHARED OBJECT PATH)
     m_Log->info("Failed to determine the OpenSSL directory or load system CAs. Falling back to bundled certificate path.");                        
     
     std::filesystem::path soPath;
@@ -837,6 +808,5 @@ AyonApi::setSSL() {
         m_Log->error("Failed to determine the path of the loaded shared library (dladdr failed).");
     }
 
-    // 5. FINAL FAILURE POINT
     throw std::runtime_error("Failed to set SSL certificate path. No valid certificate found.");
 }
