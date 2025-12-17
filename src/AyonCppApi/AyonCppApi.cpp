@@ -281,8 +281,8 @@ AyonApi::GET(const std::shared_ptr<std::string> endPoint,
     while (retries <= m_maxCallRetries) {
         try {
             response = m_AyonServer->Get(*endPoint, *headers);
-            responeStatus = response->status;
-            retryes++;
+            responseStatus = response->status;
+            retries++;
 
             if (responseStatus == successStatus) {
                 return nlohmann::json::parse(response->body);
