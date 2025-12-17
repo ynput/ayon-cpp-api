@@ -548,7 +548,7 @@ AyonApi::getAssetIdent(const nlohmann::json &uriResolverResponse) {
             uriResolverResponse.at("entities").at(uriResolverResponse.at("entities").size() - 1).at("filePath"));
     }
     catch (const nlohmann::json::exception &e) {
-        m_Log->warn("asset identification cant be generated {}", uriResolverRespone.dump());
+        m_Log->warn("asset identification cant be generated {}", uriResolverResponse.dump());
     }
     return AssetIdent;
 };
