@@ -196,7 +196,6 @@ class AyonApi {
         const std::string m_authKey;
         const std::string m_serverUrl;
         std::string m_ayonProjectName;
-        httplib::Headers m_headers;
 
         // ---- Server Vars
         std::string m_siteId;
