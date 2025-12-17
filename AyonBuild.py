@@ -28,6 +28,15 @@ SetTestVars.add_funcs(
 )
 AyonCppApiPrj.add_stage(SetTestVars)
 
+SetDefaultVars = Project.Stage("SetDefaultVars")
+SetDefaultVars.add_funcs(
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GBENCH", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GTEST", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "JTRACE", "0"),
+    Project.Func("", AyonCppApiPrj.setVar, "ReleaseType", "Release"),
+)
+AyonCppApiPrj.add_stage(SetDefaultVars)
+
 CleanUpStage = Project.Stage("Cleanup")
 binFoulder = os.path.join(os.getcwd(), "bin")
 buildFoulder = os.path.join(os.getcwd(), "build")
@@ -151,13 +160,15 @@ def startTestServer():
 
 def CheckTestServer():
     import requests
-
     response = requests.get("http://localhost:8003/")
     print("Test Respone", response.text)
 
 
 def stopTestServer():
-    ServerPocVar.kill()
+    if sys.platform == "win32":
+        ServerPocVar.join(timeout=2)
+    else:
+        ServerPocVar.kill()
 
 
 SetupTestServer = Project.Stage("SetupTestServer")
@@ -195,11 +206,13 @@ AyonCppApiPrj.add_stage(BenchStage)
 AyonCppApiPrj.creat_stage_group(
     "CleanBuild",
     CleanUpStage,
+    SetDefaultVars,
     BuildStage,
 )
 AyonCppApiPrj.creat_stage_group(
     "CleanBuildAndDocs",
     CleanUpStage,
+    SetDefaultVars,
     BuildStage,
     DoxyGenStage,
 )
@@ -222,7 +235,7 @@ AyonCppApiPrj.creat_stage_group(
 )
 
 AyonCppApiPrj.creat_stage_group(
-    "BuildAndBnech",
+    "BuildAndBench",
     SetTestVars,
     BuildStage,
     SetupTestServer,
@@ -230,7 +243,7 @@ AyonCppApiPrj.creat_stage_group(
     StopTestServer,
 )
 AyonCppApiPrj.creat_stage_group(
-    "CleanBuildAndBnech",
+    "CleanBuildAndBench",
     CleanUpStage,
     SetTestVars,
     BuildStage,
@@ -239,7 +252,7 @@ AyonCppApiPrj.creat_stage_group(
     StopTestServer,
 )
 AyonCppApiPrj.creat_stage_group(
-    "CleanBuildAndBnechPlusTest",
+    "CleanBuildAndBenchPlusTest",
     CleanUpStage,
     SetTestVars,
     BuildStage,

@@ -14,6 +14,11 @@
 #include "httplib.h"
 #include "nlohmann/json_fwd.hpp"
 
+#ifdef __linux__
+// This header provides the dladdr function and Dl_info structure.
+#include <dlfcn.h> 
+#endif
+
 /**
  * @class AyonApi
  * @brief Central Ayon api class \n
@@ -25,7 +30,7 @@ class AyonApi {
         /**
          * @brief constructor
          */
-        AyonApi(const std::string &logFilePos,
+        AyonApi(const std::optional<std::string> &logFilePos,
                 const std::string &authKey,
                 const std::string &serverUrl,
                 const std::string &ayonProjectName,
@@ -106,14 +111,6 @@ class AyonApi {
         std::pair<std::string, std::string> getAssetIdent(const nlohmann::json &uriResolverRespone);
 
         /**
-         * @brief this function loads all needed varible into the class \n
-         * this will allso be called by the constructor
-         *
-         * @return
-         */
-        bool loadEnvVars();
-
-        /**
          * @brief get function for shared AyonLogger pointer used by this class instance
          */
         std::shared_ptr<AyonLogger> logPointer();
@@ -166,11 +163,24 @@ class AyonApi {
          */
         std::string convertUriVecToString(const std::vector<std::string> &uriVec);
 
-        // ----- Env Varibles
+        /**
+         * @brief checks if the m_AyonServer is running on ssl based on m_serverUrl
+         * dumb implementation but it should work - function from httplib is not working
+         * 
+         * @return true if m_serverUrl starts with https://
+         */
+        bool isSSL() const;
+
+        /**
+         * @brief sets the ssl cert path for the m_AyonServer httplib client
+         */
+        void setSSL();
+        
         std::unique_ptr<httplib::Client> m_AyonServer;
 
         std::unordered_map<std::string, std::string> m_siteRoots;
-
+        
+        // ----- Env Varibles
         const std::string m_authKey;
         const std::string m_serverUrl;
         std::string m_ayonProjectName;
@@ -178,6 +188,9 @@ class AyonApi {
         // ---- Server Vars
         std::string m_siteId;
         std::string m_userName;
+
+        // --- HTTP Headers
+        httplib::Headers m_headers;
 
         // --- Runtime Dep Vars
 

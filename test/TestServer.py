@@ -1,5 +1,8 @@
-import subprocess
-from fastapi import FastAPI, HTTPException
+"""
+This script sets up a FastAPI server for testing purposes. It reads data from a JSON file and provides endpoints to resolve URIs and get project site roots.
+"""
+
+from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import uvicorn
@@ -21,6 +24,14 @@ class Item(BaseModel):
 @app.get("/")
 async def read_root():
     return {"Available": "1"}
+
+@app.get("/api/info")
+async def get_info():
+    return {
+        "server": "Ayon Test Server",
+        "version": "1.0.0",
+        "description": "This is a test server for AyonCppApi."
+    }
 
 
 class RequestModel(BaseModel):
@@ -60,11 +71,25 @@ async def SiteRoots(projectName: str):
 
 
 def start():
-    proc = Process(target=uvicorn.run,args=(app,),kwargs={"host": "0.0.0.0","port": 8003,"log_level": "error"})
+    import sys
+    if sys.platform == "win32":
+        import threading
+        # Windows prefers threading
+        def run_server():
+            uvicorn.run(app, host="0.0.0.0", port=8003, log_level="error")
 
-    proc.start()
-    print("Server is starting in the background...")
-    return proc
+        server_thread = threading.Thread(target=run_server, daemon=True)
+        server_thread.start()
+        print("Server is starting in the background...")
+        return server_thread
+    else:
+        # Linux can handle multiprocessing
+        # import subprocess
+        from multiprocessing import Process
+        proc = Process(target=uvicorn.run,args=(app,),kwargs={"host": "0.0.0.0","port": 8003,"log_level": "error"})
+        proc.start()
+        print("Server is starting in the background...")
+        return proc
 
 
 if __name__ == "__main__":
@@ -72,5 +97,4 @@ if __name__ == "__main__":
     del test 
     import requests
     response = requests.get("http://localhost:8003/")
-    print("Test Respone", response.text)
-
+    print("Test Response", response.text)

@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include <AyonCppApi.h>
-#include <unistd.h>
 #include <iostream>
 #include <string>
 #include "Instrumentor.h"
@@ -9,19 +8,26 @@
 
 nlohmann::json JsonFile;
 
-AyonApi
-getApiInstance() {
-    std::string AYON_API_KEY("SuperSaveTestKey");
-    std::string AYON_SERVER_URL("http://localhost:8003");
-    std::string AYON_SITE_ID("TestId");
-    std::string AYON_PROJECT_NAME("TestPrjName");
-    std::string AYONLOGGERLOGLVL("CRITICAL");
-    std::string AYONLOGGERFILELOGGING("OFF");
+AyonApi getApiInstance() {
+    std::string AYON_API_KEY;
+    std::string AYON_SERVER_URL;
+    std::string AYON_SITE_ID;
+    std::string AYON_PROJECT_NAME;
+
+    #ifdef _WIN32
+    std::string envFilePath("test\\.env_http");
+    #else
+    std::string envFilePath("test/.env_http");
+    #endif
+    if (!AyonCppApiTest::load_EnvVariables(envFilePath, AYON_API_KEY, AYON_SERVER_URL, AYON_SITE_ID, AYON_PROJECT_NAME)) {
+        std::cerr << "Failed to load environment variables!" << std::endl;
+        throw std::runtime_error("Failed to load environment variables!");
+    }
 
     return AyonApi("./test_logs", AYON_API_KEY, AYON_SERVER_URL, AYON_PROJECT_NAME, AYON_SITE_ID);
 }
 
-TEST(AyonCppApi, AyonCppApiCreaion) {
+TEST(AyonCppApi, AyonCppApiCreation) {
     AyonApi Test = getApiInstance();
 }
 
@@ -30,33 +36,54 @@ TEST(AyonCppApi, AyonCppApiSerialResolveRootReplace) {
     AyonApi Api = getApiInstance();
     nlohmann::json JsonFileStage = JsonFile["Resolve"];
     bool RunOnlyOneResolveIteration = false;
-    bool printResult = true;
+    bool printResult = false;
 
     if (!AyonCppApiTest::test_SimpleResolve(JsonFile, RunOnlyOneResolveIteration, printResult, Api)) {
         FAIL();
     }
 
     Instrumentor::Get().EndSession();
-    std::cout << std::endl;
 }
 
-TEST(AyonCppApi, AyonCppApiBathResolveRootReplace) {
+TEST(AyonCppApi, AyonCppApiBatchResolveRootReplace) {
     Instrumentor::Get().BeginSession("Profile", "bin/profBatch.json");
     AyonApi Api = getApiInstance();
     nlohmann::json JsonFileStage = JsonFile["Resolve"];
     bool RunOnlyOneResolveIteration = false;
-    bool printResult = true;
+    bool printResult = false;
 
     if (!AyonCppApiTest::test_BatchResolve(JsonFile, printResult, Api)) {
         FAIL();
     }
 
     Instrumentor::Get().EndSession();
-    std::cout << std::endl;
 }
 
-int
-main(int argc, char** argv) {
+AyonApi getApiInstanceSSL() {
+    std::string AYON_API_KEY;
+    std::string AYON_SERVER_URL;
+    std::string AYON_SITE_ID;
+    std::string AYON_PROJECT_NAME;
+
+    #ifdef _WIN32
+    std::string envFilePath("test\\.env_https");
+    #else
+    std::string envFilePath("test/.env_https");
+    #endif
+    if (!AyonCppApiTest::load_EnvVariables(envFilePath, AYON_API_KEY, AYON_SERVER_URL, AYON_SITE_ID, AYON_PROJECT_NAME)) {
+        std::cerr << "Failed to load environment variables!" << std::endl;
+        throw std::runtime_error("Failed to load environment variables!");
+    }
+
+    return AyonApi("./test_logs", AYON_API_KEY, AYON_SERVER_URL, AYON_PROJECT_NAME, AYON_SITE_ID);
+}
+
+TEST(AyonCppApi, AyonCppApiCreationSSL) {
+    AyonApi Test = getApiInstanceSSL();
+}
+
+int main(int argc, char** argv) {
+    std::cout << "Running tests..." << std::endl;
     std::ifstream file("test/testData.json");
     if (!file.is_open()) {
         std::cerr << "Failed to open file!" << std::endl;

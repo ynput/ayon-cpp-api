@@ -9,6 +9,9 @@ set(AR_PROJECT_NAME AyonCppApi)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+if(NOT DEFINED JTRACE)
+  set(JTRACE 0)
+endif()
 add_compile_definitions(JTRACE=${JTRACE})
 
 option(BUILD_TEST "Build the test application" OFF)
@@ -35,8 +38,6 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/json/include")
 
 set(AYON_CPPTOOLS_BUILD_LOGGER 1)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools/src/")
-
 
 project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
 
@@ -55,3 +56,4 @@ endif()
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/AyonCppApi")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/AyonCppApi")
 
+target_link_libraries(AyonCppApi PUBLIC AyonCppDevToolsLib)
