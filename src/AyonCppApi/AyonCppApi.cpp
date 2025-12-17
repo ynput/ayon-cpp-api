@@ -1,4 +1,3 @@
-
 #include "AyonCppApi.h"
 #include <sys/types.h>
 #include "httplib.h"
@@ -28,48 +27,178 @@
 #include <vector>
 
 #include <cstdlib>
+#include <dlfcn.h> 
 #include <filesystem>
 #include "backward.hpp"
 #include "perfPrinter.h"
 
-// TODO implement the better Crash handler
+// TODO implement the better Crash hanlder
 backward::StackTrace st;
 
-AyonApi::AyonApi(const std::string &logFilePos,
+// ------------------------------------------------
+// helper functions for getting the ca cert path
+// ------------------------------------------------
+std::string parseOutput(std::string& output) {
+    std::string::size_type start = output.find('"');
+    std::string::size_type end = output.find('"', start + 1);
+    if (start != std::string::npos && end != std::string::npos) {
+        return output.substr(start + 1, end - start - 1);
+    } else {
+        throw std::runtime_error("Failed to parse OpenSSL directory from command output.");
+    }
+}
+
+std::string getOpenSSLDirByCLI() {
+    std::array<char, 128> buffer;
+    std::string result;
+    auto pipeDeleter = [](FILE* pipe) { 
+    #ifdef _WIN32
+        _pclose(pipe);
+    #else
+        pclose(pipe); 
+    #endif
+    };
+    std::unique_ptr<FILE, decltype(pipeDeleter)> pipe(
+    #ifdef _WIN32
+        _popen("openssl version -d", "r"),
+    #else
+        popen("openssl version -d", "r"),
+    #endif
+        pipeDeleter
+    );
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return parseOutput(result);
+}
+
+std::string getOpenSSLDir() {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+    const char* sslVersion = OpenSSL_version(OPENSSL_DIR);
+    std::string sslVersionStr(sslVersion);
+    return parseOutput(sslVersionStr);
+#else
+    return parseOutput(SSLeay_version(SSLEAY_DIR));
+#endif
+}
+// ------------------------------------------------
+
+AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
                  const std::string &authKey,
                  const std::string &serverUrl,
                  const std::string &ayonProjectName,
                  const std::string &siteId,
-                 std::optional<int> concurrency):
-    m_num_threads(concurrency.value_or(std::max(int(std::thread::hardware_concurrency() / 2), 1))),
-    m_authKey(authKey),
-    m_serverUrl(serverUrl),
-    m_ayonProjectName(ayonProjectName),
-    m_siteId(siteId) {
+                 std::optional<int> concurrency)
+    : m_num_threads(concurrency.value_or(std::max(int(std::thread::hardware_concurrency() / 2), 1))),
+      m_authKey(authKey),
+      m_serverUrl(serverUrl),
+      m_ayonProjectName(ayonProjectName),
+      m_siteId(siteId) {
     PerfTimer("AyonApi::AyonApi");
 
-    // ----------- Init m_Logger
-    std::filesystem::path logFileName = "logFile.json";
-    std::filesystem::path basePath = logFilePos;
-    std::filesystem::path logFilePath = std::filesystem::absolute(basePath) / logFileName;
+    // ----------- Resolve Log Path
+    std::filesystem::path logPath;
+    if (logFilePos.has_value()) {
+        try {
+            std::filesystem::path inPath(logFilePos.value());
+            std::cout << "Input log path: " << inPath << std::endl;
 
-    if (std::filesystem::exists(logFilePath)) {
-        logFilePath = std::filesystem::canonical(logFilePath);
+            if (inPath.is_relative()) {
+                logPath = std::filesystem::weakly_canonical(inPath);
+            } else {
+                logPath = inPath;
+            }
+
+            if (!inPath.has_parent_path()) {
+                logPath = std::filesystem::temp_directory_path() / inPath;
+            }
+            
+            // Validate / Create directories
+            if (std::filesystem::exists(logPath)) {
+                logPath = std::filesystem::canonical(logPath);
+            } else {
+                if (logPath.has_parent_path()) {
+                    std::filesystem::create_directories(logPath.parent_path());
+                }
+            }
+        } 
+        catch (const std::exception& e) {
+            std::cerr << "[AyonApi] Path error: " << e.what() << std::endl;
+        }
     }
-    else {
-        std::filesystem::create_directories(logFilePath.parent_path());
+
+    // ----------- Init m_Logger (Singleton Logic)
+    std::cout << "[AyonApi] Retrieving AyonLogger Singleton..." << std::endl;
+    
+    AyonLogger& loggerRef = AyonLogger::getInstance();
+    
+    if (!logPath.empty()) {
+        loggerRef.initFileLogger(logPath.string());
     }
 
-    m_Log = std::make_shared<AyonLogger>(AyonLogger::getInstance(logFilePath.string()));
-    m_Log->LogLevlWarn();
+    m_Log = std::shared_ptr<AyonLogger>(&loggerRef, [](AyonLogger*){});
+    
+    m_Log->registerLoggingKey("AyonApi");
 
+    m_Log->LogLevelInfo();
     m_Log->info(m_Log->key("AyonApi"), "Init AyonServer httplib::Client");
+    
     m_AyonServer = std::make_unique<httplib::Client>(m_serverUrl);
-    m_AyonServer->set_bearer_token_auth(m_authKey);
+    m_Log->info(m_Log->key("AyonApi"), "After creating httplib::Client - {}", m_serverUrl);
+
+    if (isSSL()) {
+        std::string ayonSSLPath = std::getenv("AYON_SSL_CERT_PATH") ? std::getenv("AYON_SSL_CERT_PATH") : "";
+        if (!ayonSSLPath.empty()) {
+            m_Log->info(m_Log->key("AyonApi"), "Using AYON_SSL_CERT_PATH: {}", ayonSSLPath);
+            m_AyonServer->set_ca_cert_path(ayonSSLPath.c_str());
+        } else {
+            m_Log->warn(m_Log->key("AyonApi"), "No AYON_SSL_CERT_PATH set, trying to get OpenSSL dir");
+            try {
+                setSSL();
+            } catch (const std::exception &e) {
+                m_Log->error("Failed to get OpenSSL directory: {}", e.what());
+                m_AyonServer->set_ca_cert_path(nullptr); 
+            }
+        }
+        m_AyonServer->enable_server_certificate_verification(true);
+    }
+
+    if (!m_AyonServer) {
+        m_Log->error("m_AyonServer is null. serverUrl='{}'", m_serverUrl);
+        throw std::runtime_error("AyonApi: HTTP client not initialized");
+    }
+
+    httplib::Result res;
+    try {
+        res = m_AyonServer->Get("/api/info");
+    } catch (const std::exception& e) {
+        m_Log->error("Exception during GET /api/info: {}", e.what());
+        throw;
+    }
+
+    if (!res) {
+        m_Log->error("Failed to connect to the Ayon server.");
+    } else {
+        m_Log->info(m_Log->key("AyonApi"), "Ayon server info: {}", res->body);
+        m_Log->info(m_Log->key("AyonApi"), "Status code: {}", res->status);
+
+        m_headers = {
+            {"X-Api-Key", m_authKey},
+        };
+        auto resMe = m_AyonServer->Get("/api/users/me", m_headers);
+        if (resMe && resMe->status != 200) {
+            m_headers = {};
+            m_AyonServer->set_bearer_token_auth(m_authKey);
+        }
+    }
 
     m_Log->info(m_Log->key("AyonApi"), "Constructor Getting Site Roots");
     getSiteRoots();
-};
+}
+
 AyonApi::~AyonApi() {
     m_Log->info(m_Log->key("AyonApi"), "AyonApi::~AyonApi()");
 };
@@ -77,12 +206,23 @@ AyonApi::~AyonApi() {
 std::unordered_map<std::string, std::string>*
 AyonApi::getSiteRoots() {
     m_Log->info(m_Log->key("AyonApi"), "AyonApi::getSiteRoots()");
-    if (m_siteRoots.size() < 1) {
-        httplib::Headers headers = {{"X-ayon-site-id", m_siteId}};
-        nlohmann::json response
-            = GET(std::make_shared<std::string>("/api/projects/" + m_ayonProjectName + "/siteRoots"),
-                  std::make_shared<httplib::Headers>(headers), 200);
-        m_siteRoots = response;
+        if (m_siteRoots.size() < 1) {
+            std::string platform;
+            #ifdef _WIN32
+                platform = "windows";
+            #elif __linux__
+                platform = "linux";
+            #endif
+            nlohmann::json response = GET(std::make_shared<std::string>("/api/projects/" + m_ayonProjectName + "/siteRoots?platform=" + platform),
+                  std::make_shared<httplib::Headers>(m_headers), 200);
+        
+        if (response.empty()) {
+            m_Log->error("AyonApi::getSiteRoots response is empty");
+            return &m_siteRoots;
+        } else {
+            m_siteRoots = response;
+        }
+        
     }
     if (m_Log->isKeyActive(m_Log->key("AyonApi"))) {
         m_Log->info(m_Log->key("AyonApi"), "found site Roots: ");
@@ -116,7 +256,7 @@ AyonApi::rootReplace(const std::string &rootLessPath) {
                 return rootedPath;
             }
             catch (std::out_of_range &e) {
-                m_Log->warn("AyonApi::rootedPath error occurred {}, list of available root replace str: ");
+                m_Log->warn("AyonApi::rootedPath error acured {}, list off available root replace str: ");
                 for (auto &g: m_siteRoots) {
                     m_Log->warn("Key: {}, replacement: {}", g.first, g.second);
                 }
@@ -141,8 +281,8 @@ AyonApi::GET(const std::shared_ptr<std::string> endPoint,
     while (retries <= m_maxCallRetries) {
         try {
             response = m_AyonServer->Get(*endPoint, *headers);
-            responseStatus = response->status;
-            retries++;
+            responeStatus = response->status;
+            retryes++;
 
             if (responseStatus == successStatus) {
                 return nlohmann::json::parse(response->body);
@@ -253,7 +393,7 @@ AyonApi::resolvePath(const std::string &uriPath) {
     std::pair<std::string, std::string> resolvedAsset;
     nlohmann::json jsonPayload = {{"resolveRoots", false}, {"uris", nlohmann::json::array({uriPath})}};
     httplib::Headers headers = {{"X-ayon-site-id", m_siteId}};
-    uint8_t successStatus = 200;
+    uint8_t sucsessStatus = 200;
 
     nlohmann::json response
         = SPOST(std::make_shared<std::string>(m_uriResolverEndpoint + m_uriResolverEndpointPathOnlyVar),
@@ -280,9 +420,9 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
         {
             PerfTimer("AyonApi::batchResolvePath::sanitizeVector");
             std::set<std::string> s;
-            unsigned size = uriPaths.size();
+            size_t size = uriPaths.size();
 
-            for (unsigned i = 0; i < size; ++i) s.insert(uriPaths[i]);
+            for (size_t i = 0; i < size; ++i) s.insert(uriPaths[i]);
             uriPaths.assign(s.begin(), s.end());
             m_Log->info("Make sure that the vector has no duplicates. vecSize before: {} after: {}", size,
                         uriPaths.size());
@@ -292,7 +432,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
     std::vector<std::future<nlohmann::json>> futures;
 
     std::shared_ptr<httplib::Headers> headers
-        = std::make_shared<httplib::Headers>(httplib::Headers{{"X-ayon-site-id", m_siteId}});
+        = std::make_shared<httplib::Headers>(m_headers);
 
     std::shared_ptr<std::string> batchResolveEndpoint;
     if (m_pathOnlyResolution) {
@@ -408,7 +548,7 @@ AyonApi::getAssetIdent(const nlohmann::json &uriResolverResponse) {
             uriResolverResponse.at("entities").at(uriResolverResponse.at("entities").size() - 1).at("filePath"));
     }
     catch (const nlohmann::json::exception &e) {
-        m_Log->warn("asset identification can't be generated {}", uriResolverResponse.dump());
+        m_Log->warn("asset identification cant be generated {}", uriResolverRespone.dump());
     }
     return AssetIdent;
 };
@@ -588,3 +728,72 @@ AyonApi::logPointer() {
     m_Log->info(m_Log->key("AyonApi"), "AyonApi::logPointer()");
     return m_Log;
 };
+
+bool
+AyonApi::isSSL() const {
+    return m_serverUrl.rfind("https://", 0) == 0;
+}
+
+
+void
+AyonApi::setSSL() {
+    const char* envCertFile = getenv("SSL_CERT_FILE");
+    if (envCertFile) {
+        if (std::filesystem::exists(envCertFile)) {
+            m_Log->info("Using cert based on env variable (SSL_CERT_FILE): {}", envCertFile);
+            m_AyonServer->set_ca_cert_path(envCertFile);
+            return;
+        }
+    }
+
+    std::filesystem::path opensslDirCLI(getOpenSSLDirByCLI());
+    opensslDirCLI /= "cert.pem";
+    std::string certFileCLI = opensslDirCLI.string();
+
+    if (std::filesystem::exists(certFileCLI)) {
+        m_Log->info("Using cert based on CLI var: {}", certFileCLI);
+        m_AyonServer->set_ca_cert_path(certFileCLI.c_str());
+        return;
+    } 
+
+    std::filesystem::path opensslDirSSLEAY(getOpenSSLDir());
+    opensslDirSSLEAY /= "cert.pem";
+    std::string certFileSSLEAY = opensslDirSSLEAY.string();
+
+    if (std::filesystem::exists(certFileSSLEAY)) {
+        m_Log->info("Using cert based on SSLEAY_DIR: {}", certFileSSLEAY);
+        m_AyonServer->set_ca_cert_path(certFileSSLEAY.c_str());
+        return;
+    }
+
+    m_Log->info("Failed to determine the OpenSSL directory or load system CAs. Falling back to bundled certificate path.");                        
+    
+    std::filesystem::path soPath;
+    Dl_info dl_info;
+
+    if (dladdr(reinterpret_cast<const void*>(&parseOutput), &dl_info) && dl_info.dli_fname) {
+        soPath = dl_info.dli_fname;
+    }
+
+    if (!soPath.empty()) {
+        std::filesystem::path resolverRoot = soPath.parent_path().parent_path();
+        
+        std::filesystem::path bundledPath = (
+            resolverRoot / "certs" / "cacert.pem"
+        );
+
+        std::string certPath = bundledPath.string();
+
+        if (std::filesystem::exists(certPath)) {
+            m_Log->info("Using bundled certificate (via SO path): {}", certPath);
+            m_AyonServer->set_ca_cert_path(certPath.c_str());
+            return;
+        }
+
+        m_Log->error("Bundled cacert.pem file not found at expected runtime path: {}", certPath);
+    } else {
+        m_Log->error("Failed to determine the path of the loaded shared library (dladdr failed).");
+    }
+
+    throw std::runtime_error("Failed to set SSL certificate path. No valid certificate found.");
+}

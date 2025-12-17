@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include <AyonCppApi.h>
-#include <unistd.h>
 #include <iostream>
 #include <string>
 #include "Instrumentor.h"
@@ -9,7 +8,8 @@
 
 nlohmann::json JsonFile;
 
-AyonApi getApiInstance() {
+AyonApi
+getApiInstance() {
     std::string AYON_API_KEY("SuperSaveTestKey");
     std::string AYON_SERVER_URL("http://localhost:8003");
     std::string AYON_SITE_ID("TestId");
@@ -28,21 +28,20 @@ TEST(AyonCppApi, AyonCppApiSerialResolveRootReplace) {
     Instrumentor::Get().BeginSession("Profile", "bin/profSerial.json");
     AyonApi Api = getApiInstance();
     bool RunOnlyOneResolveIteration = false;
-    bool printResult = true;
+    bool printResult = false;
 
     if (!AyonCppApiTest::test_SimpleResolve(JsonFile, RunOnlyOneResolveIteration, printResult, Api)) {
         FAIL();
     }
 
     Instrumentor::Get().EndSession();
-    std::cout << std::endl;
 }
 
 TEST(AyonCppApi, AyonCppApiBatchResolveRootReplace) {
     Instrumentor::Get().BeginSession("Profile", "bin/profBatch.json");
     AyonApi Api = getApiInstance();
     bool RunOnlyOneResolveIteration = false;
-    bool printResult = true;
+    bool printResult = false;
 
     if (!AyonCppApiTest::test_BatchResolve(JsonFile, printResult, Api)) {
         FAIL();
@@ -52,7 +51,8 @@ TEST(AyonCppApi, AyonCppApiBatchResolveRootReplace) {
     std::cout << std::endl;
 }
 
-int main(int argc, char** argv) {
+int
+main(int argc, char** argv) {
     std::ifstream file("test/testData.json");
     if (!file.is_open()) {
         std::cerr << "Failed to open file!" << std::endl;
