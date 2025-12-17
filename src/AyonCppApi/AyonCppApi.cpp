@@ -393,7 +393,7 @@ AyonApi::resolvePath(const std::string &uriPath) {
     std::pair<std::string, std::string> resolvedAsset;
     nlohmann::json jsonPayload = {{"resolveRoots", false}, {"uris", nlohmann::json::array({uriPath})}};
     httplib::Headers headers = {{"X-ayon-site-id", m_siteId}};
-    uint8_t sucsessStatus = 200;
+    uint8_t successStatus = 200;
 
     nlohmann::json response
         = SPOST(std::make_shared<std::string>(m_uriResolverEndpoint + m_uriResolverEndpointPathOnlyVar),
