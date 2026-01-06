@@ -32,6 +32,11 @@
 #include "backward.hpp"
 #include "perfPrinter.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#include <wincrypt.h>
+#endif
+
 // TODO implement the better Crash hanlder
 backward::StackTrace st;
 
@@ -187,6 +192,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
 
         m_headers = {
             {"X-Api-Key", m_authKey},
+            {"X-ayon-site-id", m_siteId}
         };
         auto resMe = m_AyonServer->Get("/api/users/me", m_headers);
         if (resMe && resMe->status != 200) {
@@ -281,13 +287,18 @@ AyonApi::GET(const std::shared_ptr<std::string> endPoint,
     while (retries <= m_maxCallRetries) {
         try {
             response = m_AyonServer->Get(*endPoint, *headers);
+
+            if (!response) {
+                m_Log->warn("AyonApi::GET response is null: {}", httplib::to_string(response.error()));
+                return nlohmann::json();
+            }
+
             responseStatus = response->status;
             retries++;
 
             if (responseStatus == successStatus) {
                 return nlohmann::json::parse(response->body);
-            }
-            else {
+            } else {
                 m_Log->info("AyonApi::serialCorePost wrong status code: {} expected: {}", responseStatus, successStatus);
                 if (responseStatus == 401) {
                     m_Log->warn("not logged in 401 ");
@@ -392,12 +403,11 @@ AyonApi::resolvePath(const std::string &uriPath) {
     }
     std::pair<std::string, std::string> resolvedAsset;
     nlohmann::json jsonPayload = {{"resolveRoots", false}, {"uris", nlohmann::json::array({uriPath})}};
-    httplib::Headers headers = {{"X-ayon-site-id", m_siteId}};
     uint8_t successStatus = 200;
 
     nlohmann::json response
         = SPOST(std::make_shared<std::string>(m_uriResolverEndpoint + m_uriResolverEndpointPathOnlyVar),
-                std::make_shared<httplib::Headers>(headers), jsonPayload, std::make_shared<uint8_t>(successStatus));
+                std::make_shared<httplib::Headers>(m_headers), jsonPayload, std::make_shared<uint8_t>(successStatus));
 
     resolvedAsset = getAssetIdent(response);
     return resolvedAsset;
