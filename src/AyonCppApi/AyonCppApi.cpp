@@ -37,7 +37,7 @@
 #include <wincrypt.h>
 #endif
 
-// TODO implement the better Crash hanlder
+// TODO implement the better Crash handler
 backward::StackTrace st;
 
 // ------------------------------------------------
@@ -97,7 +97,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
                  const std::string &ayonProjectName,
                  const std::string &siteId,
                  std::optional<int> concurrency)
-    : m_num_threads(concurrency.value_or(std::max(int(std::thread::hardware_concurrency() / 2), 1))),
+    : m_numThreads(concurrency.value_or(std::max(int(std::thread::hardware_concurrency() / 2), 1))),
       m_authKey(authKey),
       m_serverUrl(serverUrl),
       m_ayonProjectName(ayonProjectName),
@@ -135,7 +135,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
         }
     }
 
-    // ----------- Init m_logger (Singleton Logic)
+    // ----------- Init m_log (Singleton Logic)
     std::cout << "[AyonApi] Retrieving AyonLogger Singleton..." << std::endl;
     
     AyonLogger& loggerRef = AyonLogger::getInstance();
@@ -224,7 +224,7 @@ AyonApi::getSiteRoots() {
         
         if (response.empty()) {
             m_log->error("AyonApi::getSiteRoots response is empty");
-            return &m_siteRoots;
+            return m_siteRoots;
         } else {
             m_siteRoots = response;
         }
@@ -237,7 +237,7 @@ AyonApi::getSiteRoots() {
         }
     }
 
-    return &m_siteRoots;
+    return m_siteRoots;
 };
 
 std::string
@@ -262,7 +262,7 @@ AyonApi::rootReplace(const std::string &rootLessPath) {
                 return rootedPath;
             }
             catch (std::out_of_range &e) {
-                m_log->warn("AyonApi::rootedPath error acured {}, list off available root replace str: ");
+                m_log->warn("AyonApi::rootedPath error occurred {}, list of available root replace str: ", e.what());
                 for (auto &g: m_siteRoots) {
                     m_log->warn("Key: {}, replacement: {}", g.first, g.second);
                 }
@@ -299,7 +299,7 @@ AyonApi::GET(const std::shared_ptr<std::string> endPoint,
             if (responseStatus == successStatus) {
                 return nlohmann::json::parse(response->body);
             } else {
-                m_log->info("AyonApi::serialCorePost wrong status code: {} expected: {}", responseStatus, successStatus);
+                m_log->info("AyonApi::GET wrong status code: {} expected: {}", responseStatus, successStatus);
                 if (responseStatus == 401) {
                     m_log->warn("not logged in 401 ");
                     return nlohmann::json();
@@ -391,7 +391,8 @@ AyonApi::CPOST(const std::shared_ptr<std::string> endPoint,
     }
     return jsonResponse;
 };
-// TODO change the pointer work in here because the pointers consume more data that coping would
+
+// TODO change the pointer work in here because the pointers consume more data that copying would
 std::pair<std::string, std::string>
 AyonApi::resolvePath(const std::string &uriPath) {
     PerfTimer("AyonApi::resolvePath");
@@ -468,14 +469,13 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
     // check what scaling the groups should have
     if (uriPathsVecSize > m_minVecSizeForGroupSplitAsyncRequests) {
         // vector size is large enough to build groups
-        // double result = static_cast<double>(uriPathsVecSize) / num_threads;
-        groupSize = std::ceil(static_cast<double>(uriPathsVecSize) / m_num_threads);
-        if (groupSize > m_minGrpSizeForAsyncRequests) {
+        groupSize = std::ceil(static_cast<double>(uriPathsVecSize) / m_numThreads);
+        if (groupSize > m_minGroupSizeForAsyncRequests) {
             // the group size is large enough to build groups from them
             if (groupSize < m_maxGroupSizeForAsyncRequests) {
                 // now it's bigger than 5 and smaller than 500
                 // now we can just generate a group per thread and set the group amount
-                groupSize = std::ceil(static_cast<double>(uriPathsVecSize) / m_num_threads);
+                groupSize = std::ceil(static_cast<double>(uriPathsVecSize) / m_numThreads);
                 groupAmount = std::floor(static_cast<double>(uriPathsVecSize) / groupSize);
 
                 // TODO explicit rounding .x group amount
@@ -503,7 +503,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
 
     int groupStartPos = 0;
     int groupEndPos;
-    for (int thread = 0; thread < groupAmount; thread++)
+    for (int thread = 0; thread < groupAmount; thread++) {
         groupEndPos = groupSize * (thread + 1);
         std::string perTimerLoopName = "AyonApi::batchResolvePath Thread Loop: " + std::to_string(thread);
         PerfTimer(perTimerLoopName.c_str());
@@ -539,6 +539,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
 
     return assetIdentGrp;
 };
+
 // TODO make it so that hero version is chosen if available
 std::pair<std::string, std::string>
 AyonApi::getAssetIdent(const nlohmann::json &uriResolverResponse) {
@@ -552,7 +553,7 @@ AyonApi::getAssetIdent(const nlohmann::json &uriResolverResponse) {
     try {
         AssetIdent.first = uriResolverResponse.at("uri");
         if (uriResolverResponse.at("entities").size() > 1) {
-            m_log->warn("Uri resolution returned more than one path (%s)", uriResolverResponse.at("entities").dump());
+            m_log->warn("Uri resolution returned more than one path: {}", uriResolverResponse.at("entities").dump());
         }
         AssetIdent.second = rootReplace(
             uriResolverResponse.at("entities").at(uriResolverResponse.at("entities").size() - 1).at("filePath"));
@@ -647,20 +648,20 @@ AyonApi::generativeCorePost(const std::string &endPoint,
                     std::hash<std::thread::id>{}(std::this_thread::get_id()), loopIteration);
 
         if (ffoLock) {
-            m_concurrentRequestAfterFfoMutex.lock();
+            m_concurrentRequestAfter503Mutex.lock();
             m_log->info("AyonApi::generativeCorePost ffoLock enabled");
-            if (m_maxConcurrentRequestAfterFfo >= 1) {
-                m_maxConcurrentRequestAfterFfo--;
+            if (m_maxConcurrentRequestsAfter503 >= 1) {
+                m_maxConcurrentRequestsAfter503--;
 
                 m_log->info("AyonApi::generativeCorePost thread pool open available: {}",
-                            m_maxConcurrentRequestAfterFfo);
+                            m_maxConcurrentRequestsAfter503);
 
-                m_concurrentRequestAfterFfoMutex.unlock();
+                m_concurrentRequestAfter503Mutex.unlock();
             }
             else {
                 m_log->info("AyonApi::generativeCorePost Thread pool closed");
 
-                m_concurrentRequestAfterFfoMutex.unlock();
+                m_concurrentRequestAfter503Mutex.unlock();
                 std::this_thread::sleep_for(std::chrono::milliseconds(800));
                 continue;
             }
@@ -673,9 +674,9 @@ AyonApi::generativeCorePost(const std::string &endPoint,
             responseStatus = response->status;
             retries++;
             if (ffoLock) {
-                m_concurrentRequestAfterFfoMutex.lock();
-                m_maxConcurrentRequestAfterFfo++;
-                m_concurrentRequestAfterFfoMutex.unlock();
+                m_concurrentRequestAfter503Mutex.lock();
+                m_maxConcurrentRequestsAfter503++;
+                m_concurrentRequestAfter503Mutex.unlock();
             }
             if (responseStatus == successStatus) {
                 m_log->info("AyonApi::generativeCorePost The request worked, unlocking and returning. ");
@@ -722,10 +723,13 @@ AyonApi::convertUriVecToString(const std::vector<std::string> &uriVec) {
     m_log->info(m_log->key("AyonApi"), "AyonApi::convertUriVecToString({})",
                 std::accumulate(uriVec.begin(), uriVec.end(), std::string()));
 
-    std::string payload = R"({{"resolveRoots": true,"uris": [)";
+    std::string payload = R"({"resolveRoots": true,"uris": [)";
 
-    for (size_t i = 0; i <= uriVec.size(); i++) {
-        payload += uriVec[i];
+    for (size_t i = 0; i < uriVec.size(); i++) {
+        payload += "\"" + uriVec[i] + "\"";
+        if (i < uriVec.size() - 1) {
+            payload += ",";
+        }
     }
 
     payload += "]}";
