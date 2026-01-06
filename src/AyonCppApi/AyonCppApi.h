@@ -221,8 +221,8 @@ class AyonApi {
         
         // Thread Synchronization
         std::mutex m_ayonServerMutex;
-        std::mutex m_concurrentRequestAfter503Mutex;
-        uint8_t m_maxConcurrentRequestsAfter503 = 8;
+        std::mutex m_concurrentRequestAfterFfoMutex;
+        uint8_t m_maxConcurrentRequestAfterFfo = 8;
 };
 
 #endif   // !AYONCPPAPI_H
