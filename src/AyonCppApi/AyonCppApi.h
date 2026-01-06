@@ -115,14 +115,6 @@ class AyonApi {
         std::pair<std::string, std::string> getAssetIdent(const nlohmann::json &uriResolverResponse);
 
         /**
-         * @brief this function loads all needed varible into the class \n
-         * this will allso be called by the constructor
-         *
-         * @return
-         */
-        bool loadEnvVars();
-
-        /**
          * @brief Get function for shared AyonLogger pointer used by this class instance
          */
         std::shared_ptr<AyonLogger> logPointer();
@@ -131,8 +123,7 @@ class AyonApi {
          * @brief Gets the site root overwrites for the current project. Current project is defined via an env variable
          * for now
          */
-        std::unordered_map<std::string, std::string>*
-        getSiteRoots();   // TODO think about if this should only support current project or multiple projects
+        const std::unordered_map<std::string, std::string>& getSiteRoots();   // TODO think about if this should only support current project or multiple projects
 
         /**
          * @brief Replaces {root[var]} for ayon:// paths.
@@ -163,7 +154,7 @@ class AyonApi {
          * @param payload JSON payload to be resolved by endpoint.
          * @param successStatus Defines what is considered a success response to break the retry loop.
          */
-        std::string GenerativeCorePost(const std::string &endPoint,
+        std::string generativeCorePost(const std::string &endPoint,
                                        httplib::Headers headers,
                                        std::string &payload,
                                        const int &successStatus);
@@ -176,78 +167,62 @@ class AyonApi {
         std::string convertUriVecToString(const std::vector<std::string> &uriVec);
 
         /**
-         * @brief checks if the m_ayonServer is running on ssl based on m_serverUrl
-         * dumb implementation but it should work - function from httplib is not working
+         * @brief Checks if the m_ayonServer is running on SSL based on m_serverUrl
+         * Simple implementation - httplib's built-in check is not working
          * 
          * @return true if m_serverUrl starts with https://
          */
         bool isSSL() const;
 
         /**
-         * @brief sets the ssl cert path for the m_ayonServer httplib client
+         * @brief Sets the SSL cert path for the m_ayonServer httplib client
          */
         void setSSL();
         
+        // Core Dependencies
         std::unique_ptr<httplib::Client> m_ayonServer;
-
-        std::unordered_map<std::string, std::string> m_siteRoots;
+        std::shared_ptr<AyonLogger> m_log;
         
-        // ----- Env Varibles
+        // Configuration from Constructor
         const std::string m_authKey;
         const std::string m_serverUrl;
         std::string m_ayonProjectName;
-
-        // ---- Server Vars
         std::string m_siteId;
-        std::string m_userName;
-
-        // --- HTTP Headers
+        const int m_numThreads;
+        
+        // Runtime State
+        std::unordered_map<std::string, std::string> m_siteRoots;
         httplib::Headers m_headers;
-
-        // --- Runtime Dep Vars
-
-        // Async Grp Generation Varaibles
-        uint8_t m_minGrpSizeForAsyncRequests = 10;
-        uint16_t m_regroupSizeForAsyncRequests = 200;
-        uint16_t m_maxGroupSizeForAsyncRequests = 300;
-        uint16_t m_minVecSizeForGroupSplitAsyncRequests = 50;
-        uint8_t m_maxCallRetries = 8;
-        uint16_t m_retryWait = 800;
-
-        /**
-         * @brief maximum number of threads that the CPU can handle at the same time. Will be set via constructor
-         */
-        const int m_num_threads;   // set by constructor
-        std::shared_ptr<AyonLogger> m_Log;
+        std::string m_userName;
+        bool m_serverBusy = false;
+        
+        // URI Resolution Configuration
         std::string m_uriResolverEndpoint = "/api/resolve";
         std::string m_uriResolverEndpointPathOnlyVar = "?pathOnly=true";
         bool m_pathOnlyResolution = true;
-
-        std::mutex m_ConcurrentRequestAfterffoMutex;
-        uint8_t m_maxConcurrentRequestAfterffo = 8;
-
-        uint16_t m_generativeCorePostMaxLoopIterations = 200;
-
-        uint16_t m_connectionTimeoutMax = 200;
-        uint8_t m_readTimeoutMax = 160;
-
+        
         /**
          * @brief Decides if the cpp API removes duplicates from batch request vector. Default is true
          */
         bool m_batchResolveOptimizeVector = true;
-
+        uint8_t m_minGroupSizeForAsyncRequests = 10;
+        uint16_t m_regroupSizeForAsyncRequests = 200;
+        uint16_t m_maxGroupSizeForAsyncRequests = 300;
+        uint16_t m_minVecSizeForGroupSplitAsyncRequests = 50;
+        
+        // Retry and Timeout Configuration
+        uint8_t m_maxCallRetries = 8;
+        uint16_t m_retryWait = 800;
         uint16_t m_serverBusyCode = 503;
         uint16_t m_requestDelayWhenServerBusy = 10000;
-
-        /**
-         * @brief This bool will be set to true if a 503 is encountered
-         */
-        bool m_serverBusy = false;
-
-        /**
-         * @brief Needed for serial resolve operations. to lock access to AyonServer shared pointer
-         */
+        uint16_t m_connectionTimeoutMax = 200;
+        uint8_t m_readTimeoutMax = 160;
+        uint16_t m_generativeCorePostMaxLoopIterations = 200;
+        
+        // Thread Synchronization
         std::mutex m_ayonServerMutex;
+        std::mutex m_concurrentRequestAfter503Mutex;
+        uint8_t m_maxConcurrentRequestsAfter503 = 8;
 };
 
 #endif   // !AYONCPPAPI_H
