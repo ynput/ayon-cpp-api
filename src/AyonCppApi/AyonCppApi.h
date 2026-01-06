@@ -176,7 +176,7 @@ class AyonApi {
         std::string convertUriVecToString(const std::vector<std::string> &uriVec);
 
         /**
-         * @brief checks if the m_AyonServer is running on ssl based on m_serverUrl
+         * @brief checks if the m_ayonServer is running on ssl based on m_serverUrl
          * dumb implementation but it should work - function from httplib is not working
          * 
          * @return true if m_serverUrl starts with https://
@@ -184,11 +184,11 @@ class AyonApi {
         bool isSSL() const;
 
         /**
-         * @brief sets the ssl cert path for the m_AyonServer httplib client
+         * @brief sets the ssl cert path for the m_ayonServer httplib client
          */
         void setSSL();
         
-        std::unique_ptr<httplib::Client> m_AyonServer;
+        std::unique_ptr<httplib::Client> m_ayonServer;
 
         std::unordered_map<std::string, std::string> m_siteRoots;
         
@@ -226,7 +226,7 @@ class AyonApi {
         std::mutex m_ConcurrentRequestAfterffoMutex;
         uint8_t m_maxConcurrentRequestAfterffo = 8;
 
-        uint16_t m_GenerativeCorePostMaxLoopIterations = 200;
+        uint16_t m_generativeCorePostMaxLoopIterations = 200;
 
         uint16_t m_connectionTimeoutMax = 200;
         uint8_t m_readTimeoutMax = 160;
@@ -236,8 +236,8 @@ class AyonApi {
          */
         bool m_batchResolveOptimizeVector = true;
 
-        uint16_t m_ServerBusyCode = 503;
-        uint16_t m_RequestDelayWhenServerBusy = 10000;
+        uint16_t m_serverBusyCode = 503;
+        uint16_t m_requestDelayWhenServerBusy = 10000;
 
         /**
          * @brief This bool will be set to true if a 503 is encountered
@@ -247,7 +247,7 @@ class AyonApi {
         /**
          * @brief Needed for serial resolve operations. to lock access to AyonServer shared pointer
          */
-        std::mutex m_AyonServerMutex;
+        std::mutex m_ayonServerMutex;
 };
 
 #endif   // !AYONCPPAPI_H

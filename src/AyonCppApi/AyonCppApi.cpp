@@ -151,34 +151,34 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
     m_Log->LogLevelInfo();
     m_Log->info(m_Log->key("AyonApi"), "Init AyonServer httplib::Client");
     
-    m_AyonServer = std::make_unique<httplib::Client>(m_serverUrl);
+    m_ayonServer = std::make_unique<httplib::Client>(m_serverUrl);
     m_Log->info(m_Log->key("AyonApi"), "After creating httplib::Client - {}", m_serverUrl);
 
     if (isSSL()) {
         std::string ayonSSLPath = std::getenv("AYON_SSL_CERT_PATH") ? std::getenv("AYON_SSL_CERT_PATH") : "";
         if (!ayonSSLPath.empty()) {
             m_Log->info(m_Log->key("AyonApi"), "Using AYON_SSL_CERT_PATH: {}", ayonSSLPath);
-            m_AyonServer->set_ca_cert_path(ayonSSLPath.c_str());
+            m_ayonServer->set_ca_cert_path(ayonSSLPath.c_str());
         } else {
             m_Log->warn(m_Log->key("AyonApi"), "No AYON_SSL_CERT_PATH set, trying to get OpenSSL dir");
             try {
                 setSSL();
             } catch (const std::exception &e) {
                 m_Log->error("Failed to get OpenSSL directory: {}", e.what());
-                m_AyonServer->set_ca_cert_path(nullptr); 
+                m_ayonServer->set_ca_cert_path(nullptr); 
             }
         }
-        m_AyonServer->enable_server_certificate_verification(true);
+        m_ayonServer->enable_server_certificate_verification(true);
     }
 
-    if (!m_AyonServer) {
-        m_Log->error("m_AyonServer is null. serverUrl='{}'", m_serverUrl);
+    if (!m_ayonServer) {
+        m_Log->error("m_ayonServer is null. serverUrl='{}'", m_serverUrl);
         throw std::runtime_error("AyonApi: HTTP client not initialized");
     }
 
     httplib::Result res;
     try {
-        res = m_AyonServer->Get("/api/info");
+        res = m_ayonServer->Get("/api/info");
     } catch (const std::exception& e) {
         m_Log->error("Exception during GET /api/info: {}", e.what());
         throw;
@@ -194,10 +194,10 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
             {"X-Api-Key", m_authKey},
             {"X-ayon-site-id", m_siteId}
         };
-        auto resMe = m_AyonServer->Get("/api/users/me", m_headers);
+        auto resMe = m_ayonServer->Get("/api/users/me", m_headers);
         if (resMe && resMe->status != 200) {
             m_headers = {};
-            m_AyonServer->set_bearer_token_auth(m_authKey);
+            m_ayonServer->set_bearer_token_auth(m_authKey);
         }
     }
 
@@ -286,7 +286,7 @@ AyonApi::GET(const std::shared_ptr<std::string> endPoint,
     uint8_t retries = 0;
     while (retries <= m_maxCallRetries) {
         try {
-            response = m_AyonServer->Get(*endPoint, *headers);
+            response = m_ayonServer->Get(*endPoint, *headers);
 
             if (!response) {
                 m_Log->warn("AyonApi::GET response is null: {}", httplib::to_string(response.error()));
@@ -309,7 +309,7 @@ AyonApi::GET(const std::shared_ptr<std::string> endPoint,
                     return nlohmann::json();
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(
-                    responseStatus == m_ServerBusyCode ? m_RequestDelayWhenServerBusy : m_retryWait));
+                    responseStatus == m_serverBusyCode ? m_requestDelayWhenServerBusy : m_retryWait));
             }
 
         }
@@ -344,7 +344,7 @@ AyonApi::SPOST(const std::shared_ptr<std::string> endPoint,
         return jsonResponse;
     }
 
-    m_AyonServerMutex.lock();
+    m_ayonServerMutex.lock();
 
     std::string payload = jsonPayload.dump();
     std::string rawResponse = serialCorePost(*endPoint, *headers, payload, *successStatus);
@@ -356,7 +356,7 @@ AyonApi::SPOST(const std::shared_ptr<std::string> endPoint,
     else {
         m_Log->warn("SPOST can't parse JSON // response empty");
     }
-    m_AyonServerMutex.unlock();
+    m_ayonServerMutex.unlock();
     return jsonResponse;
 };
 
@@ -592,7 +592,7 @@ AyonApi::serialCorePost(const std::string &endPoint,
     uint8_t retries = 0;
     while (retries <= m_maxCallRetries) {
         try {
-            response = m_AyonServer->Post(endPoint, headers, Payload, "application/json");
+            response = m_ayonServer->Post(endPoint, headers, Payload, "application/json");
             responseStatus = response->status;
             retries++;
 
@@ -610,7 +610,7 @@ AyonApi::serialCorePost(const std::string &endPoint,
                     return "";
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(
-                    responseStatus == m_ServerBusyCode ? m_RequestDelayWhenServerBusy : m_retryWait));
+                    responseStatus == m_serverBusyCode ? m_requestDelayWhenServerBusy : m_retryWait));
             }
         }
         catch (const httplib::Error &e) {
@@ -641,7 +641,7 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
     uint8_t retries = 0;
     bool ffoLock = false;
     uint16_t loopIteration = 0;
-    while (retries <= m_maxCallRetries || m_GenerativeCorePostMaxLoopIterations > loopIteration) {
+    while (retries <= m_maxCallRetries || m_generativeCorePostMaxLoopIterations > loopIteration) {
         loopIteration++;
         m_Log->info("AyonApi::GenerativeCorePost while loop thread {} iteration {}",
                     std::hash<std::thread::id>{}(std::this_thread::get_id()), loopIteration);
@@ -683,7 +683,7 @@ AyonApi::GenerativeCorePost(const std::string &endPoint,
                 return response->body;
             }
             else {
-                if (responseStatus == m_ServerBusyCode) {
+                if (responseStatus == m_serverBusyCode) {
                     m_Log->warn("AyonApi::GenerativeCorePost The server responded with 503");
 
                     retries = 0;
@@ -751,7 +751,7 @@ AyonApi::setSSL() {
     if (envCertFile) {
         if (std::filesystem::exists(envCertFile)) {
             m_Log->info("Using cert based on env variable (SSL_CERT_FILE): {}", envCertFile);
-            m_AyonServer->set_ca_cert_path(envCertFile);
+            m_ayonServer->set_ca_cert_path(envCertFile);
             return;
         }
     }
@@ -762,7 +762,7 @@ AyonApi::setSSL() {
 
     if (std::filesystem::exists(certFileCLI)) {
         m_Log->info("Using cert based on CLI var: {}", certFileCLI);
-        m_AyonServer->set_ca_cert_path(certFileCLI.c_str());
+        m_ayonServer->set_ca_cert_path(certFileCLI.c_str());
         return;
     } 
 
@@ -772,7 +772,7 @@ AyonApi::setSSL() {
 
     if (std::filesystem::exists(certFileSSLEAY)) {
         m_Log->info("Using cert based on SSLEAY_DIR: {}", certFileSSLEAY);
-        m_AyonServer->set_ca_cert_path(certFileSSLEAY.c_str());
+        m_ayonServer->set_ca_cert_path(certFileSSLEAY.c_str());
         return;
     }
 
@@ -796,7 +796,7 @@ AyonApi::setSSL() {
 
         if (std::filesystem::exists(certPath)) {
             m_Log->info("Using bundled certificate (via SO path): {}", certPath);
-            m_AyonServer->set_ca_cert_path(certPath.c_str());
+            m_ayonServer->set_ca_cert_path(certPath.c_str());
             return;
         }
 
