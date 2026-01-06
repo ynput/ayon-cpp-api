@@ -135,7 +135,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
         }
     }
 
-    // ----------- Init m_Logger (Singleton Logic)
+    // ----------- Init m_logger (Singleton Logic)
     std::cout << "[AyonApi] Retrieving AyonLogger Singleton..." << std::endl;
     
     AyonLogger& loggerRef = AyonLogger::getInstance();
@@ -144,27 +144,27 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
         loggerRef.initFileLogger(logPath.string());
     }
 
-    m_Log = std::shared_ptr<AyonLogger>(&loggerRef, [](AyonLogger*){});
+    m_log = std::shared_ptr<AyonLogger>(&loggerRef, [](AyonLogger*){});
     
-    m_Log->registerLoggingKey("AyonApi");
+    m_log->registerLoggingKey("AyonApi");
 
-    m_Log->LogLevelInfo();
-    m_Log->info(m_Log->key("AyonApi"), "Init AyonServer httplib::Client");
+    m_log->LogLevelInfo();
+    m_log->info(m_log->key("AyonApi"), "Init AyonServer httplib::Client");
     
     m_ayonServer = std::make_unique<httplib::Client>(m_serverUrl);
-    m_Log->info(m_Log->key("AyonApi"), "After creating httplib::Client - {}", m_serverUrl);
+    m_log->info(m_log->key("AyonApi"), "After creating httplib::Client - {}", m_serverUrl);
 
     if (isSSL()) {
         std::string ayonSSLPath = std::getenv("AYON_SSL_CERT_PATH") ? std::getenv("AYON_SSL_CERT_PATH") : "";
         if (!ayonSSLPath.empty()) {
-            m_Log->info(m_Log->key("AyonApi"), "Using AYON_SSL_CERT_PATH: {}", ayonSSLPath);
+            m_log->info(m_log->key("AyonApi"), "Using AYON_SSL_CERT_PATH: {}", ayonSSLPath);
             m_ayonServer->set_ca_cert_path(ayonSSLPath.c_str());
         } else {
-            m_Log->warn(m_Log->key("AyonApi"), "No AYON_SSL_CERT_PATH set, trying to get OpenSSL dir");
+            m_log->warn(m_log->key("AyonApi"), "No AYON_SSL_CERT_PATH set, trying to get OpenSSL dir");
             try {
                 setSSL();
             } catch (const std::exception &e) {
-                m_Log->error("Failed to get OpenSSL directory: {}", e.what());
+                m_log->error("Failed to get OpenSSL directory: {}", e.what());
                 m_ayonServer->set_ca_cert_path(nullptr); 
             }
         }
@@ -172,7 +172,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
     }
 
     if (!m_ayonServer) {
-        m_Log->error("m_ayonServer is null. serverUrl='{}'", m_serverUrl);
+        m_log->error("m_ayonServer is null. serverUrl='{}'", m_serverUrl);
         throw std::runtime_error("AyonApi: HTTP client not initialized");
     }
 
@@ -180,15 +180,15 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
     try {
         res = m_ayonServer->Get("/api/info");
     } catch (const std::exception& e) {
-        m_Log->error("Exception during GET /api/info: {}", e.what());
+        m_log->error("Exception during GET /api/info: {}", e.what());
         throw;
     }
 
     if (!res) {
-        m_Log->error("Failed to connect to the Ayon server.");
+        m_log->error("Failed to connect to the Ayon server.");
     } else {
-        m_Log->info(m_Log->key("AyonApi"), "Ayon server info: {}", res->body);
-        m_Log->info(m_Log->key("AyonApi"), "Status code: {}", res->status);
+        m_log->info(m_log->key("AyonApi"), "Ayon server info: {}", res->body);
+        m_log->info(m_log->key("AyonApi"), "Status code: {}", res->status);
 
         m_headers = {
             {"X-Api-Key", m_authKey},
@@ -201,17 +201,17 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
         }
     }
 
-    m_Log->info(m_Log->key("AyonApi"), "Constructor Getting Site Roots");
+    m_log->info(m_log->key("AyonApi"), "Constructor Getting Site Roots");
     getSiteRoots();
 }
 
 AyonApi::~AyonApi() {
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::~AyonApi()");
+    m_log->info(m_log->key("AyonApi"), "AyonApi::~AyonApi()");
 };
 
 const std::unordered_map<std::string, std::string>&
 AyonApi::getSiteRoots() {
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::getSiteRoots()");
+    m_log->info(m_log->key("AyonApi"), "AyonApi::getSiteRoots()");
         if (m_siteRoots.size() < 1) {
             std::string platform;
             #ifdef _WIN32
@@ -223,17 +223,17 @@ AyonApi::getSiteRoots() {
                   std::make_shared<httplib::Headers>(m_headers), 200);
         
         if (response.empty()) {
-            m_Log->error("AyonApi::getSiteRoots response is empty");
+            m_log->error("AyonApi::getSiteRoots response is empty");
             return &m_siteRoots;
         } else {
             m_siteRoots = response;
         }
         
     }
-    if (m_Log->isKeyActive(m_Log->key("AyonApi"))) {
-        m_Log->info(m_Log->key("AyonApi"), "found site Roots: ");
+    if (m_log->isKeyActive(m_log->key("AyonApi"))) {
+        m_log->info(m_log->key("AyonApi"), "found site Roots: ");
         for (auto &e: m_siteRoots) {
-            m_Log->info("{}, {}", e.first, e.second);
+            m_log->info("{}, {}", e.first, e.second);
         }
     }
 
@@ -242,7 +242,7 @@ AyonApi::getSiteRoots() {
 
 std::string
 AyonApi::rootReplace(const std::string &rootLessPath) {
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::rootReplace({})", rootLessPath);
+    m_log->info(m_log->key("AyonApi"), "AyonApi::rootReplace({})", rootLessPath);
     std::string rootedPath;
 
     std::smatch matchesA;
@@ -258,13 +258,13 @@ AyonApi::rootReplace(const std::string &rootLessPath) {
             try {
                 std::string replacement = m_siteRoots.at(bracketedString);
                 rootedPath = std::regex_replace(rootLessPath, rootFindPattern, replacement);
-                m_Log->info(m_Log->key("AyonApi"), "AyonApi::rootReplace({}) rooted", rootedPath);
+                m_log->info(m_log->key("AyonApi"), "AyonApi::rootReplace({}) rooted", rootedPath);
                 return rootedPath;
             }
             catch (std::out_of_range &e) {
-                m_Log->warn("AyonApi::rootedPath error acured {}, list off available root replace str: ");
+                m_log->warn("AyonApi::rootedPath error acured {}, list off available root replace str: ");
                 for (auto &g: m_siteRoots) {
-                    m_Log->warn("Key: {}, replacement: {}", g.first, g.second);
+                    m_log->warn("Key: {}, replacement: {}", g.first, g.second);
                 }
                 return rootLessPath;
             }
@@ -279,7 +279,7 @@ AyonApi::GET(const std::shared_ptr<std::string> endPoint,
              const std::shared_ptr<httplib::Headers> headers,
              uint8_t successStatus) {
     PerfTimer("AyonApi::GET");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::GET({})", *endPoint);
+    m_log->info(m_log->key("AyonApi"), "AyonApi::GET({})", *endPoint);
 
     httplib::Result response;
     int responseStatus;
@@ -289,7 +289,7 @@ AyonApi::GET(const std::shared_ptr<std::string> endPoint,
             response = m_ayonServer->Get(*endPoint, *headers);
 
             if (!response) {
-                m_Log->warn("AyonApi::GET response is null: {}", httplib::to_string(response.error()));
+                m_log->warn("AyonApi::GET response is null: {}", httplib::to_string(response.error()));
                 return nlohmann::json();
             }
 
@@ -299,13 +299,13 @@ AyonApi::GET(const std::shared_ptr<std::string> endPoint,
             if (responseStatus == successStatus) {
                 return nlohmann::json::parse(response->body);
             } else {
-                m_Log->info("AyonApi::serialCorePost wrong status code: {} expected: {}", responseStatus, successStatus);
+                m_log->info("AyonApi::serialCorePost wrong status code: {} expected: {}", responseStatus, successStatus);
                 if (responseStatus == 401) {
-                    m_Log->warn("not logged in 401 ");
+                    m_log->warn("not logged in 401 ");
                     return nlohmann::json();
                 }
                 if (responseStatus == 500) {
-                    m_Log->warn("internal server error ");
+                    m_log->warn("internal server error ");
                     return nlohmann::json();
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(
@@ -314,10 +314,10 @@ AyonApi::GET(const std::shared_ptr<std::string> endPoint,
 
         }
         catch (const httplib::Error &e) {
-            m_Log->warn("Request Failed because: {}", httplib::to_string(e));
+            m_log->warn("Request Failed because: {}", httplib::to_string(e));
             break;
         }
-        m_Log->warn("The connection failed. Retry now.");
+        m_log->warn("The connection failed. Retry now.");
     }
     return nlohmann::json();
 };
@@ -328,18 +328,18 @@ AyonApi::SPOST(const std::shared_ptr<std::string> endPoint,
                nlohmann::json jsonPayload,
                const std::shared_ptr<uint8_t> successStatus) {
     PerfTimer("AyonApi::SPOST");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::SPOST endPoint: {}, jsonPayload: {}, successStatus: {}", *endPoint,
+    m_log->info(m_log->key("AyonApi"), "AyonApi::SPOST endPoint: {}, jsonPayload: {}, successStatus: {}", *endPoint,
                 jsonPayload.dump(), *successStatus);
 
     nlohmann::json jsonResponse;
 
     if (jsonPayload.empty()) {
-        m_Log->info("JSON payload is empty. No request created");
+        m_log->info("JSON payload is empty. No request created");
         return jsonResponse;
     }
 
     if (endPoint == nullptr || headers == nullptr || successStatus == nullptr) {
-        m_Log->error("One or more of the provided pointers are null: endPoint, headers, successStatus.");
+        m_log->error("One or more of the provided pointers are null: endPoint, headers, successStatus.");
 
         return jsonResponse;
     }
@@ -354,7 +354,7 @@ AyonApi::SPOST(const std::shared_ptr<std::string> endPoint,
                                                               // find a better way to make sure its not an array
     }
     else {
-        m_Log->warn("SPOST can't parse JSON // response empty");
+        m_log->warn("SPOST can't parse JSON // response empty");
     }
     m_ayonServerMutex.unlock();
     return jsonResponse;
@@ -366,17 +366,17 @@ AyonApi::CPOST(const std::shared_ptr<std::string> endPoint,
                nlohmann::json jsonPayload,
                const std::shared_ptr<uint8_t> successStatus) {
     PerfTimer("AyonApi::CPOST");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::CPOST endPoint: {}, jsonPayload: {}, successStatus: {}", *endPoint,
+    m_log->info(m_log->key("AyonApi"), "AyonApi::CPOST endPoint: {}, jsonPayload: {}, successStatus: {}", *endPoint,
                 jsonPayload.dump(), *successStatus);
     nlohmann::json jsonResponse;
 
     if (jsonPayload.empty()) {
-        m_Log->info("JSON payload is empty. No request created");
+        m_log->info("JSON payload is empty. No request created");
         return jsonResponse;
     }
 
     if (endPoint == nullptr || headers == nullptr || successStatus == nullptr) {
-        m_Log->error("One or more of the provided pointers are null: endPoint, headers, successStatus");
+        m_log->error("One or more of the provided pointers are null: endPoint, headers, successStatus");
 
         return jsonResponse;
     }
@@ -387,7 +387,7 @@ AyonApi::CPOST(const std::shared_ptr<std::string> endPoint,
         jsonResponse = nlohmann::json::parse(rawResponse);
     }
     else {
-        m_Log->warn("CPOST can't parse JSON // response empty");
+        m_log->warn("CPOST can't parse JSON // response empty");
     }
     return jsonResponse;
 };
@@ -395,10 +395,10 @@ AyonApi::CPOST(const std::shared_ptr<std::string> endPoint,
 std::pair<std::string, std::string>
 AyonApi::resolvePath(const std::string &uriPath) {
     PerfTimer("AyonApi::resolvePath");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::resolvePath({})", uriPath);
+    m_log->info(m_log->key("AyonApi"), "AyonApi::resolvePath({})", uriPath);
 
     if (uriPath.empty()) {
-        m_Log->info("Path was empty: {}", uriPath.c_str());
+        m_log->info("Path was empty: {}", uriPath.c_str());
         return {};
     }
     std::pair<std::string, std::string> resolvedAsset;
@@ -416,13 +416,13 @@ AyonApi::resolvePath(const std::string &uriPath) {
 std::unordered_map<std::string, std::string>
 AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
     PerfTimer("AyonApi::batchResolvePath");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::batchResolvePath({})",
+    m_log->info(m_log->key("AyonApi"), "AyonApi::batchResolvePath({})",
                 std::accumulate(
                     uriPaths.begin(), uriPaths.end(), std::string(),
                     [](const std::string &a, const std::string &b) { return a + (a.length() > 0 ? " " : "") + b; }));
 
     if (uriPaths.size() < 1) {
-        m_Log->warn("AyonApi::batchResolvePath Got empty vector stopped resolution");
+        m_log->warn("AyonApi::batchResolvePath Got empty vector stopped resolution");
         return {};
     }
 
@@ -434,7 +434,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
 
             for (size_t i = 0; i < size; ++i) s.insert(uriPaths[i]);
             uriPaths.assign(s.begin(), s.end());
-            m_Log->info("Make sure that the vector has no duplicates. vecSize before: {} after: {}", size,
+            m_log->info("Make sure that the vector has no duplicates. vecSize before: {} after: {}", size,
                         uriPaths.size());
         }
     }
@@ -497,13 +497,13 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
             grpReason = "If groups are too small, we will build them by size.";
         }
     }
-    m_Log->info(
+    m_log->info(
         "AyonApi::batchResolvePath Build groups with grpSize: {} grpAmount: {} groupingReason: {} vectorSize: {}",
         groupSize, groupAmount, grpReason, uriPathsVecSize);
 
     int groupStartPos = 0;
     int groupEndPos;
-    for (int thread = 0; thread < groupAmount; thread++) {
+    for (int thread = 0; thread < groupAmount; thread++)
         groupEndPos = groupSize * (thread + 1);
         std::string perTimerLoopName = "AyonApi::batchResolvePath Thread Loop: " + std::to_string(thread);
         PerfTimer(perTimerLoopName.c_str());
@@ -511,7 +511,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
         // check if we are too close to the end and extend the group to catch all the data and end the loop
 
         if (uriPathsVecSize - groupEndPos < groupSize + (groupSize / 2)) {
-            m_Log->info("the group with the threadId: {} It is too close to the end. This group will be extended. ",
+            m_log->info("the group with the threadId: {} It is too close to the end. This group will be extended. ",
                         thread);
             groupEndPos = uriPathsVecSize - 1;
             thread = groupAmount;
@@ -543,7 +543,7 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
 std::pair<std::string, std::string>
 AyonApi::getAssetIdent(const nlohmann::json &uriResolverResponse) {
     PerfTimer("AyonApi::getAssetIdent");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::getAssetIdent({})", uriResolverResponse.dump());
+    m_log->info(m_log->key("AyonApi"), "AyonApi::getAssetIdent({})", uriResolverResponse.dump());
 
     std::pair<std::string, std::string> AssetIdent;
     if (uriResolverResponse.empty()) {
@@ -552,13 +552,13 @@ AyonApi::getAssetIdent(const nlohmann::json &uriResolverResponse) {
     try {
         AssetIdent.first = uriResolverResponse.at("uri");
         if (uriResolverResponse.at("entities").size() > 1) {
-            m_Log->warn("Uri resolution returned more than one path (%s)", uriResolverResponse.at("entities").dump());
+            m_log->warn("Uri resolution returned more than one path (%s)", uriResolverResponse.at("entities").dump());
         }
         AssetIdent.second = rootReplace(
             uriResolverResponse.at("entities").at(uriResolverResponse.at("entities").size() - 1).at("filePath"));
     }
     catch (const nlohmann::json::exception &e) {
-        m_Log->warn("asset identification cant be generated {}", uriResolverResponse.dump());
+        m_log->warn("asset identification cant be generated {}", uriResolverResponse.dump());
     }
     return AssetIdent;
 };
@@ -566,14 +566,14 @@ AyonApi::getAssetIdent(const nlohmann::json &uriResolverResponse) {
 std::string
 AyonApi::getKey() {
     PerfTimer("AyonApi::getKey");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::getKey");
+    m_log->info(m_log->key("AyonApi"), "AyonApi::getKey");
     return m_authKey;
 };
 
 std::string
 AyonApi::getUrl() {
     PerfTimer("AyonApi::getUrl");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::getUrl");
+    m_log->info(m_log->key("AyonApi"), "AyonApi::getUrl");
     return m_serverUrl;
 }
 
@@ -584,7 +584,7 @@ AyonApi::serialCorePost(const std::string &endPoint,
                         std::string &Payload,
                         const int &successStatus) {
     PerfTimer("AyonApi::serialCorePost");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::serialCorePost() endPoint: {}, Payload: {}, successStatus: {}",
+    m_log->info(m_log->key("AyonApi"), "AyonApi::serialCorePost() endPoint: {}, Payload: {}, successStatus: {}",
                 endPoint, Payload, successStatus);
 
     httplib::Result response;
@@ -600,13 +600,13 @@ AyonApi::serialCorePost(const std::string &endPoint,
                 return response->body;
             }
             else {
-                m_Log->info("AyonApi::serialCorePost wrong status code: {} expected: {}", responseStatus, successStatus);
+                m_log->info("AyonApi::serialCorePost wrong status code: {} expected: {}", responseStatus, successStatus);
                 if (responseStatus == 401) {
-                    m_Log->warn("not logged in 401 ");
+                    m_log->warn("not logged in 401 ");
                     return "";
                 }
                 if (responseStatus == 500) {
-                    m_Log->warn("internal server error ");
+                    m_log->warn("internal server error ");
                     return "";
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(
@@ -614,10 +614,10 @@ AyonApi::serialCorePost(const std::string &endPoint,
             }
         }
         catch (const httplib::Error &e) {
-            m_Log->warn("Request Failed because: {}", httplib::to_string(e));
+            m_log->warn("Request Failed because: {}", httplib::to_string(e));
             break;
         }
-        m_Log->warn("The connection failed. Retry now.");
+        m_log->warn("The connection failed. Retry now.");
     }
     return "";
 };
@@ -628,7 +628,7 @@ AyonApi::generativeCorePost(const std::string &endPoint,
                             std::string &Payload,
                             const int &successStatus) {
     PerfTimer("AyonApi::generativeCorePost");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::generativeCorePost() endPoint: {}, Payload: {}, successStatus: {}",
+    m_log->info(m_log->key("AyonApi"), "AyonApi::generativeCorePost() endPoint: {}, Payload: {}, successStatus: {}",
                 endPoint, Payload, successStatus);
 
     httplib::Client AyonServerClient(m_serverUrl);
@@ -643,22 +643,22 @@ AyonApi::generativeCorePost(const std::string &endPoint,
     uint16_t loopIteration = 0;
     while (retries <= m_maxCallRetries || m_generativeCorePostMaxLoopIterations > loopIteration) {
         loopIteration++;
-        m_Log->info("AyonApi::generativeCorePost while loop thread {} iteration {}",
+        m_log->info("AyonApi::generativeCorePost while loop thread {} iteration {}",
                     std::hash<std::thread::id>{}(std::this_thread::get_id()), loopIteration);
 
         if (ffoLock) {
             m_concurrentRequestAfterFfoMutex.lock();
-            m_Log->info("AyonApi::generativeCorePost ffoLock enabled");
+            m_log->info("AyonApi::generativeCorePost ffoLock enabled");
             if (m_maxConcurrentRequestAfterFfo >= 1) {
                 m_maxConcurrentRequestAfterFfo--;
 
-                m_Log->info("AyonApi::generativeCorePost thread pool open available: {}",
+                m_log->info("AyonApi::generativeCorePost thread pool open available: {}",
                             m_maxConcurrentRequestAfterFfo);
 
                 m_concurrentRequestAfterFfoMutex.unlock();
             }
             else {
-                m_Log->info("AyonApi::generativeCorePost Thread pool closed");
+                m_log->info("AyonApi::generativeCorePost Thread pool closed");
 
                 m_concurrentRequestAfterFfoMutex.unlock();
                 std::this_thread::sleep_for(std::chrono::milliseconds(800));
@@ -666,7 +666,7 @@ AyonApi::generativeCorePost(const std::string &endPoint,
             }
         }
 
-        m_Log->info("AyonApi::generativeCorePost sending request");
+        m_log->info("AyonApi::generativeCorePost sending request");
 
         try {
             response = AyonServerClient.Post(endPoint, headers, Payload, "application/json");
@@ -678,39 +678,39 @@ AyonApi::generativeCorePost(const std::string &endPoint,
                 m_concurrentRequestAfterFfoMutex.unlock();
             }
             if (responseStatus == successStatus) {
-                m_Log->info("AyonApi::generativeCorePost The request worked, unlocking and returning. ");
+                m_log->info("AyonApi::generativeCorePost The request worked, unlocking and returning. ");
 
                 return response->body;
             }
             else {
                 if (responseStatus == m_serverBusyCode) {
-                    m_Log->warn("AyonApi::generativeCorePost The server responded with 503");
+                    m_log->warn("AyonApi::generativeCorePost The server responded with 503");
 
                     retries = 0;
                     ffoLock = true;
                     continue;
                 }
                 if (responseStatus == 401) {
-                    m_Log->warn("not logged in 401 ");
+                    m_log->warn("not logged in 401 ");
                     return "";
                 }
                 if (responseStatus == 500) {
-                    m_Log->warn("internal server error ");
+                    m_log->warn("internal server error ");
                     return "";
                 }
-                m_Log->info("AyonApi::generativeCorePost wrong status code: {} expected: {} retrying", responseStatus,
+                m_log->info("AyonApi::generativeCorePost wrong status code: {} expected: {} retrying", responseStatus,
                             successStatus);
                 std::this_thread::sleep_for(std::chrono::milliseconds(m_retryWait));
                 continue;
             }
         }
         catch (const httplib::Error &e) {
-            m_Log->warn("AyonApi::generativeCorePost Request Failed because: {}", httplib::to_string(e));
+            m_log->warn("AyonApi::generativeCorePost Request Failed because: {}", httplib::to_string(e));
             break;
         }
     }
 
-    m_Log->warn(
+    m_log->warn(
         "AyonApi::generativeCorePost Too many resolve retries without the correct response code for: {}, on: {}",
         Payload, endPoint);
     return "";
@@ -719,7 +719,7 @@ AyonApi::generativeCorePost(const std::string &endPoint,
 std::string
 AyonApi::convertUriVecToString(const std::vector<std::string> &uriVec) {
     PerfTimer("AyonApi::convertUriVecToString");
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::convertUriVecToString({})",
+    m_log->info(m_log->key("AyonApi"), "AyonApi::convertUriVecToString({})",
                 std::accumulate(uriVec.begin(), uriVec.end(), std::string()));
 
     std::string payload = R"({{"resolveRoots": true,"uris": [)";
@@ -735,8 +735,8 @@ AyonApi::convertUriVecToString(const std::vector<std::string> &uriVec) {
 
 std::shared_ptr<AyonLogger>
 AyonApi::logPointer() {
-    m_Log->info(m_Log->key("AyonApi"), "AyonApi::logPointer()");
-    return m_Log;
+    m_log->info(m_log->key("AyonApi"), "AyonApi::logPointer()");
+    return m_log;
 };
 
 bool
@@ -750,7 +750,7 @@ AyonApi::setSSL() {
     const char* envCertFile = getenv("SSL_CERT_FILE");
     if (envCertFile) {
         if (std::filesystem::exists(envCertFile)) {
-            m_Log->info("Using cert based on env variable (SSL_CERT_FILE): {}", envCertFile);
+            m_log->info("Using cert based on env variable (SSL_CERT_FILE): {}", envCertFile);
             m_ayonServer->set_ca_cert_path(envCertFile);
             return;
         }
@@ -761,7 +761,7 @@ AyonApi::setSSL() {
     std::string certFileCLI = opensslDirCLI.string();
 
     if (std::filesystem::exists(certFileCLI)) {
-        m_Log->info("Using cert based on CLI var: {}", certFileCLI);
+        m_log->info("Using cert based on CLI var: {}", certFileCLI);
         m_ayonServer->set_ca_cert_path(certFileCLI.c_str());
         return;
     } 
@@ -771,12 +771,12 @@ AyonApi::setSSL() {
     std::string certFileSSLEAY = opensslDirSSLEAY.string();
 
     if (std::filesystem::exists(certFileSSLEAY)) {
-        m_Log->info("Using cert based on SSLEAY_DIR: {}", certFileSSLEAY);
+        m_log->info("Using cert based on SSLEAY_DIR: {}", certFileSSLEAY);
         m_ayonServer->set_ca_cert_path(certFileSSLEAY.c_str());
         return;
     }
 
-    m_Log->info("Failed to determine the OpenSSL directory or load system CAs. Falling back to bundled certificate path.");                        
+    m_log->info("Failed to determine the OpenSSL directory or load system CAs. Falling back to bundled certificate path.");                        
     
     std::filesystem::path soPath;
     Dl_info dl_info;
@@ -795,14 +795,14 @@ AyonApi::setSSL() {
         std::string certPath = bundledPath.string();
 
         if (std::filesystem::exists(certPath)) {
-            m_Log->info("Using bundled certificate (via SO path): {}", certPath);
+            m_log->info("Using bundled certificate (via SO path): {}", certPath);
             m_ayonServer->set_ca_cert_path(certPath.c_str());
             return;
         }
 
-        m_Log->error("Bundled cacert.pem file not found at expected runtime path: {}", certPath);
+        m_log->error("Bundled cacert.pem file not found at expected runtime path: {}", certPath);
     } else {
-        m_Log->error("Failed to determine the path of the loaded shared library (dladdr failed).");
+        m_log->error("Failed to determine the path of the loaded shared library (dladdr failed).");
     }
 
     throw std::runtime_error("Failed to set SSL certificate path. No valid certificate found.");
