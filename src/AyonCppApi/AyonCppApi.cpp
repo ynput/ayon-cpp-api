@@ -27,15 +27,17 @@
 #include <vector>
 
 #include <cstdlib>
-#include <dlfcn.h> 
 #include <filesystem>
-#include "backward.hpp"
-#include "perfPrinter.h"
 
 #ifdef _WIN32
-#include <windows.h>
-#include <wincrypt.h>
+    #include <windows.h>
+    #include <wincrypt.h>
+#else
+    #include <dlfcn.h>
 #endif
+
+#include "backward.hpp"
+#include "perfPrinter.h"
 
 // TODO implement the better Crash handler
 backward::StackTrace st;
@@ -783,13 +785,28 @@ AyonApi::setSSL() {
     m_log->info("Failed to determine the OpenSSL directory or load system CAs. Falling back to bundled certificate path.");                        
     
     std::filesystem::path soPath;
-    Dl_info dl_info;
 
+#ifdef _WIN32
+    char path_buffer[MAX_PATH];
+    HMODULE hm = NULL;
+
+    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | 
+                          GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                          reinterpret_cast<LPCSTR>(&parseOutput), &hm)) {
+        
+        if (GetModuleFileNameA(hm, path_buffer, sizeof(path_buffer)) != 0) {
+            soPath = path_buffer;
+        }
+    }
+#else
+    Dl_info dl_info;
     if (dladdr(reinterpret_cast<const void*>(&parseOutput), &dl_info) && dl_info.dli_fname) {
         soPath = dl_info.dli_fname;
     }
+#endif
 
     if (!soPath.empty()) {
+        // Resolve parent directories (e.g., .../lib/ayonUsdResolver.dll -> .../lib -> ...)
         std::filesystem::path resolverRoot = soPath.parent_path().parent_path();
         
         std::filesystem::path bundledPath = (
@@ -799,14 +816,14 @@ AyonApi::setSSL() {
         std::string certPath = bundledPath.string();
 
         if (std::filesystem::exists(certPath)) {
-            m_log->info("Using bundled certificate (via SO path): {}", certPath);
+            m_log->info("Using bundled certificate (via library path): {}", certPath);
             m_ayonServer->set_ca_cert_path(certPath.c_str());
             return;
         }
 
         m_log->error("Bundled cacert.pem file not found at expected runtime path: {}", certPath);
     } else {
-        m_log->error("Failed to determine the path of the loaded shared library (dladdr failed).");
+        m_log->error("Failed to determine the path of the loaded shared library.");
     }
 
     throw std::runtime_error("Failed to set SSL certificate path. No valid certificate found.");
