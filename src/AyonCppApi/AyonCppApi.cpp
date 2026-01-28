@@ -151,7 +151,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
     
     m_log->registerLoggingKey("AyonApi");
 
-    m_log->LogLevelInfo();
+    m_log->setLogLevelInfo();
     m_log->info(m_log->key("AyonApi"), "Init AyonServer httplib::Client");
     
     m_ayonServer = std::make_unique<httplib::Client>(m_serverUrl);
