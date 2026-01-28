@@ -1,13 +1,13 @@
 #ifndef AYONCPPAPIINSTRUMENTOR_H
 #define AYONCPPAPIINSTRUMENTOR_H
 
-#include <string>
-#include <chrono>
 #include <algorithm>
+#include <chrono>
 #include <fstream>
-#include <mutex>
-#include <thread>
 #include <future>
+#include <mutex>
+#include <string>
+#include <thread>
 
 struct ProfileResult {
     std::string Name;

@@ -1,14 +1,12 @@
 #include "AyonCppApi.h"
-#include <sys/types.h>
-#include "httplib.h"
-#include "nlohmann/json.hpp"
-#include "nlohmann/json_fwd.hpp"
-#include "devMacros.h"
-#include <algorithm>
-#include <chrono>
+
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+
+#include <algorithm>
+#include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <future>
@@ -19,15 +17,13 @@
 #include <regex>
 #include <stdexcept>
 #include <string>
-#include <filesystem>
 #include <string_view>
 #include <thread>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include <cstdlib>
-#include <filesystem>
+#include <sys/types.h>
 
 #ifdef _WIN32
     #include <windows.h>
@@ -37,6 +33,11 @@
 #endif
 
 #include "backward.hpp"
+#include "httplib.h"
+#include "nlohmann/json.hpp"
+#include "nlohmann/json_fwd.hpp"
+
+#include "devMacros.h"
 #include "perfPrinter.h"
 
 // TODO implement the better Crash handler

@@ -1,23 +1,27 @@
 #ifndef AYONCPPAPI_H
 #define AYONCPPAPI_H
-#include <sys/types.h>
+
 #include <cstdint>
+
 #include <memory>
 #include <mutex>
 #include <optional>
-
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
-#include "lib/ynput/lib/logging/AyonLogger.hpp"
-#include "appDataFolder.h"
+
+#include <sys/types.h>
+
+#ifdef __linux__
+#include <dlfcn.h>
+#endif
+
 #include "httplib.h"
 #include "nlohmann/json_fwd.hpp"
 
-#ifdef __linux__
-// This header provides the dladdr function and Dl_info structure.
-#include <dlfcn.h> 
-#endif
+#include "appDataFolder.h"
+#include "lib/ynput/lib/logging/AyonLogger.hpp"
 
 /**
  * @class AyonApi
