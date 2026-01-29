@@ -195,9 +195,10 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
             {"X-Api-Key", m_authKey},
             {"X-ayon-site-id", m_siteId}
         };
+        
         auto resMe = m_ayonServer->Get("/api/users/me", m_headers);
         if (resMe && resMe->status != 200) {
-            m_headers = {};
+            m_headers.erase("X-Api-Key");
             m_ayonServer->set_bearer_token_auth(m_authKey);
         }
     }
