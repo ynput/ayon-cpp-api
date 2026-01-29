@@ -197,7 +197,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
         };
         auto resMe = m_ayonServer->Get("/api/users/me", m_headers);
         if (resMe && resMe->status != 200) {
-            m_headers = {};
+            m_headers.erase("X-Api-Key");
             m_ayonServer->set_bearer_token_auth(m_authKey);
         }
     }
@@ -348,16 +348,25 @@ AyonApi::SPOST(const std::shared_ptr<std::string> endPoint,
     m_ayonServerMutex.lock();
 
     std::string payload = jsonPayload.dump();
-    std::string rawResponse = serialCorePost(*endPoint, *headers, payload, *successStatus);
+    std::string rawResponse;
+    
+    {
+        std::lock_guard<std::mutex> lock(m_ayonServerMutex);
+        rawResponse = serialCorePost(*endPoint, *headers, payload, *successStatus);
+    }
 
     if (!rawResponse.empty()) {
-        jsonResponse = nlohmann::json::parse(rawResponse)[0];   // TODO figure out why this is isnt the same as CPOST and
-                                                              // find a better way to make sure its not an array
+        try {
+            jsonResponse = nlohmann::json::parse(rawResponse)[0];
+        }
+        catch (const nlohmann::json::exception &e) {
+            m_log->error("SPOST JSON parse failed: {}", e.what());
+        }
     }
     else {
         m_log->warn("SPOST can't parse JSON // response empty");
     }
-    m_ayonServerMutex.unlock();
+    
     return jsonResponse;
 };
 
@@ -649,20 +658,17 @@ AyonApi::generativeCorePost(const std::string &endPoint,
                     std::hash<std::thread::id>{}(std::this_thread::get_id()), loopIteration);
 
         if (ffoLock) {
-            m_concurrentRequestAfter503Mutex.lock();
+            std::unique_lock<std::mutex> lock(m_concurrentRequestAfterServerBusyMutex);
             m_log->info("AyonApi::generativeCorePost ffoLock enabled");
-            if (m_maxConcurrentRequestsAfter503 >= 1) {
-                m_maxConcurrentRequestsAfter503--;
+            if (m_maxConcurrentRequestsAfterServerBusy >= 1) {
+                m_maxConcurrentRequestsAfterServerBusy--;
 
                 m_log->info("AyonApi::generativeCorePost thread pool open available: {}",
-                            m_maxConcurrentRequestsAfter503);
-
-                m_concurrentRequestAfter503Mutex.unlock();
+                            m_maxConcurrentRequestsAfterServerBusy);
             }
             else {
                 m_log->info("AyonApi::generativeCorePost Thread pool closed");
-
-                m_concurrentRequestAfter503Mutex.unlock();
+                lock.unlock();
                 std::this_thread::sleep_for(std::chrono::milliseconds(800));
                 continue;
             }
@@ -675,9 +681,8 @@ AyonApi::generativeCorePost(const std::string &endPoint,
             responseStatus = response->status;
             retries++;
             if (ffoLock) {
-                m_concurrentRequestAfter503Mutex.lock();
-                m_maxConcurrentRequestsAfter503++;
-                m_concurrentRequestAfter503Mutex.unlock();
+                std::lock_guard<std::mutex> lock(m_concurrentRequestAfterServerBusyMutex);
+                m_maxConcurrentRequestsAfterServerBusy++;
             }
             if (responseStatus == successStatus) {
                 m_log->info("AyonApi::generativeCorePost The request worked, unlocking and returning. ");
