@@ -195,7 +195,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
             {"X-Api-Key", m_authKey},
             {"X-ayon-site-id", m_siteId}
         };
-        
+
         auto resMe = m_ayonServer->Get("/api/users/me", m_headers);
         if (resMe && resMe->status != 200) {
             m_headers.erase("X-Api-Key");
@@ -728,18 +728,12 @@ AyonApi::convertUriVecToString(const std::vector<std::string> &uriVec) {
     m_log->info(m_log->key("AyonApi"), "AyonApi::convertUriVecToString({})",
                 std::accumulate(uriVec.begin(), uriVec.end(), std::string()));
 
-    std::string payload = R"({"resolveRoots": true,"uris": [)";
+    nlohmann::json payload = {
+        {"resolveRoots", true},
+        {"uris", uriVec}
+    };
 
-    for (size_t i = 0; i < uriVec.size(); i++) {
-        payload += "\"" + uriVec[i] + "\"";
-        if (i < uriVec.size() - 1) {
-            payload += ",";
-        }
-    }
-
-    payload += "]}";
-
-    return payload;
+    return payload.dump();
 };
 
 std::shared_ptr<AyonLogger>
