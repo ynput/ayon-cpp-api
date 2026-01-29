@@ -14,8 +14,6 @@ getApiInstance() {
     std::string AYON_SERVER_URL("http://localhost:8003");
     std::string AYON_SITE_ID("TestId");
     std::string AYON_PROJECT_NAME("TestPrjName");
-    std::string AYONLOGGERLOGLVL("CRITICAL");
-    std::string AYONLOGGERFILELOGGING("OFF");
 
     return AyonApi("./test_logs", AYON_API_KEY, AYON_SERVER_URL, AYON_PROJECT_NAME, AYON_SITE_ID);
 }
