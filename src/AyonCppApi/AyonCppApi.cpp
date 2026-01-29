@@ -635,92 +635,112 @@ AyonApi::serialCorePost(const std::string &endPoint,
 std::string
 AyonApi::generativeCorePost(const std::string &endPoint,
                             httplib::Headers headers,
-                            std::string &Payload,
+                            std::string &payload,
                             const int &successStatus) {
     PerfTimer("AyonApi::generativeCorePost");
-    m_log->info(m_log->key("AyonApi"), "AyonApi::generativeCorePost() endPoint: {}, Payload: {}, successStatus: {}",
-                endPoint, Payload, successStatus);
+    m_log->info(m_log->key("AyonApi"), 
+                "AyonApi::generativeCorePost() endPoint: {}, payload: {}, successStatus: {}",
+                endPoint, payload, successStatus);
 
-    httplib::Client AyonServerClient(m_serverUrl);
-    AyonServerClient.set_bearer_token_auth(m_authKey);
-    AyonServerClient.set_connection_timeout(m_connectionTimeoutMax);
-    AyonServerClient.set_read_timeout(m_readTimeoutMax);
+    httplib::Client ayonServerClient(m_serverUrl);
+    ayonServerClient.set_bearer_token_auth(m_authKey);
+    ayonServerClient.set_connection_timeout(m_connectionTimeoutMax);
+    ayonServerClient.set_read_timeout(m_readTimeoutMax);
 
-    httplib::Result response;
-    int responseStatus;
-    uint8_t retries = 0;
-    bool ffoLock = false;
-    uint16_t loopIteration = 0;
-    while (retries <= m_maxCallRetries || m_generativeCorePostMaxLoopIterations > loopIteration) {
-        loopIteration++;
-        m_log->info("AyonApi::generativeCorePost while loop thread {} iteration {}",
-                    std::hash<std::thread::id>{}(std::this_thread::get_id()), loopIteration);
+    bool serverBusyMode = false;
+    uint16_t totalAttempts = 0;
+    const uint16_t maxTotalAttempts = m_generativeCorePostMaxLoopIterations;
 
-        if (ffoLock) {
+    while (totalAttempts < maxTotalAttempts) {
+        totalAttempts++;
+        m_log->info("AyonApi::generativeCorePost thread {} attempt {} of {}", 
+                    std::hash<std::thread::id>{}(std::this_thread::get_id()),
+                    totalAttempts, maxTotalAttempts);
+
+        // Rate limiting when server is busy
+        if (serverBusyMode) {
             std::unique_lock<std::mutex> lock(m_concurrentRequestAfterServerBusyMutex);
-            m_log->info("AyonApi::generativeCorePost ffoLock enabled");
-            if (m_maxConcurrentRequestsAfterServerBusy >= 1) {
-                m_maxConcurrentRequestsAfterServerBusy--;
-
-                m_log->info("AyonApi::generativeCorePost thread pool open available: {}",
-                            m_maxConcurrentRequestsAfterServerBusy);
-            }
-            else {
-                m_log->info("AyonApi::generativeCorePost Thread pool closed");
-                lock.unlock();
-                std::this_thread::sleep_for(std::chrono::milliseconds(800));
-                continue;
-            }
+            
+            // Wait for available slot
+            m_serverBusyCondVar.wait(lock, [this] {
+                return m_maxConcurrentRequestsAfterServerBusy >= 1;
+            });
+            
+            m_maxConcurrentRequestsAfterServerBusy--;
+            m_log->info("AyonApi::generativeCorePost acquired slot, {} remaining",
+                        m_maxConcurrentRequestsAfterServerBusy);
         }
 
-        m_log->info("AyonApi::generativeCorePost sending request");
-
+        // Make HTTP request
+        httplib::Result response;
+        int responseStatus = 0;
+        bool requestSucceeded = false;
+        
         try {
-            response = AyonServerClient.Post(endPoint, headers, Payload, "application/json");
-            responseStatus = response->status;
-            retries++;
-            if (ffoLock) {
-                std::lock_guard<std::mutex> lock(m_concurrentRequestAfterServerBusyMutex);
-                m_maxConcurrentRequestsAfterServerBusy++;
-            }
-            if (responseStatus == successStatus) {
-                m_log->info("AyonApi::generativeCorePost The request worked, unlocking and returning. ");
-
-                return response->body;
-            }
-            else {
-                if (responseStatus == m_serverBusyCode) {
-                    m_log->warn("AyonApi::generativeCorePost The server responded with 503");
-
-                    retries = 0;
-                    ffoLock = true;
-                    continue;
-                }
-                if (responseStatus == 401) {
-                    m_log->warn("not logged in 401 ");
-                    return "";
-                }
-                if (responseStatus == 500) {
-                    m_log->warn("internal server error ");
-                    return "";
-                }
-                m_log->info("AyonApi::generativeCorePost wrong status code: {} expected: {} retrying", responseStatus,
-                            successStatus);
-                std::this_thread::sleep_for(std::chrono::milliseconds(m_retryWait));
-                continue;
+            m_log->info("AyonApi::generativeCorePost sending request");
+            response = ayonServerClient.Post(endPoint, headers, payload, "application/json");
+            
+            if (response) {
+                responseStatus = response->status;
+                requestSucceeded = true;
+            } else {
+                m_log->warn("AyonApi::generativeCorePost request returned null response");
             }
         }
         catch (const httplib::Error &e) {
-            m_log->warn("AyonApi::generativeCorePost Request Failed because: {}", httplib::to_string(e));
-            break;
+            m_log->error("AyonApi::generativeCorePost HTTP error: {}", httplib::to_string(e));
         }
+
+        // Release slot if in rate-limited mode (RAII-style cleanup)
+        if (serverBusyMode) {
+            std::lock_guard<std::mutex> lock(m_concurrentRequestAfterServerBusyMutex);
+            m_maxConcurrentRequestsAfterServerBusy++;
+            m_serverBusyCondVar.notify_one();
+        }
+
+        // If request failed, retry with backoff
+        if (!requestSucceeded) {
+            auto backoff = std::min(m_retryWait * totalAttempts, 10000);
+            std::this_thread::sleep_for(std::chrono::milliseconds(backoff));
+            continue;
+        }
+
+        // Handle successful request with various status codes
+        if (responseStatus == successStatus) {
+            m_log->info("AyonApi::generativeCorePost success after {} attempts", totalAttempts);
+            return response->body;
+        }
+        
+        // Fatal errors - don't retry
+        if (responseStatus == 401) {
+            m_log->error("AyonApi::generativeCorePost authentication failed (401)");
+            return "";
+        }
+        
+        if (responseStatus == 500) {
+            m_log->error("AyonApi::generativeCorePost internal server error (500)");
+            return "";
+        }
+        
+        // Server busy - enable rate limiting
+        if (responseStatus == m_serverBusyCode) {
+            m_log->warn("AyonApi::generativeCorePost server busy ({}), enabling rate limiting", 
+                        m_serverBusyCode);
+            serverBusyMode = true;
+            std::this_thread::sleep_for(std::chrono::milliseconds(m_requestDelayWhenServerBusy));
+            continue;
+        }
+        
+        // Other errors - retry with backoff
+        m_log->warn("AyonApi::generativeCorePost unexpected status {}, expected {}",
+                    responseStatus, successStatus);
+        std::this_thread::sleep_for(std::chrono::milliseconds(m_retryWait));
     }
 
-    m_log->warn(
-        "AyonApi::generativeCorePost Too many resolve retries without the correct response code for: {}, on: {}",
-        Payload, endPoint);
+    m_log->error("AyonApi::generativeCorePost max attempts ({}) reached for endpoint: {}", 
+                 maxTotalAttempts, endPoint);
     return "";
-};
+}
 
 std::string
 AyonApi::convertUriVecToString(const std::vector<std::string> &uriVec) {

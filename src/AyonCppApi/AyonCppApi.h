@@ -3,6 +3,7 @@
 
 #include <cstdint>
 
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -226,6 +227,7 @@ class AyonApi {
         // Thread Synchronization
         std::mutex m_ayonServerMutex;
         std::mutex m_concurrentRequestAfterServerBusyMutex;
+        std::condition_variable m_serverBusyCondVar;
         uint8_t m_maxConcurrentRequestsAfterServerBusy = 8;
 };
 
