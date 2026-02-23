@@ -42,12 +42,12 @@ AyonCppApiTest::load_EnvVariables(std::string &envFilePath,
 
 bool
 AyonCppApiTest::test_SimpleResolve(nlohmann::json &JsonFile, const bool &RunOnlyOnce, const bool &Print, AyonApi &Api) {
-    nlohmann::json JsonFileStage = JsonFile["Resolve"];
+    nlohmann::json jsonFileStage = JsonFile["Resolve"];
 
-    for (auto it = JsonFileStage.begin(); it != JsonFileStage.end(); it++) {
-        std::pair<std::string, std::string> test = Api.resolvePath(it.key());
+    for (const auto& item : jsonFileStage.items()) {
+        std::pair<std::string, std::string> test = Api.resolvePath(item.key());
 
-        if (test.second != JsonFileStage[it.key()]["RootResolved"]) {
+        if (test.second != item.value()["RootResolved"]) {
             return false;
         }
         if (Print) {
@@ -62,21 +62,21 @@ AyonCppApiTest::test_SimpleResolve(nlohmann::json &JsonFile, const bool &RunOnly
 
 bool
 AyonCppApiTest::test_BatchResolve(nlohmann::json &JsonFile, const bool &Print, AyonApi &Api) {
-    nlohmann::json JsonFileStage = JsonFile["Resolve"];
+    nlohmann::json jsonFileStage = JsonFile["Resolve"];
     std::vector<std::string> uriListSource;
 
-    for (auto it = JsonFileStage.begin(); it != JsonFileStage.end(); it++) {
-        uriListSource.push_back(it.key());
+    for (const auto& item : jsonFileStage.items()) {
+        uriListSource.push_back(item.key());
     }
 
     std::unordered_map<std::string, std::string> test = Api.batchResolvePath(uriListSource);
 
-    for (std::pair<std::string, std::string> element: test) {
+    for (const auto& element : test) {
         if (Print) {
             std::cout << "BatchTest Run Result: " << element.first << " / " << element.second;
         }
-        if (JsonFileStage.find(element.first) != JsonFileStage.end()) {
-            if (element.second != JsonFileStage[element.first]["RootResolved"]) {
+        if (jsonFileStage.find(element.first) != jsonFileStage.end()) {
+            if (element.second != jsonFileStage[element.first]["RootResolved"]) {
                 return false;
             }
         }

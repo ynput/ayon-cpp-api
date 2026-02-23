@@ -41,14 +41,14 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools")
 
 project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
 
-if(AYON_CPP_API_ENALBE_GTEST)
+if(AYON_CPP_API_ENABLE_GTEST)
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/googletest")
 endif()
-if(AYON_CPP_API_ENALBE_GBENCH)
+if(AYON_CPP_API_ENABLE_GBENCH)
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/benchmark")
 endif()
 
-if(AYON_CPP_API_ENALBE_GTEST OR AYON_CPP_API_ENALBE_GBENCH)
+if(AYON_CPP_API_ENABLE_GTEST OR AYON_CPP_API_ENABLE_GBENCH)
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")  
 endif()
 

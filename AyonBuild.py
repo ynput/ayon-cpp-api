@@ -11,18 +11,27 @@ AyonCppApiPrj.add_pip_package("fastapi==0.109.1")
 AyonCppApiPrj.add_pip_package("uvicorn[standard]==0.25.0")
 AyonCppApiPrj.add_pip_package("requests")
 
-AyonCppApiPrj.setVar("AYON_CPP_API_ENALBE_GBENCH", "OFF")
-AyonCppApiPrj.setVar("AYON_CPP_API_ENALBE_GTEST", "OFF")
+AyonCppApiPrj.setVar("AYON_CPP_API_ENABLE_GBENCH", "OFF")
+AyonCppApiPrj.setVar("AYON_CPP_API_ENABLE_GTEST", "OFF")
 AyonCppApiPrj.setVar("JTRACE", "0")
 AyonCppApiPrj.setVar("ReleaseType", "Release")
 
 AyonCppApiPrj.setup_prj()
 
 
+SetDefaultVars = Project.Stage("SetDefaultVars")
+SetDefaultVars.add_funcs(
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENABLE_GBENCH", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENABLE_GTEST", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "JTRACE", "0"),
+    Project.Func("", AyonCppApiPrj.setVar, "ReleaseType", "Release"),
+)
+AyonCppApiPrj.add_stage(SetDefaultVars)
+
 SetTestVars = Project.Stage("SetTestVars")
 SetTestVars.add_funcs(
-    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GBENCH", "ON"),
-    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GTEST", "ON"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENABLE_GBENCH", "ON"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENABLE_GTEST", "ON"),
     Project.Func("", AyonCppApiPrj.setVar, "JTRACE", "1"),
     Project.Func("", AyonCppApiPrj.setVar, "ReleaseType", "Release"),
 )
@@ -30,8 +39,8 @@ AyonCppApiPrj.add_stage(SetTestVars)
 
 SetDefaultVars = Project.Stage("SetDefaultVars")
 SetDefaultVars.add_funcs(
-    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GBENCH", "OFF"),
-    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GTEST", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENABLE_GBENCH", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENABLE_GTEST", "OFF"),
     Project.Func("", AyonCppApiPrj.setVar, "JTRACE", "0"),
     Project.Func("", AyonCppApiPrj.setVar, "ReleaseType", "Release"),
 )
@@ -68,8 +77,8 @@ BuildStage.add_funcs(
         ".",
         "-B",
         "build",
-        lambda: f"-DAYON_CPP_API_ENALBE_GBENCH={AyonCppApiPrj.getVar('AYON_CPP_API_ENALBE_GBENCH')}",
-        lambda: f"-DAYON_CPP_API_ENALBE_GTEST={AyonCppApiPrj.getVar('AYON_CPP_API_ENALBE_GTEST')}",
+        lambda: f"-DAYON_CPP_API_ENABLE_GBENCH={AyonCppApiPrj.getVar('AYON_CPP_API_ENABLE_GBENCH')}",
+        lambda: f"-DAYON_CPP_API_ENABLE_GTEST={AyonCppApiPrj.getVar('AYON_CPP_API_ENABLE_GTEST')}",
         lambda: f"-DJTRACE={AyonCppApiPrj.getVar('JTRACE')}",
         lambda: f"-DCMAKE_BUILD_TYPE={AyonCppApiPrj.getVar('ReleaseType')}",
     ),

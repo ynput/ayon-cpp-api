@@ -1,13 +1,14 @@
-# ==============================================================================
-# 1. OpenSSL Version Selector 
-# ==============================================================================
 option(USE_OPENSSL3 "Build against OpenSSL 3.x" OFF)
 
 if(USE_OPENSSL3)
-    message(STATUS " [AyonCppApi] OpenSSL Mode: v3 (Newer standards, Maya 2025+)")
-    set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../ext/openssl3L")
+    message(STATUS " [AyonCppApi] OpenSSL Mode: v3 (Houdini 21 / Maya 2025)")
+    if(WIN32)
+        set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../ext/opensslW")
+    else()
+        set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../ext/openssl3L")
+    endif()
 else()
-    message(STATUS " [AyonCppApi] OpenSSL Mode: v1 (VFX Platform 2023, Houdini 20/21)")
+    message(STATUS " [AyonCppApi] OpenSSL Mode: v1 (Legacy)")
     set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../ext/openssl1L")
 endif()
 
@@ -66,6 +67,6 @@ install (
 )
 
 install (
-  FILES AyonCppApi.h appDataFoulder.h devMacros.h Instrumentor.h
+  FILES AyonCppApi.h appDataFolder.h devMacros.h Instrumentor.h
   DESTINATION include
 )
