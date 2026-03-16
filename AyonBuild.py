@@ -11,22 +11,40 @@ AyonCppApiPrj.add_pip_package("fastapi==0.109.1")
 AyonCppApiPrj.add_pip_package("uvicorn[standard]==0.25.0")
 AyonCppApiPrj.add_pip_package("requests")
 
-AyonCppApiPrj.setVar("AYON_CPP_API_ENALBE_GBENCH", "OFF")
-AyonCppApiPrj.setVar("AYON_CPP_API_ENALBE_GTEST", "OFF")
+AyonCppApiPrj.setVar("AYON_CPP_API_ENABLE_GBENCH", "OFF")
+AyonCppApiPrj.setVar("AYON_CPP_API_ENABLE_GTEST", "OFF")
 AyonCppApiPrj.setVar("JTRACE", "0")
 AyonCppApiPrj.setVar("ReleaseType", "Release")
 
 AyonCppApiPrj.setup_prj()
 
 
+SetDefaultVars = Project.Stage("SetDefaultVars")
+SetDefaultVars.add_funcs(
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENABLE_GBENCH", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENABLE_GTEST", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "JTRACE", "0"),
+    Project.Func("", AyonCppApiPrj.setVar, "ReleaseType", "Release"),
+)
+AyonCppApiPrj.add_stage(SetDefaultVars)
+
 SetTestVars = Project.Stage("SetTestVars")
 SetTestVars.add_funcs(
-    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GBENCH", "ON"),
-    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENALBE_GTEST", "ON"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENABLE_GBENCH", "ON"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENABLE_GTEST", "ON"),
     Project.Func("", AyonCppApiPrj.setVar, "JTRACE", "1"),
     Project.Func("", AyonCppApiPrj.setVar, "ReleaseType", "Release"),
 )
 AyonCppApiPrj.add_stage(SetTestVars)
+
+SetDefaultVars = Project.Stage("SetDefaultVars")
+SetDefaultVars.add_funcs(
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENABLE_GBENCH", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "AYON_CPP_API_ENABLE_GTEST", "OFF"),
+    Project.Func("", AyonCppApiPrj.setVar, "JTRACE", "0"),
+    Project.Func("", AyonCppApiPrj.setVar, "ReleaseType", "Release"),
+)
+AyonCppApiPrj.add_stage(SetDefaultVars)
 
 CleanUpStage = Project.Stage("Cleanup")
 binFoulder = os.path.join(os.getcwd(), "bin")
@@ -59,8 +77,8 @@ BuildStage.add_funcs(
         ".",
         "-B",
         "build",
-        lambda: f"-DAYON_CPP_API_ENALBE_GBENCH={AyonCppApiPrj.getVar('AYON_CPP_API_ENALBE_GBENCH')}",
-        lambda: f"-DAYON_CPP_API_ENALBE_GTEST={AyonCppApiPrj.getVar('AYON_CPP_API_ENALBE_GTEST')}",
+        lambda: f"-DAYON_CPP_API_ENABLE_GBENCH={AyonCppApiPrj.getVar('AYON_CPP_API_ENABLE_GBENCH')}",
+        lambda: f"-DAYON_CPP_API_ENABLE_GTEST={AyonCppApiPrj.getVar('AYON_CPP_API_ENABLE_GTEST')}",
         lambda: f"-DJTRACE={AyonCppApiPrj.getVar('JTRACE')}",
         lambda: f"-DCMAKE_BUILD_TYPE={AyonCppApiPrj.getVar('ReleaseType')}",
     ),
@@ -151,13 +169,15 @@ def startTestServer():
 
 def CheckTestServer():
     import requests
-
     response = requests.get("http://localhost:8003/")
     print("Test Respone", response.text)
 
 
 def stopTestServer():
-    ServerPocVar.kill()
+    if sys.platform == "win32":
+        ServerPocVar.join(timeout=2)
+    else:
+        ServerPocVar.kill()
 
 
 SetupTestServer = Project.Stage("SetupTestServer")
@@ -195,11 +215,13 @@ AyonCppApiPrj.add_stage(BenchStage)
 AyonCppApiPrj.creat_stage_group(
     "CleanBuild",
     CleanUpStage,
+    SetDefaultVars,
     BuildStage,
 )
 AyonCppApiPrj.creat_stage_group(
     "CleanBuildAndDocs",
     CleanUpStage,
+    SetDefaultVars,
     BuildStage,
     DoxyGenStage,
 )
@@ -222,7 +244,7 @@ AyonCppApiPrj.creat_stage_group(
 )
 
 AyonCppApiPrj.creat_stage_group(
-    "BuildAndBnech",
+    "BuildAndBench",
     SetTestVars,
     BuildStage,
     SetupTestServer,
@@ -230,7 +252,7 @@ AyonCppApiPrj.creat_stage_group(
     StopTestServer,
 )
 AyonCppApiPrj.creat_stage_group(
-    "CleanBuildAndBnech",
+    "CleanBuildAndBench",
     CleanUpStage,
     SetTestVars,
     BuildStage,
@@ -239,7 +261,7 @@ AyonCppApiPrj.creat_stage_group(
     StopTestServer,
 )
 AyonCppApiPrj.creat_stage_group(
-    "CleanBuildAndBnechPlusTest",
+    "CleanBuildAndBenchPlusTest",
     CleanUpStage,
     SetTestVars,
     BuildStage,

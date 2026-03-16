@@ -8,7 +8,7 @@ struct perfStats {
         std::chrono::time_point<std::chrono::high_resolution_clock> endTime;
         std::string StatName;
         std::string HeaderText;
-        std::string FoderText;
+        std::string FooterText;
         std::string Note;
         std::vector<std::string> extraInfo;
         bool Stop = false;
@@ -26,8 +26,7 @@ class perfPrinter {
             this->printStats();
         };
 
-        void
-        printStats() {
+        void printStats() {
             std::cout << currentRunStats.StatName << "\n"
                       << currentRunStats.HeaderText << "\n"
                       << currentRunStats.Note << "\n";
@@ -38,11 +37,11 @@ class perfPrinter {
                       .time_since_epoch()
                       .count();
 
-            long long castEndTime
+            long long castedEndTime
                 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now())
                       .time_since_epoch()
                       .count();
-            std::cout << "Execution Time: " << castedStartTime - castEndTime << "\n";
+            std::cout << "Execution Time: " << castedEndTime - castedStartTime << "\n";
 
             std::cout << "ThreadId: " << std::hash<std::thread::id>{}(std::this_thread::get_id()) << "\n";
 
@@ -50,6 +49,6 @@ class perfPrinter {
             for (const std::string &infoEntry: currentRunStats.extraInfo) {
                 std::cout << infoEntry << "\n";
             }
-            std::cout << currentRunStats.FoderText << std::endl;
+            std::cout << currentRunStats.FooterText << std::endl;
         };
 };

@@ -1,22 +1,23 @@
 #ifndef APPDATA_UTILS_H
 #define APPDATA_UTILS_H
 
-#include <string>
 #include <cstdlib>
+
 #include <filesystem>
+#include <string>
 
 #ifdef _WIN32
     #include <windows.h>
     #define OS_WINDOWS
 #elif __APPLE__
-    #include <unistd.h>
     #include <sys/types.h>
     #include <pwd.h>
+    #include <unistd.h>
     #define OS_MACOS
 #else
-    #include <unistd.h>
     #include <sys/types.h>
     #include <pwd.h>
+    #include <unistd.h>
     #define OS_LINUX
 #endif
 
