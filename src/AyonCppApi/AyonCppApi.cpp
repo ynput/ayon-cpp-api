@@ -109,7 +109,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
 
     // ----------- Resolve Log Path
     std::filesystem::path logPath;
-    if (logFilePos.has_value()) {
+    if (logFilePos && !logFilePos->empty()) {
         try {
             std::filesystem::path inPath(logFilePos.value());
             std::cout << "Input log path: " << inPath << std::endl;
