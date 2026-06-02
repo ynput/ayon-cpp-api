@@ -153,6 +153,14 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
     m_log->info(m_log->key("AyonApi"), "Init AyonServer httplib::Client");
     
     m_ayonServer = std::make_unique<httplib::Client>(m_serverUrl);
+    // Reuse the TCP/TLS connection across resolves instead of a fresh handshake per
+    // request. Over a WAN link the handshake dominates per-call latency, so this is
+    // a large win for the serial resolve path and the prewarm batched resolves.
+    // Gated so the keep-alive contribution can be benchmarked: set
+    // AYON_RESOLVER_NO_KEEPALIVE=1 to fall back to a fresh handshake per request.
+    if (!std::getenv("AYON_RESOLVER_NO_KEEPALIVE")) {
+        m_ayonServer->set_keep_alive(true);
+    }
     m_log->info(m_log->key("AyonApi"), "After creating httplib::Client - {}", m_serverUrl);
 
     if (isSSL()) {
@@ -543,6 +551,70 @@ AyonApi::batchResolvePath(std::vector<std::string> &uriPaths) {
     for (auto &future: futures) {
         for (const auto &assetRaw: future.get()) {
             assetIdentGrp.emplace(getAssetIdent(assetRaw));
+        }
+    }
+
+    return assetIdentGrp;
+};
+
+std::unordered_map<std::string, std::string>
+AyonApi::batchResolvePathSerial(const std::vector<std::string> &uriPaths) {
+    PerfTimer("AyonApi::batchResolvePathSerial");
+    m_log->info(m_log->key("AyonApi"), "AyonApi::batchResolvePathSerial({} uris)", uriPaths.size());
+
+    std::unordered_map<std::string, std::string> assetIdentGrp;
+    if (uriPaths.empty()) {
+        return assetIdentGrp;
+    }
+
+    // Drop empties up front so chunk boundaries are stable and we never POST blank uris.
+    std::vector<std::string> cleanUris;
+    cleanUris.reserve(uriPaths.size());
+    for (const auto &uri: uriPaths) {
+        if (!uri.empty()) {
+            cleanUris.push_back(uri);
+        }
+    }
+    if (cleanUris.empty()) {
+        return assetIdentGrp;
+    }
+
+    const std::string endPoint
+        = m_pathOnlyResolution ? m_uriResolverEndpoint + m_uriResolverEndpointPathOnlyVar : m_uriResolverEndpoint;
+
+    // Split large frontiers into capped chunks (see m_maxSerialBatchSize). Each chunk is its
+    // own POST over the keep-alive client, so the server processes and releases a bounded
+    // batch at a time. For typical frontiers (<= m_maxSerialBatchSize) this is a single
+    // request, identical to the un-chunked path.
+    const size_t chunkSize = m_maxSerialBatchSize;
+    for (size_t start = 0; start < cleanUris.size(); start += chunkSize) {
+        const size_t end = std::min(start + chunkSize, cleanUris.size());
+
+        nlohmann::json uriArray = nlohmann::json::array();
+        for (size_t i = start; i < end; ++i) {
+            uriArray.push_back(cleanUris[i]);
+        }
+        nlohmann::json jsonPayload = {{"resolveRoots", false}, {"uris", uriArray}};
+        std::string payload = jsonPayload.dump();
+
+        std::string rawResponse;
+        {
+            std::lock_guard<std::mutex> lock(m_ayonServerMutex);
+            rawResponse = serialCorePost(endPoint, m_headers, payload, 200);
+        }
+        if (rawResponse.empty()) {
+            m_log->warn("AyonApi::batchResolvePathSerial empty response for chunk [{}, {})", start, end);
+            continue;
+        }
+
+        try {
+            nlohmann::json responseArray = nlohmann::json::parse(rawResponse);
+            for (const auto &assetRaw: responseArray) {
+                assetIdentGrp.emplace(getAssetIdent(assetRaw));
+            }
+        }
+        catch (const nlohmann::json::exception &e) {
+            m_log->error("AyonApi::batchResolvePathSerial JSON parse failed: {}", e.what());
         }
     }
 
