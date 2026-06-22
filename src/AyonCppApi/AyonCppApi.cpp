@@ -109,7 +109,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
 
     // ----------- Resolve Log Path
     std::filesystem::path logPath;
-    if (logFilePos.has_value()) {
+    if (logFilePos && !logFilePos->empty()) {
         try {
             std::filesystem::path inPath(logFilePos.value());
             std::cout << "Input log path: " << inPath << std::endl;
@@ -149,7 +149,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
 
     m_log = std::shared_ptr<AyonLogger>(&loggerRef, [](AyonLogger*){});
     m_log->registerLoggingKey("AyonApi");
-    m_log->setLogLevelInfo();
+    m_log->setLogLevelFromEnv();
     m_log->info(m_log->key("AyonApi"), "Init AyonServer httplib::Client");
     
     m_ayonServer = std::make_unique<httplib::Client>(m_serverUrl);
