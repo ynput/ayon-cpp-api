@@ -111,6 +111,21 @@ class AyonApi {
         std::unordered_map<std::string, std::string> batchResolvePath(std::vector<std::string> &uriPaths);
 
         /**
+         * @brief Resolves a vector of paths in a SINGLE batched request over the persistent
+         * keep-alive client.
+         *
+         * Unlike batchResolvePath (which fans out parallel requests on fresh, non-keep-alive
+         * clients), this sends one POST with all URIs through m_ayonServer and parses the whole
+         * response array. One round-trip, deterministic, connection reused. Intended for the
+         * prewarm pass where frontiers are modest and determinism + keep-alive matter more than
+         * request-level parallelism.
+         *
+         * @param uriPaths The vector of URI paths to resolve.
+         * @return An unordered map of URI -> resolved path.
+         */
+        std::unordered_map<std::string, std::string> batchResolvePathSerial(const std::vector<std::string> &uriPaths);
+
+        /**
          * @brief Takes an AYON path URI response (resolved ayon://path) and returns a pair of
          * asset identifier (ayon:// path) and the machine local file location.
          *
@@ -214,7 +229,13 @@ class AyonApi {
         uint16_t m_regroupSizeForAsyncRequests = 200;
         uint16_t m_maxGroupSizeForAsyncRequests = 300;
         uint16_t m_minVecSizeForGroupSplitAsyncRequests = 50;
-        
+        // Max uris per POST in batchResolvePathSerial. The server resolves a batch in one
+        // sequential transaction, so an unbounded request holds a DB connection for the whole
+        // frontier (risking its connection-pool 503 guard) and grows the body/response without
+        // limit. Splitting into capped chunks releases the connection between chunks. Matches
+        // m_regroupSizeForAsyncRequests so the serial and async paths cap requests alike.
+        uint16_t m_maxSerialBatchSize = 200;
+
         // Retry and Timeout Configuration
         uint8_t m_maxCallRetries = 8;
         uint16_t m_retryWait = 800;
