@@ -1,4 +1,4 @@
-option(USE_OPENSSL3 "Build against OpenSSL 3.x" OFF)
+option(USE_OPENSSL3 "Build against OpenSSL 3.x" ON)
 
 if(USE_OPENSSL3)
     message(STATUS " [AyonCppApi] OpenSSL Mode: v3 (Houdini 21 / Maya 2025)")
