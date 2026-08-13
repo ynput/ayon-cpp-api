@@ -202,6 +202,10 @@ class AyonApi {
         // Core Dependencies
         std::unique_ptr<httplib::Client> m_ayonServer;
         std::shared_ptr<AyonLogger> m_log;
+        // Path to the CA cert bundle actually in use, recorded so a client
+        // can be rebuilt with the same configuration after a verification
+        // failure, without re-running cert path discovery.
+        std::string m_caCertPath;
         
         // Configuration from Constructor
         const std::string m_authKey;
