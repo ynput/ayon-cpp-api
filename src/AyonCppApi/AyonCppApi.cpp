@@ -168,6 +168,7 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
         if (!ayonSSLPath.empty()) {
             m_log->info(m_log->key("AyonApi"), "Using AYON_SSL_CERT_PATH: {}", ayonSSLPath);
             m_ayonServer->set_ca_cert_path(ayonSSLPath.c_str());
+            m_caCertPath = ayonSSLPath;
         } else {
             m_log->warn(m_log->key("AyonApi"), "No AYON_SSL_CERT_PATH set, trying to get OpenSSL dir");
             try {
@@ -681,6 +682,25 @@ AyonApi::serialCorePost(const std::string &endPoint,
     while (retries <= m_maxCallRetries) {
         try {
             response = m_ayonServer->Post(endPoint, headers, Payload, "application/json");
+            if (!response) {
+                auto err = response.error();
+                m_log->warn("AyonApi::serialCorePost response is null: {}", httplib::to_string(err));
+                if (err == httplib::Error::SSLServerVerification) {
+                    if (m_caCertPath.empty() || !std::filesystem::exists(m_caCertPath) ||
+                        !std::filesystem::is_regular_file(m_caCertPath)) {
+                        m_log->error("AyonApi::serialCorePost SSL verification failed and cert path is invalid: '{}' - not retrying", m_caCertPath);
+                        return "";
+                    }
+                    m_log->warn("AyonApi::serialCorePost SSL verification failed with a valid cert path present - rebuilding client and retrying");
+                    m_ayonServer = std::make_unique<httplib::Client>(m_serverUrl);
+                    m_ayonServer->set_keep_alive(true);
+                    m_ayonServer->set_ca_cert_path(m_caCertPath.c_str());
+                    m_ayonServer->enable_server_certificate_verification(true);
+                }
+                retries++;
+                std::this_thread::sleep_for(std::chrono::milliseconds(m_retryWait));
+                continue;
+            }
             responseStatus = response->status;
             retries++;
 
@@ -853,6 +873,7 @@ AyonApi::setSSL() {
         if (std::filesystem::exists(envCertFile)) {
             m_log->info("Using cert based on env variable (SSL_CERT_FILE): {}", envCertFile);
             m_ayonServer->set_ca_cert_path(envCertFile);
+            m_caCertPath = envCertFile;
             return;
         }
     }
@@ -864,6 +885,7 @@ AyonApi::setSSL() {
     if (std::filesystem::exists(certFileCLI)) {
         m_log->info("Using cert based on CLI var: {}", certFileCLI);
         m_ayonServer->set_ca_cert_path(certFileCLI.c_str());
+        m_caCertPath = certFileCLI;
         return;
     } 
 
@@ -874,6 +896,7 @@ AyonApi::setSSL() {
     if (std::filesystem::exists(certFileSSLEAY)) {
         m_log->info("Using cert based on SSLEAY_DIR: {}", certFileSSLEAY);
         m_ayonServer->set_ca_cert_path(certFileSSLEAY.c_str());
+        m_caCertPath = certFileSSLEAY;
         return;
     }
 
@@ -913,6 +936,7 @@ AyonApi::setSSL() {
         if (std::filesystem::exists(certPath)) {
             m_log->info("Using bundled certificate (via library path): {}", certPath);
             m_ayonServer->set_ca_cert_path(certPath.c_str());
+            m_caCertPath = certPath;
             return;
         }
 
