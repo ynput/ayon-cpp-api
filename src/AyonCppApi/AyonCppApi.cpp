@@ -174,8 +174,9 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
             try {
                 setSSL();
             } catch (const std::exception &e) {
+                // No set_ca_cert_path(nullptr): it takes a std::string, so null throws and aborts init.
+                // httplib falls back to OpenSSL's default verify paths.
                 m_log->error("Failed to get OpenSSL directory: {}", e.what());
-                m_ayonServer->set_ca_cert_path(nullptr); 
             }
         }
         m_ayonServer->enable_server_certificate_verification(true);
@@ -877,6 +878,21 @@ AyonApi::setSSL() {
             return;
         }
     }
+
+#ifndef _WIN32
+    // The system CA bundle first: the `openssl` CLI below breaks when the host app puts its own libcrypto on
+    // LD_LIBRARY_PATH (Houdini 22 dsolib: "undefined symbol: BIO_new_dgram_sctp").
+    for (const char* bundle: {"/etc/pki/tls/certs/ca-bundle.crt",   // RHEL / Rocky
+                              "/etc/ssl/certs/ca-certificates.crt",  // Debian / Ubuntu
+                              "/etc/ssl/cert.pem"}) {                // macOS
+        if (std::filesystem::is_regular_file(bundle)) {
+            m_log->info("Using system CA bundle: {}", bundle);
+            m_ayonServer->set_ca_cert_path(bundle);
+            m_caCertPath = bundle;
+            return;
+        }
+    }
+#endif
 
     std::filesystem::path opensslDirCLI(getOpenSSLDirByCLI());
     opensslDirCLI /= "cert.pem";
