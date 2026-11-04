@@ -636,22 +636,34 @@ AyonApi::getAssetIdent(const nlohmann::json &uriResolverResponse) {
     PerfTimer("AyonApi::getAssetIdent");
     m_log->info(m_log->key("AyonApi"), "AyonApi::getAssetIdent({})", uriResolverResponse.dump());
 
-    std::pair<std::string, std::string> AssetIdent;
     if (uriResolverResponse.empty()) {
-        return AssetIdent;
+        return {};
     }
     try {
-        AssetIdent.first = uriResolverResponse.at("uri");
-        if (uriResolverResponse.at("entities").size() > 1) {
-            m_log->warn("Uri resolution returned more than one path: {}", uriResolverResponse.at("entities").dump());
+        std::string uri = uriResolverResponse.at("uri").get<std::string>();
+        const nlohmann::json &entities = uriResolverResponse.at("entities");
+        if (entities.is_array() && entities.empty()) {
+            return {std::move(uri), ""};
         }
-        AssetIdent.second = rootReplace(
-            uriResolverResponse.at("entities").at(uriResolverResponse.at("entities").size() - 1).at("filePath"));
+        if (!entities.is_array() || !entities.back().is_object()) {
+            m_log->warn("asset identification cant be generated {}", uriResolverResponse.dump());
+            return {};
+        }
+        if (entities.size() > 1) {
+            m_log->warn("Uri resolution returned more than one path: {}", entities.dump());
+        }
+        // The server leaves filePath out when the URI names no representation.
+        const nlohmann::json &entity = entities.back();
+        const auto filePath = entity.find("filePath");
+        if (filePath == entity.end() || filePath->is_null()) {
+            return {std::move(uri), ""};
+        }
+        return {std::move(uri), rootReplace(filePath->get<std::string>())};
     }
     catch (const nlohmann::json::exception &e) {
         m_log->warn("asset identification cant be generated {}", uriResolverResponse.dump());
     }
-    return AssetIdent;
+    return {};
 };
 
 std::string

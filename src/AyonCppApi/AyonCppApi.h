@@ -132,6 +132,11 @@ class AyonApi {
          * @param uriResolverResponse JSON representation of the response from the AYON API resolve endpoint.
          * @return A pair containing the asset identifier and the machine local file location.
          */
+        /**
+         * @brief Read one entry of a resolve response.
+         * @return (uri, path) when resolved; (uri, "") when the server answered that it has no path;
+         * an empty pair when the entry cannot be read, which says nothing about whether the URI exists.
+         */
         std::pair<std::string, std::string> getAssetIdent(const nlohmann::json &uriResolverResponse);
 
         /**
