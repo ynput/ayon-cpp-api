@@ -174,8 +174,10 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
             try {
                 setSSL();
             } catch (const std::exception &e) {
-                m_log->error("Failed to get OpenSSL directory: {}", e.what());
-                m_ayonServer->set_ca_cert_path(nullptr); 
+                // No set_ca_cert_path(nullptr): it takes a std::string, so null throws and aborts init.
+                // httplib then uses its default CA lookup (OpenSSL's default verify paths on Linux, the system
+                // store on Windows, the keychain on macOS with CPPHTTPLIB_USE_CERTS_FROM_MACOSX_KEYCHAIN).
+                m_log->error("Failed to find a CA bundle ({}); continuing with httplib's default CA lookup", e.what());
             }
         }
         m_ayonServer->enable_server_certificate_verification(true);
@@ -878,22 +880,52 @@ AyonApi::setSSL() {
         }
     }
 
-    std::filesystem::path opensslDirCLI(getOpenSSLDirByCLI());
-    opensslDirCLI /= "cert.pem";
-    std::string certFileCLI = opensslDirCLI.string();
+#ifdef __linux__
+    // The system CA bundle first: the `openssl` CLI below breaks when the host app puts its own libcrypto on
+    // LD_LIBRARY_PATH (Houdini 22 dsolib: "undefined symbol: BIO_new_dgram_sctp"). Linux only: on macOS the CLI's
+    // OPENSSLDIR (e.g. Homebrew's, which can carry keychain CAs) stays ahead of the stock /etc/ssl/cert.pem.
+    for (const char* bundle: {"/etc/pki/tls/certs/ca-bundle.crt",   // RHEL / Rocky
+                              "/etc/ssl/certs/ca-certificates.crt",  // Debian / Ubuntu
+                              "/etc/ssl/ca-bundle.pem",              // openSUSE
+                              "/etc/ssl/cert.pem"}) {                // Alpine / Arch
+        std::error_code ec;
+        if (std::filesystem::is_regular_file(bundle, ec)) {
+            m_log->info("Using system CA bundle: {}", bundle);
+            m_ayonServer->set_ca_cert_path(bundle);
+            m_caCertPath = bundle;
+            return;
+        }
+    }
+#endif
 
-    if (std::filesystem::exists(certFileCLI)) {
+    // Each lookup below may throw (no or broken `openssl` CLI, unparsable OPENSSLDIR): fall through to the next one
+    // and finally to the bundled certificate instead of giving up.
+    std::string certFileCLI;
+    try {
+        std::filesystem::path opensslDirCLI(getOpenSSLDirByCLI());
+        opensslDirCLI /= "cert.pem";
+        certFileCLI = opensslDirCLI.string();
+    } catch (const std::exception &e) {
+        m_log->warn("openssl CLI lookup failed: {}", e.what());
+    }
+
+    if (!certFileCLI.empty() && std::filesystem::exists(certFileCLI)) {
         m_log->info("Using cert based on CLI var: {}", certFileCLI);
         m_ayonServer->set_ca_cert_path(certFileCLI.c_str());
         m_caCertPath = certFileCLI;
         return;
     } 
 
-    std::filesystem::path opensslDirSSLEAY(getOpenSSLDir());
-    opensslDirSSLEAY /= "cert.pem";
-    std::string certFileSSLEAY = opensslDirSSLEAY.string();
+    std::string certFileSSLEAY;
+    try {
+        std::filesystem::path opensslDirSSLEAY(getOpenSSLDir());
+        opensslDirSSLEAY /= "cert.pem";
+        certFileSSLEAY = opensslDirSSLEAY.string();
+    } catch (const std::exception &e) {
+        m_log->warn("OPENSSLDIR lookup failed: {}", e.what());
+    }
 
-    if (std::filesystem::exists(certFileSSLEAY)) {
+    if (!certFileSSLEAY.empty() && std::filesystem::exists(certFileSSLEAY)) {
         m_log->info("Using cert based on SSLEAY_DIR: {}", certFileSSLEAY);
         m_ayonServer->set_ca_cert_path(certFileSSLEAY.c_str());
         m_caCertPath = certFileSSLEAY;
