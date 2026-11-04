@@ -888,7 +888,8 @@ AyonApi::setSSL() {
                               "/etc/ssl/certs/ca-certificates.crt",  // Debian / Ubuntu
                               "/etc/ssl/ca-bundle.pem",              // openSUSE
                               "/etc/ssl/cert.pem"}) {                // Alpine / Arch
-        if (std::filesystem::is_regular_file(bundle)) {
+        std::error_code ec;
+        if (std::filesystem::is_regular_file(bundle, ec)) {
             m_log->info("Using system CA bundle: {}", bundle);
             m_ayonServer->set_ca_cert_path(bundle);
             m_caCertPath = bundle;
