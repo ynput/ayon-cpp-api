@@ -164,13 +164,28 @@ AyonApi::AyonApi(const std::optional<std::string> &logFilePos,
     m_log->info(m_log->key("AyonApi"), "After creating httplib::Client - {}", m_serverUrl);
 
     if (isSSL()) {
-        std::string ayonSSLPath = std::getenv("AYON_SSL_CERT_PATH") ? std::getenv("AYON_SSL_CERT_PATH") : "";
+        // AYON_CA_FILE is the variable ayon-python-api and the AYON launcher read, so one setting covers
+        // all of them. AYON_SSL_CERT_PATH is the older name and is kept as a fallback.
+        std::string ayonSSLPath;
+        for (const char* envName : {"AYON_CA_FILE", "AYON_SSL_CERT_PATH"}) {
+            const char* envValue = std::getenv(envName);
+            if (!envValue || !*envValue) {
+                continue;
+            }
+            std::error_code ec;
+            if (!std::filesystem::is_regular_file(envValue, ec)) {
+                m_log->warn(m_log->key("AyonApi"), "{} is set to '{}', which is not an existing file; ignoring it", envName, envValue);
+                continue;
+            }
+            m_log->info(m_log->key("AyonApi"), "Using {}: {}", envName, envValue);
+            ayonSSLPath = envValue;
+            break;
+        }
         if (!ayonSSLPath.empty()) {
-            m_log->info(m_log->key("AyonApi"), "Using AYON_SSL_CERT_PATH: {}", ayonSSLPath);
             m_ayonServer->set_ca_cert_path(ayonSSLPath.c_str());
             m_caCertPath = ayonSSLPath;
         } else {
-            m_log->warn(m_log->key("AyonApi"), "No AYON_SSL_CERT_PATH set, trying to get OpenSSL dir");
+            m_log->warn(m_log->key("AyonApi"), "No AYON_CA_FILE / AYON_SSL_CERT_PATH set, trying to get OpenSSL dir");
             try {
                 setSSL();
             } catch (const std::exception &e) {
@@ -755,6 +770,12 @@ AyonApi::generativeCorePost(const std::string &endPoint,
                 endPoint, payload, successStatus);
 
     httplib::Client ayonServerClient(m_serverUrl);
+    // Same CA as the main client: a new client does not inherit it, so without this it would
+    // fall back to httplib's default lookup and fail against a self-signed server.
+    if (isSSL() && !m_caCertPath.empty()) {
+        ayonServerClient.set_ca_cert_path(m_caCertPath.c_str());
+        ayonServerClient.enable_server_certificate_verification(true);
+    }
     ayonServerClient.set_bearer_token_auth(m_authKey);
     ayonServerClient.set_connection_timeout(m_connectionTimeoutMax);
     ayonServerClient.set_read_timeout(m_readTimeoutMax);
